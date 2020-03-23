@@ -1,6 +1,7 @@
 
 set( subdirs
-    "01_test_id"
+    "01_test_res"
+    "02_test_rptr"
     )
 
 foreach( _subdir ${subdirs} )
