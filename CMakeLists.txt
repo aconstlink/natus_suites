@@ -10,6 +10,7 @@ include( visual_studio_generate_bat_dll )
 
 set( SUBDIRS 
     "chaos_soil"
+    "chaos_one"
     )
     
 foreach( _SUBDIR ${SUBDIRS} )
