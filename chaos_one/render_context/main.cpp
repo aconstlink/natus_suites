@@ -28,6 +28,7 @@ int main( int argc, char ** argv )
     {
         wi.w = 800 ;
         wi.h = 800 ;
+        wi.window_name = "Render Window Test" ;
     }
 
 #if defined( NATUS_GRAPHICS_WGL )
@@ -39,8 +40,6 @@ int main( int argc, char ** argv )
 #elif defined( NATUS_GRAPHICS_GLX )
 
 #endif
-
-    //natus::application::iwindow_rptr_t wnd =  natus::application::global_t::create_render_window() ;
 
     std::this_thread::sleep_for( std::chrono::milliseconds( 2000 ) ) ;
     return 0 ;
