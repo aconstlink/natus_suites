@@ -33,12 +33,14 @@ int main( int argc, char ** argv )
 
 #if defined( NATUS_GRAPHICS_WGL )
 
-    
+
     natus::application::wgl::window_res_t wglw = 
         natus::application::wgl::window_t( gli, wi ) ;
 
 #elif defined( NATUS_GRAPHICS_GLX )
 
+    natus::application::glx::window_res_t glxw = 
+        natus::application::glx::window_t( gli, wi ) ;
 #endif
 
     std::this_thread::sleep_for( std::chrono::milliseconds( 2000 ) ) ;
