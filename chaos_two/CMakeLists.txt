@@ -1,8 +1,6 @@
 
 set( subdirs
-    "01_render_context"
-    "02_application_base"
-    "03_app"
+    "01_async_render"
     )
 
 foreach( _subdir ${subdirs} )

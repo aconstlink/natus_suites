@@ -16,6 +16,7 @@ natus_emacs_default_directory( "${CMAKE_CURRENT_LIST_DIR}/natus" )
 set( SUBDIRS 
     "chaos_soil"
     "chaos_one"
+    "chaos_two"
     )
     
 foreach( _SUBDIR ${SUBDIRS} )
