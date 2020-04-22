@@ -43,7 +43,7 @@ int main( int argc, char ** argv )
         natus::application::glx::window_t( gli, wi ) ;
 #endif
 
-    std::this_thread::sleep_for( std::chrono::milliseconds( 2000 ) ) ;
+    std::this_thread::sleep_for( std::chrono::milliseconds( 4000 ) ) ;
     return 0 ;
 }
 

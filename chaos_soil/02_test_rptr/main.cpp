@@ -34,6 +34,10 @@ namespace this_file
         }
 
     public:
+        a( void_t ) 
+        {
+            natus::log::global_t::status( "[a::a()]" ) ;
+        }
         virtual ~a(){}
     };
     natus_typedefs( natus::soil::res<a>, resa ) ;
@@ -79,6 +83,10 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
+    {
+        std::shared_ptr< this_file::x > ptr = std::shared_ptr< this_file::a >( new this_file::a() ) ;
+        ptr->dummy() ;
+    }
     {
         this_file::resa_t a = this_file::a() ;
         this_file::resb_t b = this_file::b(10) ;

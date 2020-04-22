@@ -64,10 +64,7 @@ namespace this_file
     };
     natus_typedefs( natus::soil::res<c>, resc ) ;
 
-    natus::soil::res_t some_funk( natus::soil::res_rref_t id_ )
-    {
-        return std::move( id_ ) ;
-    }
+    
 }
 
 

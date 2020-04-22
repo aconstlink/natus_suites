@@ -33,8 +33,8 @@ int main( int argc, char ** argv )
     natus::application::wgl::window_res_t wglw0 =
         natus::application::wgl::window_t( gli, wi ) ;
     
-    natus::application::wgl::window_res_t wglw1 =
-        natus::application::wgl::window_t( gli, wi ) ;
+    //natus::application::wgl::window_res_t wglw1 =
+      //  natus::application::wgl::window_t( gli, wi ) ;
 
     natus::application::win32::win32_application_t app ;
     app.exec() ;
