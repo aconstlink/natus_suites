@@ -18,14 +18,14 @@ int main( int argc, char ** argv )
     // init 
     {
         natus::gpu::async_id_res_t aid0 ;
-        natus::gpu::render_configuration_t rc ;
-        async_->prepare( aid0, rc ) ;
+        natus::gpu::render_configuration_res_t rc ;
+        async_->configure( aid0, rc ) ;
 
         aid = ::std::move( aid0 ) ;
     }
     
     // runs in the render thread
-    async_->update() ;
+    async_->system_update() ;
 
     {
         async_->render( aid ) ;
