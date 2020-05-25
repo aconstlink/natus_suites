@@ -25,6 +25,9 @@ namespace this_file
         natus::gpu::async_id_res_t _rconfig = natus::gpu::async_id_t() ;
         natus::gpu::variable_set_res_t _vars = natus::gpu::variable_set_t() ;
 
+        typedef ::std::chrono::high_resolution_clock __clock_t ;
+        __clock_t::time_point _tp = __clock_t::now() ;
+
     public:
 
         test_app( void_t ) 
@@ -174,10 +177,17 @@ namespace this_file
 
         virtual natus::application::result on_render( void_t ) 
         { 
+            
+            auto const dif = ::std::chrono::duration_cast<::std::chrono::microseconds>( __clock_t::now() - _tp ) ;
+            _tp = __clock_t::now() ;
+
+
+            float_t const sec = float_t( double_t( dif.count() ) / ::std::chrono::microseconds::period().den ) ;
+
             {
                 static float_t value = 0.0f ;
                 if( value > 1.0f ) value = 0.0f ;
-                value += 0.005f ;
+                value += natus::math::fn<float_t>::fract( sec ) ;
 
                 auto* var = _vars->data_variable< natus::math::vec4f_t >( "u_color" ) ;
                 var->set( natus::math::vec4f_t( value , 1.0f-value, value*0.5f, 1.0f ) ) ;
@@ -186,6 +196,18 @@ namespace this_file
             {
                 _wid_async.second.render( _rconfig ) ;
             }
+
+            static size_t count = 0 ;
+            count++ ;
+            static float this_sec = 0.0f ;
+            this_sec += sec ;
+            if( this_sec > 1.0 )
+            {
+                natus::log::global_t::status( "Render Count: " + ::std::to_string(count) ) ;
+                this_sec = 0.0f ;
+                count = 0 ;
+            }
+            
 
             return natus::application::result::ok ; 
         }
