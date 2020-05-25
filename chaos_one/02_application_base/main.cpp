@@ -12,6 +12,8 @@
 
 #elif defined( NATUS_GRAPHICS_GLX )
 
+#include <natus/application/platform/glx/glx_window.h>
+#include <natus/application/platform/xlib/xlib_application.h>
 #endif
 
 int main( int argc, char ** argv )

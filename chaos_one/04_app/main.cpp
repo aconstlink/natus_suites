@@ -87,7 +87,7 @@ namespace this_file
 
                 {
                     auto vs = natus::gpu::vertex_shader_t( R"(
-                        #version 330 core
+                        #version 140
                         in vec3 in_pos ;
                         uniform mat4 u_proj ;
                         uniform mat4 u_view ;
@@ -110,8 +110,9 @@ namespace this_file
 
                 {
                     natus::gpu::pixel_shader_t ps( R"(
-                        #version 330 core
-                        layout( location = 0 ) out vec4 out_color ;
+                        #version 140
+                        //layout( location = 0 ) out vec4 out_color ;
+                        out vec4 out_color ;
 
                         //in vertex_data
                         //{
@@ -119,7 +120,7 @@ namespace this_file
                         //} psi ;
 
                         uniform vec4 u_color ;
-
+                        
                         void main()
                         {    
                             out_color = u_color ;
@@ -167,6 +168,7 @@ namespace this_file
 
         virtual natus::application::result on_update( void_t ) 
         { 
+            ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 10 ) ) ;
             return natus::application::result::ok ; 
         }
 
