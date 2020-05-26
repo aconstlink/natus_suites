@@ -169,43 +169,54 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        float value = 0.0f ;
+
         virtual natus::application::result on_update( void_t ) 
         { 
+            auto const dif = ::std::chrono::duration_cast< ::std::chrono::microseconds >( __clock_t::now() - _tp ) ;
+            _tp = __clock_t::now() ;
+
+
+            float_t const sec = float_t( double_t( dif.count() ) / ::std::chrono::microseconds::period().den ) ;
+            
+            if( value > 1.0f ) value = 0.0f ;
+            value += natus::math::fn<float_t>::fract( sec ) ;
+
             ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 1 ) ) ;
+
             return natus::application::result::ok ; 
         }
 
         virtual natus::application::result on_render( void_t ) 
         { 
             
-            auto const dif = ::std::chrono::duration_cast<::std::chrono::microseconds>( __clock_t::now() - _tp ) ;
-            _tp = __clock_t::now() ;
-
-
-            float_t const sec = float_t( double_t( dif.count() ) / ::std::chrono::microseconds::period().den ) ;
 
             {
-                static float_t value = 0.0f ;
-                if( value > 1.0f ) value = 0.0f ;
-                value += natus::math::fn<float_t>::fract( sec ) ;
-
+                //natus::log::global_t::status( "Value: " + ::std::to_string(value) ) ;
                 auto* var = _vars->data_variable< natus::math::vec4f_t >( "u_color" ) ;
-                var->set( natus::math::vec4f_t( value , 1.0f-value, value*0.5f, 1.0f ) ) ;
-            }
-
-            {
+                var->set( natus::math::vec4f_t( value, value, value, 1.0f ) ) ;
                 _wid_async.second.render( _rconfig ) ;
             }
 
-            static size_t count = 0 ;
-            count++ ;
-            static float this_sec = 0.0f ;
-            this_sec += sec ;
-            if( this_sec > 1.0 )
+            // print calls from run-time per second
             {
-                natus::log::global_t::status( "Render Count: " + ::std::to_string(count) ) ;
-                this_sec = 0.0f ;
-                count = 0 ;
+                static __clock_t::time_point tp = __clock_t::now() ;
+
+                auto const dif = ::std::chrono::duration_cast< ::std::chrono::microseconds >( __clock_t::now() - tp ) ;
+                tp = __clock_t::now() ;
+
+                float_t const sec = float_t( double_t( dif.count() ) / ::std::chrono::microseconds::period().den ) ;
+
+                static size_t count = 0 ;
+                count++ ;
+                static float this_sec = 0.0f ;
+                this_sec += sec ;
+                if( this_sec > 1.0 )
+                {
+                    natus::log::global_t::status( "Render Count: " + ::std::to_string( count ) ) ;
+                    this_sec = 0.0f ;
+                    count = 0 ;
+                }
             }
             
 
