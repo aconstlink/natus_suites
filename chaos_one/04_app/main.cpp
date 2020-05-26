@@ -171,7 +171,7 @@ namespace this_file
 
         virtual natus::application::result on_update( void_t ) 
         { 
-            ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 10 ) ) ;
+            ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 1 ) ) ;
             return natus::application::result::ok ; 
         }
 
