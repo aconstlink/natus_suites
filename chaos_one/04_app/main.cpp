@@ -170,6 +170,7 @@ namespace this_file
         }
 
         float value = 0.0f ;
+        size_t ucount = 0 ;
 
         virtual natus::application::result on_update( void_t ) 
         { 
@@ -182,15 +183,15 @@ namespace this_file
             if( value > 1.0f ) value = 0.0f ;
             value += natus::math::fn<float_t>::fract( sec ) ;
 
-            ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 1 ) ) ;
+            ucount++ ;
+
+            ::std::this_thread::sleep_for( ::std::chrono::microseconds( 100 ) ) ;
 
             return natus::application::result::ok ; 
         }
 
         virtual natus::application::result on_render( void_t ) 
         { 
-            
-
             {
                 //natus::log::global_t::status( "Value: " + ::std::to_string(value) ) ;
                 auto* var = _vars->data_variable< natus::math::vec4f_t >( "u_color" ) ;
@@ -213,12 +214,13 @@ namespace this_file
                 this_sec += sec ;
                 if( this_sec > 1.0 )
                 {
+                    natus::log::global_t::status( "Update Count: " + ::std::to_string( ucount ) ) ;
                     natus::log::global_t::status( "Render Count: " + ::std::to_string( count ) ) ;
                     this_sec = 0.0f ;
                     count = 0 ;
+                    ucount = 0 ;
                 }
             }
-            
 
             return natus::application::result::ok ; 
         }
