@@ -44,6 +44,7 @@ namespace this_file
             _wid_async = ::std::move( rhv._wid_async ) ;
             _geo = ::std::move( rhv._geo ) ;
             _rconfig = ::std::move( rhv._rconfig ) ;
+            _camera = ::std::move( rhv._camera ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -181,14 +182,29 @@ namespace this_file
 
         virtual natus::application::result on_update( void_t ) 
         { 
+            
             auto const dif = ::std::chrono::duration_cast< ::std::chrono::microseconds >( __clock_t::now() - _tp ) ;
             _tp = __clock_t::now() ;
 
 
-            float_t const sec = float_t( double_t( dif.count() ) / ::std::chrono::microseconds::period().den ) ;
+            float_t const dt = float_t( double_t( dif.count() ) / ::std::chrono::microseconds::period().den ) ;
             
             if( value > 1.0f ) value = 0.0f ;
-            value += natus::math::fn<float_t>::fract( sec ) ;
+            value += natus::math::fn<float_t>::fract( dt ) ;
+
+            {
+                static float_t t = 0.0f ;
+                t += dt * 0.1f ;
+
+                if( t > 1.0f ) t = 0.0f ;
+                
+                static natus::math::vec3f_t tr ;
+                tr.x( 1.0f * natus::math::fn<float_t>::sin( t * 2.0f * 3.14f ) ) ;
+
+                _camera.transpose_by( tr ) ;
+            }
+
+
 
             ucount++ ;
 
@@ -203,6 +219,11 @@ namespace this_file
                 //natus::log::global_t::status( "Value: " + ::std::to_string(value) ) ;
                 auto* var = _vars->data_variable< natus::math::vec4f_t >( "u_color" ) ;
                 var->set( natus::math::vec4f_t( value, value, value, 1.0f ) ) ;
+            }
+
+            {
+                auto* var = _vars->data_variable< natus::math::mat4f_t >( "u_view" ) ;
+                var->set( _camera.mat_view() ) ;
             }
 
             {
