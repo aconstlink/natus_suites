@@ -3,6 +3,7 @@
 
 #include <natus/application/global.h>
 #include <natus/application/app.h>
+#include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/gpu/variable/variable_set.hpp>
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
@@ -28,6 +29,8 @@ namespace this_file
         typedef ::std::chrono::high_resolution_clock __clock_t ;
         __clock_t::time_point _tp = __clock_t::now() ;
 
+        natus::gfx::pinhole_camera_t _camera ;
+
     public:
 
         test_app( void_t ) 
@@ -49,6 +52,10 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t )
         { 
+            {
+                _camera.orthographic( 2.0f, 2.0f, 1.0f, 1000.0f ) ;
+            }
+
             // geometry configuration
             {
                 struct vertex { natus::math::vec3f_t pos ; } ;
@@ -185,7 +192,7 @@ namespace this_file
 
             ucount++ ;
 
-            ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 4 ) ) ;
+            ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 1 ) ) ;
 
             return natus::application::result::ok ; 
         }
@@ -196,8 +203,14 @@ namespace this_file
                 //natus::log::global_t::status( "Value: " + ::std::to_string(value) ) ;
                 auto* var = _vars->data_variable< natus::math::vec4f_t >( "u_color" ) ;
                 var->set( natus::math::vec4f_t( value, value, value, 1.0f ) ) ;
-                _wid_async.second.render( _rconfig ) ;
             }
+
+            {
+                auto* var = _vars->data_variable< natus::math::mat4f_t >( "u_proj" ) ;
+                var->set( _camera.mat_proj() ) ;
+            }
+
+            _wid_async.second.render( _rconfig ) ;
 
             // print calls from run-time per second
             {
