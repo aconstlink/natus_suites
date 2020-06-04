@@ -201,10 +201,8 @@ namespace this_file
                 static natus::math::vec3f_t tr ;
                 tr.x( 1.0f * natus::math::fn<float_t>::sin( t * 2.0f * 3.14f ) ) ;
 
-                _camera.transpose_by( tr ) ;
+                _camera.translate_by( tr ) ;
             }
-
-
 
             ucount++ ;
 
@@ -218,7 +216,7 @@ namespace this_file
             {
                 //natus::log::global_t::status( "Value: " + ::std::to_string(value) ) ;
                 auto* var = _vars->data_variable< natus::math::vec4f_t >( "u_color" ) ;
-                var->set( natus::math::vec4f_t( value, value, value, 1.0f ) ) ;
+                var->set( natus::math::vec4f_t( value, 1.0f-value, ::std::abs( value*2.0f-1.0f ), 1.0f ) ) ;
             }
 
             {
