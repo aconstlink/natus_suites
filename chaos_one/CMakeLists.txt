@@ -1,9 +1,6 @@
 
 set( subdirs
-    "01_render_context"
-    "02_application_base"
-    "03_app"
-    "04_async_render"
+    
     "04_app"
     )
 
