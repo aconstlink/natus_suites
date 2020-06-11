@@ -93,117 +93,99 @@ namespace this_file
             }
 
             {
-                natus::gpu::render_configurations_t rcs ;
+                natus::gpu::render_configuration_t rc( "quad_a" ) ;
 
-                // render configuration: ogl 3.0
+                // shaders : ogl 3.0
                 {
-                    natus::gpu::render_configuration rc( "quad_a" ) ;
+                    natus::gpu::shader_set_t ss = natus::gpu::shader_set_t().
 
-                    {
-                        auto vs = natus::gpu::vertex_shader_t( R"(
-                        #version 140
-                        in vec3 in_pos ;
-                        uniform mat4 u_proj ;
-                        uniform mat4 u_view ;
+                        set_vertex_shader( natus::gpu::shader_t( R"(
+                            #version 140
+                            in vec3 in_pos ;
+                            uniform mat4 u_proj ;
+                            uniform mat4 u_view ;
 
-                        //out vertex_data
-                        //{
-                        //    vec2 tx ;
-                        //} vso ;
+                            //out vertex_data
+                            //{
+                            //    vec2 tx ;
+                            //} vso ;
 
-                        void main()
-                        {
-                            gl_Position = u_proj * u_view * vec4( in_pos, 1.0 ) ;
-                        } )" )
-                            .add_vertex_binding( natus::gpu::vertex_attribute::position, "in_pos" )
-                            .add_input_binding( natus::gpu::binding_point::view_matrix, "u_view" )
-                            .add_input_binding( natus::gpu::binding_point::projection_matrix, "u_proj" ) ;
+                            void main()
+                            {
+                                gl_Position = u_proj * u_view * vec4( in_pos, 1.0 ) ;
+                            } )" ) ).
 
-                        rc.set_shader( vs ) ;
-                    }
+                        set_pixel_shader( natus::gpu::shader_t( R"(
+                            #version 140
+                            //layout( location = 0 ) out vec4 out_color ;
+                            out vec4 out_color ;
 
-                    {
-                        natus::gpu::pixel_shader_t ps( R"(
-                        #version 140
-                        //layout( location = 0 ) out vec4 out_color ;
-                        out vec4 out_color ;
+                            //in vertex_data
+                            //{
+                            //  vec4 color ;
+                            //} psi ;
 
-                        //in vertex_data
-                        //{
-                        //  vec4 color ;
-                        //} psi ;
-
-                        uniform vec4 u_color ;
+                            uniform vec4 u_color ;
                         
-                        void main()
-                        {    
-                            out_color = u_color ;
-                        }
-                         )" ) ;
-                        rc.set_shader( ps ) ;
-                    }
-                    rc.set_geometry( "quad" ) ;
-                    rcs.add_config( natus::gpu::backend_type::gl3, 
-                    natus::gpu::render_configuration_res_t( ::std::move(rc) ) ) ;
+                            void main()
+                            {    
+                                out_color = u_color ;
+                            } )" ) ) ;
+                    
+                    rc.insert( natus::gpu::backend_type::gl3, ::std::move(ss) ) ;
                 }
 
-                // render configuration: es 3.0
+                // shaders : es 3.0
                 {
-                    natus::gpu::render_configuration rc( "quad_a" ) ;
+                    natus::gpu::shader_set_t ss = natus::gpu::shader_set_t().
 
-                    {
-                        auto vs = natus::gpu::vertex_shader_t( R"(
-                        #version 300 es
-                        in vec3 in_pos ;
-                        uniform mat4 u_proj ;
-                        uniform mat4 u_view ;
+                        set_vertex_shader( natus::gpu::shader_t( R"(
+                            #version 300 es
+                            in vec3 in_pos ;
+                            uniform mat4 u_proj ;
+                            uniform mat4 u_view ;
 
-                        //out vertex_data
-                        //{
-                        //    vec2 tx ;
-                        //} vso ;
+                            //out vertex_data
+                            //{
+                            //    vec2 tx ;
+                            //} vso ;
 
-                        void main()
-                        {
-                            gl_Position = u_proj * u_view * vec4( in_pos, 1.0 ) ;
-                        } )" )
-                            .add_vertex_binding( natus::gpu::vertex_attribute::position, "in_pos" )
-                            .add_input_binding( natus::gpu::binding_point::view_matrix, "u_view" )
-                            .add_input_binding( natus::gpu::binding_point::projection_matrix, "u_proj" ) ;
-
-                        rc.set_shader( vs ) ;
-                    }
-
-                    {
-                        natus::gpu::pixel_shader_t ps( R"(
-                        #version 300 es
-                        precision mediump float ;
-                        //layout( location = 0 ) out vec4 out_color ;
-                        out vec4 out_color ;
-
-                        //in vertex_data
-                        //{
-                        //  vec4 color ;
-                        //} psi ;
-
-                        uniform vec4 u_color ;
+                            void main()
+                            {
+                                gl_Position = u_proj * u_view * vec4( in_pos, 1.0 ) ;
+                            } )" ) ).
                         
-                        void main()
-                        {    
-                            out_color = u_color ;
-                        }
-                         )" ) ;
-                        rc.set_shader( ps ) ;
-                    }
-                    rc.set_geometry( "quad" ) ;
-                    rcs.add_config( natus::gpu::backend_type::es3,
-                    natus::gpu::render_configuration_res_t( ::std::move(rc) ) ) ;
+                        set_pixel_shader( natus::gpu::shader_t( R"(
+                            #version 300 es
+                            precision mediump float ;
+                            //layout( location = 0 ) out vec4 out_color ;
+                            out vec4 out_color ;
+
+                            //in vertex_data
+                            //{
+                            //  vec4 color ;
+                            //} psi ;
+
+                            uniform vec4 u_color ;
+                        
+                            void main()
+                            {    
+                                out_color = u_color ;
+                            } )" ) ) ;
+
+                    rc.insert( natus::gpu::backend_type::es3, ::std::move(ss) ) ;
                 }
 
-                _wid_async.second.configure( _rconfig, rcs ) ;
+                // configure more details
+                {
+                    rc.add_vertex_input_binding( natus::gpu::vertex_attribute::position, "in_pos" )
+                        .add_input_binding( natus::gpu::binding_point::view_matrix, "u_view" )
+                        .add_input_binding( natus::gpu::binding_point::projection_matrix, "u_proj" ) ;
 
-                // test second configure, meaning reconfigure
-                _wid_async.second.configure( _rconfig, rcs ) ;
+                    rc.link_geometry( "quad" ) ;
+                }
+
+                _wid_async.second.configure( _rconfig, rc ) ;
             }
 
             {
