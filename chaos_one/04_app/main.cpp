@@ -22,9 +22,13 @@ namespace this_file
     private:
 
         app::wid_async_t _wid_async ;
-        natus::gpu::async_id_res_t _geo = natus::gpu::async_id_t() ;
+        
         natus::gpu::async_id_res_t _rconfig = natus::gpu::async_id_t() ;
         natus::gpu::variable_set_res_t _vars = natus::gpu::variable_set_t() ;
+        
+        struct vertex { natus::math::vec3f_t pos ; } ;
+        natus::gpu::async_id_res_t _geo = natus::gpu::async_id_t() ;
+        natus::gpu::geometry_configuration_res_t _gconfig ;
 
         typedef ::std::chrono::high_resolution_clock __clock_t ;
         __clock_t::time_point _tp = __clock_t::now() ;
@@ -45,6 +49,7 @@ namespace this_file
             _geo = ::std::move( rhv._geo ) ;
             _rconfig = ::std::move( rhv._rconfig ) ;
             _camera = ::std::move( rhv._camera ) ;
+            _gconfig = ::std::move( rhv._gconfig ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -59,13 +64,10 @@ namespace this_file
 
             // geometry configuration
             {
-                struct vertex { natus::math::vec3f_t pos ; } ;
-
                 auto vb = natus::gpu::vertex_buffer_t().add_layout_element( natus::gpu::vertex_attribute::position,
                     natus::gpu::type::tfloat, natus::gpu::type_struct::vec3 ).resize( 4 )
                     .update<vertex>( [=] ( vertex* array, size_t const ne )
                 {
-                    // fill vertex buffer
                     array[ 0 ].pos = natus::math::vec3f_t( -0.5f, -0.5f, 0.0f ) ;
                     array[ 1 ].pos = natus::math::vec3f_t( -0.5f, +0.5f, 0.0f ) ;
                     array[ 2 ].pos = natus::math::vec3f_t( +0.5f, +0.5f, 0.0f ) ;
@@ -85,11 +87,11 @@ namespace this_file
                     array[ 5 ] = 3 ;
                 } ) ;
 
-                natus::gpu::geometry_configuration_t config( "quad",
+                _gconfig = natus::gpu::geometry_configuration_t( "quad",
                     natus::gpu::primitive_type::triangles,
                     ::std::move( vb ), ::std::move( ib ) ) ;
 
-                _wid_async.second.configure( _geo, ::std::move( config ) ) ;
+                _wid_async.second.configure( _geo, _gconfig ) ;
             }
 
             {
@@ -252,20 +254,40 @@ namespace this_file
 
         virtual natus::application::result on_render( void_t ) 
         { 
+            // per frame update 
             {
-                //natus::log::global_t::status( "Value: " + ::std::to_string(value) ) ;
                 auto* var = _vars->data_variable< natus::math::vec4f_t >( "u_color" ) ;
                 var->set( natus::math::vec4f_t( value, 1.0f-value, ::std::abs( value*2.0f-1.0f ), 1.0f ) ) ;
             }
 
+            // per frame update 
             {
                 auto* var = _vars->data_variable< natus::math::mat4f_t >( "u_view" ) ;
                 var->set( _camera.mat_view() ) ;
             }
 
+            // per frame update 
             {
                 auto* var = _vars->data_variable< natus::math::mat4f_t >( "u_proj" ) ;
                 var->set( _camera.mat_proj() ) ;
+            }
+
+            // per frame update 
+            {
+                static float_t v = 0.0f ;
+                v += 0.01f ;
+                if( v > 1.0f ) v = 0.0f ;
+
+                _gconfig->vertex_buffer().update<vertex>( [=] ( vertex* array, size_t const ne )
+                {
+                    float_t const x = natus::math::fn<float_t>::abs( natus::math::fn<float_t>::sin( v * 3.14 * 2.0f ) * 0.5 ) ;
+
+                    array[ 0 ].pos = natus::math::vec3f_t( -x, -0.5f, 0.0f ) ;
+                    array[ 1 ].pos = natus::math::vec3f_t( -0.5f, +0.5f, 0.0f ) ;
+                    array[ 2 ].pos = natus::math::vec3f_t( +x, +0.5f, 0.0f ) ;
+                    array[ 3 ].pos = natus::math::vec3f_t( +0.5f, -0.5f, 0.0f ) ;
+                } );
+                _wid_async.second.update( _geo, _gconfig ) ;
             }
 
             _wid_async.second.render( _rconfig ) ;
