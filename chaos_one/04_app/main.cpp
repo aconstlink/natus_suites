@@ -180,11 +180,14 @@ namespace this_file
                         set_vertex_shader( natus::gpu::shader_t( R"(
                             #version 300 es
                             in vec3 in_pos ;
+                            in vec2 in_tx ;
+                            out vec2 var_tx0 ;
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
 
                             void main()
                             {
+                                var_tx0 = in_tx ;
                                 gl_Position = u_proj * u_view * vec4( in_pos, 1.0 ) ;
                             } )" ) ).
                         
@@ -192,12 +195,14 @@ namespace this_file
                             #version 300 es
                             precision mediump float ;
                             out vec4 out_color ;
+                            in vec2 var_tx0 ;
 
+                            uniform sampler2D u_tex ;
                             uniform vec4 u_color ;
                         
                             void main()
                             {    
-                                out_color = u_color ;
+                                out_color = u_color * texture( u_tex, var_tx0 ) ;
                             } )" ) ) ;
 
                     sc.insert( natus::gpu::backend_type::es3, ::std::move(ss) ) ;
