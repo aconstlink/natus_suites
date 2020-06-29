@@ -2,6 +2,7 @@
 set( subdirs
     
     "04_app"
+    "05_imgui"
     )
 
 foreach( _subdir ${subdirs} )
