@@ -55,28 +55,6 @@ namespace this_file
         { 
             _imgui->init( _wid_async.second ) ;
 
-            return natus::application::result::ok ; 
-        }
-
-        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )
-        {
-            natus::gfx::imgui_t::window_data_t wd ;
-            wd.width = wei.w ;
-            wd.height = wei.h ;
-            _imgui->change(wd) ;
-
-            _demo_width = float_t( wei.w ) ;
-            _demo_height = float_t( wei.h ) ;
-            return natus::application::result::ok ;
-        }
-
-        virtual natus::application::result on_update( void_t ) 
-        { 
-            return natus::application::result::ok ; 
-        }
-
-        virtual natus::application::result on_render( void_t ) 
-        { 
             // A checker board image
             {
                 natus::gpu::image_t img = natus::gpu::image_t( natus::gpu::image_t::dims_t( 100, 100 ) )
@@ -111,6 +89,28 @@ namespace this_file
                 _wid_async.second.configure( _checkerboard ) ;
             }
 
+            return natus::application::result::ok ; 
+        }
+
+        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )
+        {
+            natus::gfx::imgui_t::window_data_t wd ;
+            wd.width = wei.w ;
+            wd.height = wei.h ;
+            _imgui->change(wd) ;
+
+            _demo_width = float_t( wei.w ) ;
+            _demo_height = float_t( wei.h ) ;
+            return natus::application::result::ok ;
+        }
+
+        virtual natus::application::result on_update( void_t ) 
+        { 
+            return natus::application::result::ok ; 
+        }
+
+        virtual natus::application::result on_render( void_t ) 
+        { 
             _imgui->execute( [&] ( ImGuiContext* ctx )
             {
                 ImGui::SetCurrentContext( ctx ) ;
