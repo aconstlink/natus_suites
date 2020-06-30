@@ -110,7 +110,8 @@ namespace this_file
         }
 
         virtual natus::application::result on_render( void_t ) 
-        { 
+        {
+            _imgui->begin() ;
             _imgui->execute( [&] ( ImGuiContext* ctx )
             {
                 ImGui::SetCurrentContext( ctx ) ;
