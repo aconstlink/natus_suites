@@ -110,7 +110,7 @@ namespace this_file
             natus::gfx::imgui_t::window_data_t wd ;
             wd.width = wei.w ;
             wd.height = wei.h ;
-            _imgui->change(wd) ;
+            _imgui->update(wd) ;
 
             _demo_width = float_t( wei.w ) ;
             _demo_height = float_t( wei.h ) ;
@@ -119,7 +119,7 @@ namespace this_file
 
         virtual natus::application::result on_update( void_t ) 
         { 
-            _imgui->change( _dev ) ;
+            _imgui->update( _dev ) ;
             return natus::application::result::ok ; 
         }
 
