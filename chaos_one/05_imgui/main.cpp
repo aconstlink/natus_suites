@@ -119,12 +119,13 @@ namespace this_file
 
         virtual natus::application::result on_update( void_t ) 
         { 
+            _imgui->change( _dev ) ;
             return natus::application::result::ok ; 
         }
 
         virtual natus::application::result on_render( void_t ) 
         {
-            _imgui->begin( _dev ) ;
+            _imgui->begin() ;
             _imgui->execute( [&] ( ImGuiContext* ctx )
             {
                 ImGui::SetCurrentContext( ctx ) ;
@@ -132,7 +133,7 @@ namespace this_file
                 
                 bool_t open = true ;
                 //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
-                //ImGui::ShowDemoWindow( &open ) ;
+                ImGui::ShowDemoWindow( &open ) ;
                 
                 ImGui::SetNextWindowPos( ImVec2( { _demo_width * 0.5f, _demo_height * 0.5f } ) ) ;
                 ImGui::SetNextWindowSize( ImVec2( { _demo_width * 0.5f, _demo_height * 0.5f } ) ) ;
