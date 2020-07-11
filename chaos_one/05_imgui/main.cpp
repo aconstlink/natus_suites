@@ -10,6 +10,9 @@
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
 
+#include <natus/device/layouts/three_mouse.hpp>
+#include <natus/device/global.h>
+
 #include <thread>
 
 namespace this_file
@@ -30,6 +33,8 @@ namespace this_file
         float_t _demo_height = 10.0f ;
 
         natus::gpu::image_configuration_res_t _checkerboard = natus::gpu::image_configuration_t() ;
+
+        natus::device::three_device_res_t _dev ;
 
     public:
 
@@ -53,6 +58,14 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t )
         { 
+            natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
+            {
+                if( natus::device::three_device_res_t::castable( dev_in ) )
+                {
+                    _dev = dev_in ;
+                }
+            } ) ;
+
             _imgui->init( _wid_async.second ) ;
 
             // A checker board image
@@ -111,10 +124,12 @@ namespace this_file
 
         virtual natus::application::result on_render( void_t ) 
         {
-            _imgui->begin() ;
+            _imgui->begin( _dev ) ;
             _imgui->execute( [&] ( ImGuiContext* ctx )
             {
                 ImGui::SetCurrentContext( ctx ) ;
+
+                
                 bool_t open = true ;
                 //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
                 //ImGui::ShowDemoWindow( &open ) ;
