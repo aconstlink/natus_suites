@@ -187,4 +187,41 @@ int main( int argc, char ** argv )
 {
     return natus::application::global_t::create_application( 
         this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+
+    
 }
+
+#if 0 // can be used for gamepads for example
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <istream>
+#include <unistd.h>
+#include <linux/input.h>
+
+int main( int argc, char ** argv )
+{
+    int fd ;
+    struct input_event ie ;
+
+    if( (fd=open( "/dev/input/event6", O_RDONLY )) == -1 )
+    {
+        perror( "opening device" ) ;
+        exit( EXIT_FAILURE ) ;
+    }
+    
+printf( "starting" ) ;
+    while( read(fd, &ie, sizeof(struct input_event) ) )
+    {
+        unsigned char * ptr = (unsigned char * ) &ie ;
+        for( int i=0; i<sizeof(ie); ++i )
+        {
+            printf( "%02X ", *ptr++ ) ;
+        }
+        printf("\n") ;
+    }
+
+}
+
+#endif
