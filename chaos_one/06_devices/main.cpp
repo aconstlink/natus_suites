@@ -10,6 +10,7 @@
 #include <natus/math/matrix/matrix4.hpp>
 
 #include <natus/device/layouts/three_mouse.hpp>
+#include <natus/device/layouts/ascii_keyboard.hpp>
 #include <natus/device/global.h>
 
 #include <thread>
@@ -26,7 +27,8 @@ namespace this_file
 
         app::wid_async_t _wid_async ;
         
-        natus::device::three_device_res_t dev ;
+        natus::device::three_device_res_t mouse_dev ;
+        natus::device::ascii_device_res_t ascii_dev ;
 
     public:
 
@@ -39,7 +41,8 @@ namespace this_file
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
             _wid_async = ::std::move( rhv._wid_async ) ;
-            dev = ::std::move( rhv.dev ) ;
+            mouse_dev = ::std::move( rhv.mouse_dev ) ;
+            ascii_dev = ::std::move( rhv.ascii_dev ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -52,37 +55,48 @@ namespace this_file
             {
                 if( natus::device::three_device_res_t::castable( dev_in ) )
                 {
-                    dev = dev_in ;
+                    mouse_dev = dev_in ;
+                }
+                else if( natus::device::ascii_device_res_t::castable( dev_in ) )
+                {
+                    ascii_dev = dev_in ;
                 }
             } ) ;
 
-            if( !dev.is_valid() )
+            if( !mouse_dev.is_valid() )
             {
-                natus::log::global_t::status( "no three device found" ) ;
+                natus::log::global_t::status( "no three mosue found" ) ;
+            }
+
+            if( !ascii_dev.is_valid() )
+            {
+                natus::log::global_t::status( "no ascii keyboard found" ) ;
             }
 
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_update( void_t ) 
-        { 
+        void_t test_mouse( void_t ) 
+        {
+            natus::device::layouts::three_mouse_t mouse( mouse_dev ) ;
+
             // test buttons
-            if( dev.is_valid() )
+            if( mouse_dev.is_valid() )
             {
                 auto button_funk = [&] ( natus::device::layouts::three_mouse_t::button const button )
                 {
                     static bool_t pressing = false ;
 
-                    if( natus::device::layouts::three_mouse_t::is_pressed( dev, button ) )
+                    if( mouse.is_pressed( button ) )
                     {
                         natus::log::global_t::status( "button pressed: " + natus::device::layouts::three_mouse_t::to_string( button ) ) ;
                     }
-                    else if( natus::device::layouts::three_mouse_t::is_pressing( dev, button ) && !pressing )
+                    else if( mouse.is_pressing( button ) && !pressing )
                     {
                         pressing = true ;
                         natus::log::global_t::status( "button pressing: " + natus::device::layouts::three_mouse_t::to_string( button ) ) ;
                     }
-                    else if( natus::device::layouts::three_mouse_t::is_released( dev, button ) )
+                    else if( mouse.is_released( button ) )
                     {
                         pressing = false ;
                         natus::log::global_t::status( "button released: " + natus::device::layouts::three_mouse_t::to_string( button ) ) ;
@@ -97,18 +111,23 @@ namespace this_file
             // test coords
             {
                 static bool_t show_coords = false ;
-                if( natus::device::layouts::three_mouse_t::is_released( dev, natus::device::layouts::three_mouse_t::button::right ) )
+                if( mouse.is_released( natus::device::layouts::three_mouse_t::button::right ) )
                 {
                     show_coords = !show_coords ;
                 }
                 if( show_coords )
                 {
+                    auto const locals = mouse.get_local() ;
+                    auto const globals = mouse.get_global() ;
+
                     natus::log::global_t::status(
-                        "local : [" + ::std::to_string( natus::device::layouts::three_mouse_t::get_local(dev).x() ) + ", " + ::std::to_string( natus::device::layouts::three_mouse_t::get_local(dev).y() ) + "]" 
+                        "local : [" + ::std::to_string( locals.x() ) + ", " +
+                        ::std::to_string( locals.y() ) + "]"
                     ) ;
 
                     natus::log::global_t::status(
-                        "global : [" + ::std::to_string( natus::device::layouts::three_mouse_t::get_global(dev).x() ) + ", " + ::std::to_string( natus::device::layouts::three_mouse_t::get_global(dev).y() ) + "]"
+                        "global : [" + ::std::to_string( globals.x() ) + ", " +
+                        ::std::to_string( globals.y() ) + "]"
                     ) ;
                 }
             }
@@ -116,11 +135,37 @@ namespace this_file
             // test scroll
             {
                 float_t s ;
-                if( natus::device::layouts::three_mouse_t::get_scroll( dev, s ) )
+                if( mouse.get_scroll( s ) )
                 {
                     natus::log::global_t::status( "scroll : " + ::std::to_string( s ) ) ;
                 }
             }
+        }
+
+        void_t test_ascii( void_t ) 
+        {
+            if( !ascii_dev.is_valid() ) return ;
+
+            natus::device::layouts::ascii_keyboard_t keyboard( ascii_dev ) ;
+            
+            using layout_t = natus::device::layouts::ascii_keyboard_t ;
+            using key_t = layout_t::ascii_key ;
+            
+            for( size_t i=0; i<size_t(key_t::num_keys); ++i )
+            {
+                auto const ks = keyboard.get_state( key_t( i ) ) ;
+                if( ks != natus::device::components::key_state::none ) 
+                {
+                    natus::log::global_t::status( layout_t::to_string( key_t(i) ) + " : " + 
+                        natus::device::components::to_string(ks) ) ;
+                }
+            }
+        }
+
+        virtual natus::application::result on_update( void_t ) 
+        { 
+            this_t::test_mouse() ;
+            this_t::test_ascii() ;
 
             ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 1 ) ) ;
 
