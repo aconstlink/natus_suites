@@ -34,7 +34,8 @@ namespace this_file
 
         natus::gpu::image_configuration_res_t _checkerboard = natus::gpu::image_configuration_t() ;
 
-        natus::device::three_device_res_t _dev ;
+        natus::device::three_device_res_t _dev_mouse ;
+        natus::device::ascii_device_res_t _dev_ascii ;
 
     public:
 
@@ -50,6 +51,9 @@ namespace this_file
         {
             _wid_async = ::std::move( rhv._wid_async ) ;
             _imgui = ::std::move( rhv._imgui ) ;
+
+            _dev_mouse = ::std::move( rhv._dev_mouse ) ;
+            _dev_ascii = ::std::move( rhv._dev_ascii ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -62,9 +66,23 @@ namespace this_file
             {
                 if( natus::device::three_device_res_t::castable( dev_in ) )
                 {
-                    _dev = dev_in ;
+                    _dev_mouse = dev_in ;
+                }
+                else if( natus::device::ascii_device_res_t::castable( dev_in ) )
+                {
+                    _dev_ascii = dev_in ;
                 }
             } ) ;
+
+            if( !_dev_mouse.is_valid() )
+            {
+                natus::log::global_t::status( "no three mosue found" ) ;
+            }
+
+            if( !_dev_ascii.is_valid() )
+            {
+                natus::log::global_t::status( "no ascii keyboard found" ) ;
+            }
 
             _imgui->init( _wid_async.second ) ;
 
@@ -119,7 +137,9 @@ namespace this_file
 
         virtual natus::application::result on_update( void_t ) 
         { 
-            _imgui->update( _dev ) ;
+            _imgui->update( _dev_mouse ) ;
+            _imgui->update( _dev_ascii ) ;
+
             return natus::application::result::ok ; 
         }
 
