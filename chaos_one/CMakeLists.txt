@@ -5,6 +5,7 @@ set( subdirs
     "05_imgui"
     "06_devices"
     "07_gamepad"
+    "08_gamepad2"
     )
 
 foreach( _subdir ${subdirs} )
