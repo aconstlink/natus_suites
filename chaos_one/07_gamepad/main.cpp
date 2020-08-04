@@ -228,15 +228,15 @@ namespace this_file
 
                         if( ctrl.is( s, natus::device::components::stick_state::tilted, value ) )
                         {
-                            natus::log::global_t::status( "stick pressed: " + natus::device::layouts::xbox_controller_t::to_string( s ) + " [" + ::std::to_string( value.x() ) + "," + ::std::to_string( value.y() ) + "]" ) ;
+                            natus::log::global_t::status( "stick tilted: " + natus::device::layouts::xbox_controller_t::to_string( s ) + " [" + ::std::to_string( value.x() ) + "," + ::std::to_string( value.y() ) + "]" ) ;
                         }
                         else if( ctrl.is( s, natus::device::components::stick_state::tilting, value ) )
                         {
-                            natus::log::global_t::status( "stick pressing: " + natus::device::layouts::xbox_controller_t::to_string( s ) + " [" + ::std::to_string( value.x() ) + "," + ::std::to_string( value.y() ) + "]" ) ;
+                            natus::log::global_t::status( "stick tilting: " + natus::device::layouts::xbox_controller_t::to_string( s ) + " [" + ::std::to_string( value.x() ) + "," + ::std::to_string( value.y() ) + "]" ) ;
                         }
                         else if( ctrl.is( s, natus::device::components::stick_state::untilted, value ) )
                         {
-                            natus::log::global_t::status( "stick released: " + natus::device::layouts::xbox_controller_t::to_string( s ) + " [" + ::std::to_string( value.x() ) + "," + ::std::to_string( value.y() ) + "]" ) ;
+                            natus::log::global_t::status( "stick untiled: " + natus::device::layouts::xbox_controller_t::to_string( s ) + " [" + ::std::to_string( value.x() ) + "," + ::std::to_string( value.y() ) + "]" ) ;
                         }
                     } ;
 
