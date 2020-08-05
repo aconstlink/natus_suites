@@ -31,7 +31,7 @@ namespace this_file
         app::wid_async_t _wid_async ;
         
         // always exists! We just need some mappings.
-        natus::device::game_device_res_t _game_dev = natus::device::game_device_t() ;
+        natus::device::game_device_res_t _game_dev ;
 
         natus::std::vector< natus::device::imapping_res_t > _mappings ;
 
@@ -56,135 +56,15 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t )
         { 
-            natus::device::xbc_device_res_t xbc_dev ;
-            natus::device::ascii_device_res_t ascii_dev ;
-            natus::device::three_device_res_t three_dev ;
-
             natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
             {
-                if( natus::device::xbc_device_res_t::castable( dev_in ) )
+                if( natus::device::game_device_res_t::castable( dev_in ) )
                 {
-                    if( xbc_dev.is_valid() ) return ;
-                    xbc_dev = dev_in ;
-                }
-                if( natus::device::ascii_device_res_t::castable( dev_in ) )
-                {
-                    if( ascii_dev.is_valid() ) return ;
-                    ascii_dev = dev_in ;
-                }
-                if( natus::device::three_device_res_t::castable( dev_in ) )
-                {
-                    if( three_dev.is_valid() ) return ;
-                    three_dev = dev_in ;
+                    if( _game_dev.is_valid() ) return ;
+
+                    _game_dev = dev_in ;
                 }
             } ) ;
-
-            // do mappings for xbox
-            {
-                using a_t = natus::device::game_device_t ;
-                using b_t = natus::device::xbc_device_t ;
-
-                using ica_t = a_t::layout_t::input_component ;
-                using icb_t = b_t::layout_t::input_component ;
-
-                using mapping_t = natus::device::mapping< a_t, b_t > ;
-                mapping_t m( "xbc->gc", _game_dev, xbc_dev ) ;
-
-                {
-                    auto const res = m.insert( ica_t::jump, icb_t::button_a ) ;
-                    natus::log::global_t::warning( natus::core::is_not(res), "can not do mapping." ) ;
-                }
-                {
-                    auto const res = m.insert( ica_t::shoot, icb_t::button_b ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-                {
-                    auto const res = m.insert( ica_t::action_a, icb_t::button_x ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-                {
-                    auto const res = m.insert( ica_t::action_b, icb_t::button_y ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-                {
-                    auto const res = m.insert( ica_t::aim, icb_t::stick_right ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-                {
-                    auto const res = m.insert( ica_t::movement, icb_t::stick_left ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-
-                _mappings.emplace_back( natus::soil::res<mapping_t>(m) ) ;
-            }
-
-            // do mappings for ascii
-            {
-                using a_t = natus::device::game_device_t ;
-                using b_t = natus::device::ascii_device_t ;
-
-                using ica_t = a_t::layout_t::input_component ;
-                using icb_t = b_t::layout_t::input_component ;
-
-                using mapping_t = natus::device::mapping< a_t, b_t > ;
-                mapping_t m( "ascii->gc", _game_dev, ascii_dev ) ;
-
-                {
-                    auto const res = m.insert( ica_t::jump, 
-                        b_t::layout_t::ascii_key_to_input_component(b_t::layout_t::ascii_key::space ) ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-
-                {
-                    auto const res = m.insert( ica_t::movement,
-                        b_t::layout_t::ascii_key_to_input_component( b_t::layout_t::ascii_key::a ),
-                        natus::device::mapping_detail::negative_x ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-
-                {
-                    auto const res = m.insert( ica_t::movement,
-                        b_t::layout_t::ascii_key_to_input_component( b_t::layout_t::ascii_key::d ),
-                        natus::device::mapping_detail::positive_x ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-
-                {
-                    auto const res = m.insert( ica_t::movement,
-                        b_t::layout_t::ascii_key_to_input_component( b_t::layout_t::ascii_key::w ),
-                        natus::device::mapping_detail::positive_y ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-
-                {
-                    auto const res = m.insert( ica_t::movement,
-                        b_t::layout_t::ascii_key_to_input_component( b_t::layout_t::ascii_key::s ),
-                        natus::device::mapping_detail::negative_y ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-                
-
-                _mappings.emplace_back( natus::soil::res<mapping_t>( m ) ) ;
-            }
-
-            // do mappings for mouse
-            {
-                using a_t = natus::device::game_device_t ;
-                using b_t = natus::device::three_device_t ;
-
-                using ica_t = a_t::layout_t::input_component ;
-                using icb_t = b_t::layout_t::input_component ;
-
-                using mapping_t = natus::device::mapping< a_t, b_t > ;
-                mapping_t m( "mouse->gc", _game_dev, three_dev ) ;
-
-                {
-                    auto const res = m.insert( ica_t::aim, icb_t::local_coords ) ;
-                    natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
-                }
-
-                _mappings.emplace_back( natus::soil::res<mapping_t>( m ) ) ;
-            }
 
             return natus::application::result::ok ; 
         }
@@ -214,10 +94,6 @@ namespace this_file
 
         void_t test_device( void_t ) 
         {
-            for( auto & m : _mappings )
-            {
-                m->update() ;
-            }
 
             using ctrl_t = natus::device::layouts::game_controller_t ;
             for( size_t i=0; i<size_t(ctrl_t::button::num_buttons); ++i )
@@ -243,10 +119,6 @@ namespace this_file
         virtual natus::application::result on_update( void_t ) 
         { 
             this_t::test_device() ;
-
-
-            // tmp here. This needs to go into the gamepad module
-            _game_dev->update_components() ;
 
             ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 1 ) ) ;
 

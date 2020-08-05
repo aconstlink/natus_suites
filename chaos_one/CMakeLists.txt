@@ -6,6 +6,7 @@ set( subdirs
     "06_devices"
     "07_gamepad"
     "08_gamepad2"
+    "09_gamepad3"
     )
 
 foreach( _subdir ${subdirs} )
