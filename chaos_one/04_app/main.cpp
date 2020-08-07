@@ -21,7 +21,7 @@ namespace this_file
 
     private:
 
-        app::wid_async_t _wid_async ;
+        app::window_async_t _wid_async ;
         
         natus::gpu::render_state_sets_res_t _render_states = natus::gpu::render_state_sets_t() ;
         natus::gpu::render_configuration_res_t _rc = natus::gpu::render_configuration_t() ;

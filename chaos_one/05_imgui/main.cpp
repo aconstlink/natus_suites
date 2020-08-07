@@ -25,7 +25,7 @@ namespace this_file
 
     private:
 
-        app::wid_async_t _wid_async ;
+        app::window_async_t _wid_async ;
         
         natus::gfx::imgui_res_t _imgui ;
 
@@ -37,12 +37,17 @@ namespace this_file
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
 
+        bool_t _fullscreen = false ;
+        bool_t _vsync = true ;
+
     public:
 
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
             _wid_async = this_t::create_window( "An Imgui Rendering Test", wi ) ;
+            _wid_async.first.fullscreen( _fullscreen ) ;
+            _wid_async.first.vsync( _vsync ) ;
 
             _imgui = natus::gfx::imgui_res_t( natus::gfx::imgui_t() ) ;
         }
@@ -62,6 +67,8 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t )
         { 
+            
+
             natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
             {
                 if( natus::device::three_device_res_t::castable( dev_in ) )
@@ -140,6 +147,21 @@ namespace this_file
             _imgui->update( _dev_mouse ) ;
             _imgui->update( _dev_ascii ) ;
 
+            {
+                natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
+                if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f8 ) == 
+                    natus::device::components::key_state::released )
+                {
+                    _fullscreen = !_fullscreen ;
+                    _wid_async.first.fullscreen( _fullscreen ) ;
+                }
+                else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f9 ) ==
+                    natus::device::components::key_state::released )
+                {
+                    _vsync = !_vsync ;
+                    _wid_async.first.vsync( _vsync ) ;
+                }
+            }
             return natus::application::result::ok ; 
         }
 

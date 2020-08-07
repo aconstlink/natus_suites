@@ -24,7 +24,7 @@ namespace this_file
 
     private:
 
-        app::wid_async_t _wid_async ;
+        app::window_async_t _wid_async ;
         
         natus::device::xbc_device_res_t xbox_dev ;
 
