@@ -115,7 +115,7 @@ namespace this_file
                     natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
                 }
 
-                _mappings.emplace_back( natus::soil::res<mapping_t>(m) ) ;
+                _mappings.emplace_back( natus::memory::res<mapping_t>(m) ) ;
             }
 
             // do mappings for ascii
@@ -164,7 +164,7 @@ namespace this_file
                 }
                 
 
-                _mappings.emplace_back( natus::soil::res<mapping_t>( m ) ) ;
+                _mappings.emplace_back( natus::memory::res<mapping_t>( m ) ) ;
             }
 
             // do mappings for mouse
@@ -183,7 +183,7 @@ namespace this_file
                     natus::log::global_t::warning( natus::core::is_not( res ), "can not do mapping." ) ;
                 }
 
-                _mappings.emplace_back( natus::soil::res<mapping_t>( m ) ) ;
+                _mappings.emplace_back( natus::memory::res<mapping_t>( m ) ) ;
             }
 
             return natus::application::result::ok ; 
@@ -261,7 +261,7 @@ namespace this_file
         virtual natus::application::result on_shutdown( void_t ) 
         { return natus::application::result::ok ; }
     };
-    natus_soil_typedef( test_app ) ;
+    natus_res_typedef( test_app ) ;
 }
 
 int main( int argc, char ** argv )

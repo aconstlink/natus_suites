@@ -133,7 +133,7 @@ namespace this_file
         virtual natus::application::result on_shutdown( void_t ) 
         { return natus::application::result::ok ; }
     };
-    natus_soil_typedef( test_app ) ;
+    natus_res_typedef( test_app ) ;
 }
 
 int main( int argc, char ** argv )
