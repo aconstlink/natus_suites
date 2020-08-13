@@ -13,10 +13,11 @@ int main( int argc, char ** argv )
 
     natus::io::database db( natus::io::path_t( DATAPATH ) / "data" ) ;
 
-    // show content
+    
 
+    db.pack() ;
 
-    //db.pack() ;
+    db.dump_to_std() ;
 
     return 0 ;
 }
