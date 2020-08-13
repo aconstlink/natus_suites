@@ -13,12 +13,22 @@ include( emacs_default_directory )
 
 natus_emacs_default_directory( "${CMAKE_CURRENT_LIST_DIR}/natus" )
 
-set( SUBDIRS
-    "chaos_one"
+set( subdirs
+
+    "04_app"
+    "05_imgui"
+    "06_devices"
+    "07_gamepad"
+    "08_gamepad2"
+    "09_gamepad3"
+    "10_database"
     )
-    
-foreach( _SUBDIR ${SUBDIRS} )
-    add_subdirectory( ${_SUBDIR} ) 
+
+foreach( _subdir ${subdirs} )
+
+  set( app_name "${_subdir}" )
+  add_subdirectory( ${_subdir} )
+  set_target_properties( ${app_name} PROPERTIES FOLDER "natus_examples" )
 endforeach()
 
 natus_vs_gen_bat_for_dlls()
