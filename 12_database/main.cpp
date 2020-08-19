@@ -17,7 +17,7 @@ int main( int argc, char ** argv )
     natus::io::database db( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
 
     {
-        db.load( "images.checker" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib, natus::io::result const res ) 
+        db.load( "images.checker.png" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib, natus::io::result const res ) 
         { 
             if( res != natus::io::result::ok ) 
             {
@@ -31,7 +31,7 @@ int main( int argc, char ** argv )
     }
 
     {
-        db.load( "some_info" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib, natus::io::result const res )
+        db.load( "some_info.txt" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib, natus::io::result const res )
         {
             if( res != natus::io::result::ok )
             {
@@ -45,7 +45,7 @@ int main( int argc, char ** argv )
     }
 
     {
-        db.load( "meshes.text" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib, natus::io::result const res )
+        db.load( "meshes.text.obj" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib, natus::io::result const res )
         {
             if( res != natus::io::result::ok )
             {
@@ -62,7 +62,7 @@ int main( int argc, char ** argv )
     //db.attach( "data", mon ) ;
     //db.attach( "subfolder.data", mon ) ;
 
-    //db.pack() ;
+    db.pack() ;
 
     for( size_t i=0; i<10; ++i )
     {
