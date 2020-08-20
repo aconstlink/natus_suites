@@ -33,7 +33,7 @@ namespace this_file
         // always exists! We just need some mappings.
         natus::device::game_device_res_t _game_dev ;
 
-        natus::std::vector< natus::device::imapping_res_t > _mappings ;
+        natus::ntd::vector< natus::device::imapping_res_t > _mappings ;
 
     public:
 

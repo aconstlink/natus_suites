@@ -25,7 +25,7 @@ int main( int argc, char ** argv )
             }
 
             natus::log::global_t::status( "********************************" ) ;
-            natus::log::global_t::status( natus::std::string_t( data, sib ) ) ;
+            natus::log::global_t::status( natus::ntd::string_t( data, sib ) ) ;
         } ) ;
     }
 
@@ -39,7 +39,7 @@ int main( int argc, char ** argv )
             }
 
             natus::log::global_t::status( "********************************" ) ;
-            natus::log::global_t::status( natus::std::string_t( data, sib ) ) ;
+            natus::log::global_t::status( natus::ntd::string_t( data, sib ) ) ;
         } ) ;
     }
 
@@ -70,7 +70,7 @@ int main( int argc, char ** argv )
     size_t const max_iter = 0 ;
     for( size_t i=0; i<max_iter; ++i )
     {
-        mon->for_each_and_swap( [&]( natus::std::string_cref_t loc, natus::io::monitor_t::notify const n )
+        mon->for_each_and_swap( [&]( natus::ntd::string_cref_t loc, natus::io::monitor_t::notify const n )
         {
             natus::log::global_t::status( "[monitor] : Got " + natus::io::monitor_t::to_string(n) + " for " + loc ) ;
         }) ;
