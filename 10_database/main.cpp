@@ -13,8 +13,10 @@ int main( int argc, char ** argv )
 {
     natus::io::monitor_res_t mon = natus::io::monitor_t() ;
 
+    //natus::io::database db ;
     natus::io::database db( natus::io::path_t( DATAPATH ) / "data" ) ;
 
+#if 0
     {
         db.load( "data" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib, natus::io::result const res ) 
         { 
@@ -82,6 +84,6 @@ int main( int argc, char ** argv )
 
     // dump content
     db.dump_to_std() ;
-
+#endif
     return 0 ;
 }
