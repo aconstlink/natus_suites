@@ -12,8 +12,8 @@ include( visual_studio_generate_bat_dll )
 include( emacs_default_directory )
 
 natus_emacs_default_directory( "${CMAKE_CURRENT_LIST_DIR}/natus" )
-message( ${NATUS_CXX_STANDARD} )
-set( CMAKE_CXX_STANDARD 17 )
+
+#set( CMAKE_CXX_STANDARD 17 )
 set( subdirs
 
     "04_app"
