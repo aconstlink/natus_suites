@@ -22,8 +22,6 @@ set( subdirs
     "07_gamepad"
     "08_gamepad2"
     "09_gamepad3"
-    "10_database"
-    "11_database"
     "12_database"
     )
 
