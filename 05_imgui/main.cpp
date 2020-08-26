@@ -5,7 +5,7 @@
 #include <natus/application/app.h>
 #include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/gfx/imgui/imgui.h>
-#include <natus/gpu/variable/variable_set.hpp>
+#include <natus/graphics/variable/variable_set.hpp>
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
@@ -32,7 +32,7 @@ namespace this_file
         float_t _demo_width = 10.0f ;
         float_t _demo_height = 10.0f ;
 
-        natus::gpu::image_configuration_res_t _checkerboard = natus::gpu::image_configuration_t() ;
+        natus::graphics::image_configuration_res_t _checkerboard = natus::graphics::image_configuration_t() ;
 
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
@@ -95,8 +95,8 @@ namespace this_file
 
             // A checker board image
             {
-                natus::gpu::image_t img = natus::gpu::image_t( natus::gpu::image_t::dims_t( 100, 100 ) )
-                    .update( [&] ( natus::gpu::image_ptr_t, natus::gpu::image_t::dims_in_t dims, void_ptr_t data_in )
+                natus::graphics::image_t img = natus::graphics::image_t( natus::graphics::image_t::dims_t( 100, 100 ) )
+                    .update( [&] ( natus::graphics::image_ptr_t, natus::graphics::image_t::dims_in_t dims, void_ptr_t data_in )
                 {
                     typedef natus::math::vector4< uint8_t > rgba_t ;
                     auto* data = reinterpret_cast< rgba_t* >( data_in ) ;
@@ -118,11 +118,11 @@ namespace this_file
                     }
                 } ) ;
 
-                _checkerboard = natus::gpu::image_configuration_t( "user.checkerboard", ::std::move( img ) )
-                    .set_wrap( natus::gpu::texture_wrap_mode::wrap_s, natus::gpu::texture_wrap_type::repeat )
-                    .set_wrap( natus::gpu::texture_wrap_mode::wrap_t, natus::gpu::texture_wrap_type::repeat )
-                    .set_filter( natus::gpu::texture_filter_mode::min_filter, natus::gpu::texture_filter_type::nearest )
-                    .set_filter( natus::gpu::texture_filter_mode::mag_filter, natus::gpu::texture_filter_type::nearest );
+                _checkerboard = natus::graphics::image_configuration_t( "user.checkerboard", ::std::move( img ) )
+                    .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
+                    .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
+                    .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
+                    .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
 
                 _wid_async.second.configure( _checkerboard ) ;
             }

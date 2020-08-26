@@ -4,7 +4,7 @@
 #include <natus/application/global.h>
 #include <natus/application/app.h>
 #include <natus/gfx/camera/pinhole_camera.h>
-#include <natus/gpu/variable/variable_set.hpp>
+#include <natus/graphics/variable/variable_set.hpp>
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
