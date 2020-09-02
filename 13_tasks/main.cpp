@@ -2,62 +2,42 @@
 #include "main.h"
 
 #include <natus/log/global.h>
-#include <natus/concurrent/task.hpp>
-#include <natus/concurrent/isleep.hpp>
+#include <future>
 
 using namespace natus::core::types ;
 
 //
-// 
-// 
+// Removed task in favor of std::async. This should do the job mostly(99%).
 //
 int main( int argc, char ** argv )
 {
-    natus::concurrent::isleep_t isleep ;
+    auto f0 = std::async( std::launch::async, [] () 
+    { 
+        natus::log::global_t::status( "async 0.0" ) ;
+        
 
-    // [t1, t4, t2, t3] -> t5 -> t6
-    auto t0 = natus::concurrent::task_t( [&]( natus::concurrent::task_ref_t self )
-    {
-        natus::log::global_t::status( "tasks 1" ) ;
-
-        self.insert( [=] ( natus::concurrent::task_ref_t ) 
-        { 
-            natus::log::global_t::status( "tasks 2" ) ;
-            std::this_thread::sleep_for( std::chrono::milliseconds( 300 ) ) ;
-        } ) ;
-
-        self.insert( [=] ( natus::concurrent::task_ref_t )
+        auto f1 = std::async( std::launch::async, [] ()
         {
-            natus::log::global_t::status( "tasks 3" ) ;
-            std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ) ;
+            natus::log::global_t::status( "async 1 : begin" ) ;
+            std::this_thread::sleep_for( std::chrono::milliseconds( 200 ) ) ;
+            natus::log::global_t::status( "async 1 : end" ) ;
         } ) ;
 
-    } ).insert( [=] ( natus::concurrent::task_ref_t )
-    {
-        natus::log::global_t::status( "tasks 4" ) ;
         std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) ) ;
-    } ).then( [=] ( natus::concurrent::task_ref_t )
-    {
-        natus::log::global_t::status( "tasks 5 : merge task" ) ;
-        std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) ) ;
-    } ).then( [&] ( natus::concurrent::task_ref_t )
-    {
-        natus::log::global_t::status( "tasks 6 : serial task" ) ;
-        std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) ) ;
-
-        isleep.interrupt() ;
+        natus::log::global_t::status( "async 0 : waiting for f1" ) ;
+        f1.wait() ;
 
     } ) ;
 
-    // executer here
-
-
-    while( !isleep.sleep_for( std::chrono::milliseconds(100) ) )
+    auto f1 = std::async( std::launch::async, [] ()
     {
-        natus::log::global_t::status( "waiting for results" ) ;
-    }
+        natus::log::global_t::status( "async 0.1" ) ;
+        std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) ) ;
+    } ) ;
 
-    natus::log::global_t::status( "Interrupted" ) ;
+    natus::log::global_t::status( "start waiting in main" ) ;
+    f0.wait() ;
+    f1.wait() ;
 
     return 0 ;
 }
