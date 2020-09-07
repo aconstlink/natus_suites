@@ -17,7 +17,7 @@ int main( int argc, char ** argv )
     natus::io::database db( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
 
     {
-        db.load( "images.checker.png" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib ) 
+        db.load( natus::io::location_t( "images.checker.png" ) ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib ) 
         { 
 
             natus::log::global_t::status( "********************************" ) ;
@@ -26,7 +26,7 @@ int main( int argc, char ** argv )
     }
 
     {
-        db.load( "some_info.txt" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib )
+        db.load( natus::io::location_t( "some_info.txt" ) ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib )
         {
             natus::log::global_t::status( "********************************" ) ;
             natus::log::global_t::status( natus::ntd::string_t( data, sib ) ) ;
@@ -34,7 +34,7 @@ int main( int argc, char ** argv )
     }
 
     {
-        db.load( "meshes.text.obj" ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib )
+        db.load( natus::io::location_t( "meshes.text.obj" ) ).wait_for_operation( [&] ( char_cptr_t data, size_t const sib )
         {
             natus::log::global_t::status( "********************************" ) ;
             natus::log::global_t::status( natus::ntd::string_t( data, sib ) ) ;
@@ -49,9 +49,9 @@ int main( int argc, char ** argv )
 
     for( size_t i=0; i<10; ++i )
     {
-        mon->for_each_and_swap( [&]( natus::ntd::string_cref_t loc, natus::io::monitor_t::notify const n )
+        mon->for_each_and_swap( [&]( natus::io::location_cref_t loc, natus::io::monitor_t::notify const n )
         {
-            natus::log::global_t::status( "[monitor] : Got " + natus::io::monitor_t::to_string(n) + " for " + loc ) ;
+            natus::log::global_t::status( "[monitor] : Got " + natus::io::monitor_t::to_string(n) + " for " + loc.as_string() ) ;
         }) ;
 
         ::std::this_thread::sleep_for( ::std::chrono::milliseconds(1000) ) ;

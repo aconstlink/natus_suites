@@ -24,6 +24,7 @@ set( subdirs
     "09_gamepad3"
     "12_database"
     "13_tasks"
+    "14_import"
     )
 
 foreach( _subdir ${subdirs} )
