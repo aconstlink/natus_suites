@@ -31,16 +31,12 @@ int main( int argc, char ** argv )
     // wait for the import to be finished which is async.
     fitem.wait() ;
 
-    natus::format::item_res_t ir = fitem.get() ;
-    if( natus::format::image_item_res_t::castable( ir ) )
+    natus::format::image_item_res_t iir = fitem.get() ;
+    if( iir.is_valid() )
     {
-        natus::format::image_item_res_t iir = ir ;
-
-        //std::shared_ptr< natus::format::item_t > b = std::shared_ptr< natus::format::image_item_t >() ;
-        //std::shared_ptr< natus::format::image_item_t > a = b ;
-
         int bp = 0 ;
     }
+    
 
     for( size_t i = 0; i < 10; ++i )
     {
