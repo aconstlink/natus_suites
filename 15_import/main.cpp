@@ -5,6 +5,8 @@
 #include <natus/application/app.h>
 #include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/graphics/variable/variable_set.hpp>
+#include <natus/format/global.h>
+#include <natus/io/database.h>
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
@@ -35,20 +37,24 @@ namespace this_file
 
         natus::gfx::pinhole_camera_t _camera_0 ;
 
+        natus::io::database_res_t _db ;
+
     public:
 
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
             _wid_async = this_t::create_window( "A Render Window", wi ) ;
+            _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
-            _wid_async = ::std::move( rhv._wid_async ) ;
-            _camera_0 = ::std::move( rhv._camera_0 ) ;
-            _gconfig = ::std::move( rhv._gconfig ) ;
-            _rc = ::std::move( rhv._rc) ;
+            _wid_async = std::move( rhv._wid_async ) ;
+            _camera_0 = std::move( rhv._camera_0 ) ;
+            _gconfig = std::move( rhv._gconfig ) ;
+            _rc = std::move( rhv._rc) ;
+            _db = std::move( rhv._db ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -100,34 +106,20 @@ namespace this_file
 
             // image configuration
             {
-                natus::graphics::image_t img = natus::graphics::image_t( natus::graphics::image_t::dims_t( 100, 100 ) )
-                    .update( [&]( natus::graphics::image_ptr_t, natus::graphics::image_t::dims_in_t dims, void_ptr_t data_in )
+                natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
+                auto fitem = mod_reg->import_from( natus::io::location_t( "images.test.jpg" ), _db ) ;
+                natus::format::image_item_res_t ii = fitem.get() ;
+                if( ii.is_valid() )
                 {
-                    typedef natus::math::vector4< uint8_t > rgba_t ;
-                    auto* data = reinterpret_cast< rgba_t * >( data_in ) ;
+                    natus::graphics::image_t img = *ii->img ;
 
-                    size_t const w = 5 ;
-
-                    size_t i = 0 ; 
-                    for( size_t y = 0; y < dims.y(); ++y )
-                    {
-                        bool_t const odd = ( y / w ) & 1 ;
-
-                        for( size_t x = 0; x < dims.x(); ++x )
-                        {
-                            bool_t const even = ( x / w ) & 1 ;
-
-                            data[ i++ ] = even || odd ? rgba_t( 255 ) : rgba_t( 0, 0, 0, 255 );
-                            //data[ i++ ] = rgba_t(255) ;
-                        }
-                    }
-                } ) ;
-
-                _imgconfig = natus::graphics::image_configuration_t( "loaded_image", ::std::move( img ) )
-                    .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
-                    .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
-                    .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
-                    .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
+                    _imgconfig = natus::graphics::image_configuration_t( "loaded_image", std::move( img ) )
+                        .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
+                        .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
+                        .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
+                        .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
+                }
+                
 
                 _wid_async.second.configure( _imgconfig ) ;
             }
