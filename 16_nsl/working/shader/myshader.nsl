@@ -1,0 +1,60 @@
+
+
+config name
+{
+    render_states
+    {
+        
+    }
+
+    vertex_shader
+    {
+        mat4 proj : projection ;
+        mat4 view : view ;
+
+        float some_var ;
+
+        tex2d some_texture ;
+
+        in vec3 pos : position ;
+        in vec2 tx : texcoord0 ;
+
+        out vec4 pos : position ;
+
+        void main()
+        {
+            // nsl shader
+        }
+
+        version gl3 es3
+        {
+            void main()
+            {
+                // build in function
+                vec3 pos = nsl.math.xyz( in.pos ) ;
+
+                // user library function
+                pos = mylib.xyz( in.pos ) ;
+
+                out.pos = proj * view * vec4( pos, 1.0 ) ;
+            }
+        }
+
+        version hlsl9 hlsl10 hlsl11
+        {}
+    }
+
+    pixel_shader
+    {
+        in vec3 frag_coord : frag_coord ;
+        out vec4 color : color ;
+
+        version gl3 es3
+        {
+            void main()
+            {
+                out.color = vec4(1) ;
+            }
+        }
+    }
+}

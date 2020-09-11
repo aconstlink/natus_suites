@@ -1,0 +1,35 @@
+
+
+library mylib
+{
+    // comment
+    library inner
+    {
+        // comment
+        float pi = 3.1432423 ;
+        float c = 5648.3 ;
+        float x = 324 ;
+        vec3 some_vec = vec3(1.0) ;
+
+        version gl3 es3
+        {
+            vec3 xyz( in vec3 vin )
+            {
+                return vin ;
+            }
+        }
+    }
+
+    version gl3 es3
+    {
+        vec3 ref_other( vec3 vin )
+        {
+            return mylib.inner.xyz( vin ) ;
+        }
+
+        vec3 xyz( vec3 vin )
+        {
+            return vin ;
+        }
+    }
+}

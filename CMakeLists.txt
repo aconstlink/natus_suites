@@ -26,6 +26,7 @@ set( subdirs
     "13_tasks"
     "14_import"
     "15_import"
+    "16_nsl"
     )
 
 foreach( _subdir ${subdirs} )
