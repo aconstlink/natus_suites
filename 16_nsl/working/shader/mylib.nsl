@@ -24,7 +24,7 @@ library mylib
     {
         vec3 ref_other( vec3 vin )
         {
-            return mylib.inner.xyz( vin ) ;
+            return lib.mylib.inner.xyz( vin * vec3( lib.mylib.inner.pi ) ) ;
         }
 
         vec3 xyz( vec3 vin )

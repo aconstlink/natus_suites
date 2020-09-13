@@ -34,7 +34,7 @@ config name
                 vec3 pos = nsl.math.xyz( in.pos ) ;
 
                 // user library function
-                pos = mylib.xyz( in.pos ) ;
+                pos = lib.mylib.xyz( in.pos ) ;
 
                 out.pos = proj * view * vec4( pos, 1.0 ) ;
             }

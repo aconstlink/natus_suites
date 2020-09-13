@@ -107,7 +107,7 @@ namespace this_file
             // image configuration
             {
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                auto fitem = mod_reg->import_from( natus::io::location_t( "images.test.jpg" ), _db ) ;
+                auto fitem = mod_reg->import_from( natus::io::location_t( "images.checker.png" ), _db ) ;
                 natus::format::image_item_res_t ii = fitem.get() ;
                 if( ii.is_valid() )
                 {
