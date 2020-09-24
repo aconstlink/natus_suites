@@ -1,0 +1,112 @@
+
+library math
+{
+    shader glsl
+    {
+        vec2 xyz( in vec2 vin ) {
+            return vin ;
+        }
+
+        vec3 xyz( in vec3 vin ) {
+            return vin ;
+        }
+    }
+}
+
+library mylib
+{
+    library inner
+    {
+        float pi = 3.1432423 ;
+        {{}}
+        float y = 1.0 ;
+
+        shader glsl
+        {
+            vec2 xyz( in vec2 vin ) {
+                
+                while( true ) {}
+                for( int i=0; i<10; ++i ){ abc }
+                return vin ;
+            }
+        }
+    }
+
+
+    float x = 1.0 ;
+}
+
+library mylib
+{
+    // comment
+    library inner
+    {
+        // comment 1
+        // comment 2
+        float pi = 3.1432423 ;
+        float c= 5648.3 ;
+        float x = 324 ;
+        vec3 some_vec = vec3(1.0) ;
+
+        shader glsl
+        {
+            void no_args() {
+            }
+
+            void no_args( void ) {
+            }
+
+            void unknown_arg_type( in mat4 m, in some_type t ) {
+            }
+
+            vec3 xyz( in vec3 p0, in vec3 p1, in float t ) {
+                return mix( p0, p1, t ) ;
+            }
+
+            vec2 xyz( in vec2 vin ) {
+                return vin ;
+            }
+
+            vec3 xyz( in vec3 vin ) {
+                return vin ;
+            }
+        }
+    }
+
+
+    float x = 1.0 ;
+
+    shader glsl
+    {
+        vec3 ref_other( vec3 vin )
+        {
+            return nsl.mylib.inner.xyz  ( vin * vec3( nsl.mylib.inner.pi ) ) ;
+        }
+
+        vec3 xyz( vec3 vin )
+        {
+            for( int i=0; i<10; ++i ){}
+
+            return vin ;
+        }
+    }
+}
+
+something_else xyz
+{}
+
+library mylib2
+{
+    shader glsl
+    {
+        vec3 ref_other( vec3 vin )
+        {
+            return nsl.mylib.inner.xyz( vin * vec3( nsl.mylib.inner.pi ) ) ;
+        }
+
+        vec3 xyz( vec3 vin )
+        {
+            return vin ;
+        }
+    }
+}

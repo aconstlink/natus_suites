@@ -1,11 +1,9 @@
 
 
-config name
+config myconfig
 {
     render_states
-    {
-        
-    }
+    {}
 
     vertex_shader
     {
@@ -21,17 +19,12 @@ config name
 
         out vec4 pos : position ;
 
-        void main()
-        {
-            // nsl shader
-        }
-
-        version gl3 es3
+        shader glsl
         {
             void main()
             {
                 // build in function
-                vec3 pos = nsl.math.xyz( in.pos ) ;
+                vec3 pos = nsl.math.xyz( nsl.math.xyz( in.pos * vec3( nsl.mylib.inner.pi) ) );
 
                 // user library function
                 pos = lib.mylib.xyz( in.pos ) ;
@@ -40,7 +33,10 @@ config name
             }
         }
 
-        version hlsl9 hlsl10 hlsl11
+        shader hlsl
+        {}
+
+        shader natus
         {}
     }
 
@@ -49,7 +45,7 @@ config name
         in vec3 frag_coord : frag_coord ;
         out vec4 color : color ;
 
-        version gl3 es3
+        shader gl3 es3
         {
             void main()
             {
