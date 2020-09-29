@@ -32,10 +32,8 @@ config myconfig
             }
         }
 
+        // not implemented at the moment
         shader hlsl
-        {}
-
-        shader natus
         {}
     }
 
@@ -51,6 +49,7 @@ config myconfig
             void main()
             {
                 out.color = texture( some_texture, in.tex0 ) ;
+                out.color.x = nsl.math.pulse( 0.4, 0.6, in.tex0.x ) ;
             }
         }
     }
