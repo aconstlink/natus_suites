@@ -14,7 +14,6 @@ config myconfig
         in vec2 tx : texcoord0 ;
 
         out vec2 tex0 ;
-        out vec4 pos : position ;
 
         shader glsl
         {
