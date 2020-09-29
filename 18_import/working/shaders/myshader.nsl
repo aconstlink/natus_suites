@@ -27,6 +27,7 @@ config myconfig
                 // build in function
                 //vec3 pos = nsl.math.xyz( nsl.math.xyz( in.pos * vec3( nsl.mylib.inner.pi) ) );
 
+                out.tex0 = in.tx ;
                 gl_Position = proj * view * vec4( in.pos, 1.0 ) ; //nsl.math.to_vec4( pos ) ;
             }
         }
@@ -49,7 +50,7 @@ config myconfig
         {
             void main()
             {
-                out.color = vec4(1) ;// * texture( some_texture, in.tex0 ) ;
+                out.color = texture( some_texture, in.tex0 ) ;
             }
         }
     }

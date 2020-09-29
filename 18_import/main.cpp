@@ -172,91 +172,6 @@ namespace this_file
                 }
             }
 
-            // shader configuration
-            #if 0
-            {
-                natus::graphics::shader_configuration_t sc( "quad" ) ;
-
-                // shaders : ogl 3.0
-                {
-                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
-
-                        set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 140
-                            in vec3 in_pos ;
-                            in vec2 in_tx ;
-                            out vec2 var_tx0 ;
-                            uniform mat4 u_proj ;
-                            uniform mat4 u_view ;
-                            
-                            void main()
-                            {
-                                var_tx0 = in_tx ;
-                                gl_Position = u_proj * u_view * vec4( in_pos, 1.0 ) ;
-                            } )" ) ).
-
-                        set_pixel_shader( natus::graphics::shader_t( R"(
-                            #version 140
-                            out vec4 out_color ;
-                            in vec2 var_tx0 ;
-
-                            uniform sampler2D u_tex ;
-                        
-                            void main()
-                            {    
-                                out_color = texture( u_tex, var_tx0 ) ;
-                            } )" ) ) ;
-                    
-                    sc.insert( natus::graphics::backend_type::gl3, ::std::move(ss) ) ;
-                }
-
-                // shaders : es 3.0
-                {
-                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
-
-                        set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
-                            in vec3 in_pos ;
-                            in vec2 in_tx ;
-                            out vec2 var_tx0 ;
-                            uniform mat4 u_proj ;
-                            uniform mat4 u_view ;
-
-                            void main()
-                            {
-                                var_tx0 = in_tx ;
-                                gl_Position = u_proj * u_view * vec4( in_pos, 1.0 ) ;
-                            } )" ) ).
-                        
-                        set_pixel_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
-                            precision mediump float ;
-                            out vec4 out_color ;
-                            in vec2 var_tx0 ;
-
-                            uniform sampler2D u_tex ;
-                        
-                            void main()
-                            {    
-                                out_color = texture( u_tex, var_tx0 ) ;
-                            } )" ) ) ;
-
-                    sc.insert( natus::graphics::backend_type::es3, ::std::move(ss) ) ;
-                }
-
-                // configure more details
-                {
-                    sc
-                        .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
-                        .add_vertex_input_binding( natus::graphics::vertex_attribute::texcoord0, "in_tx" )
-                        .add_input_binding( natus::graphics::binding_point::view_matrix, "u_view" )
-                        .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
-                }
-
-                _wid_async.second.configure( sc ) ;
-            }
-            #endif
-
             {
                 _rc->link_geometry( "quad" ) ;
                 _rc->link_shader( "quad" ) ;
@@ -266,7 +181,7 @@ namespace this_file
             {
                 natus::graphics::variable_set_res_t vars = natus::graphics::variable_set_t() ;
                 {
-                    auto * var = vars->texture_variable( "u_tex" ) ;
+                    auto * var = vars->texture_variable( "some_texture" ) ;
                     var->set( "loaded_image" ) ;
                 }
 
