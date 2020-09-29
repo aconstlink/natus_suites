@@ -1,8 +1,13 @@
 
 #include "main.h"
 
+#include <natus/graphics/shader/nsl_bridge.hpp>
+
 #include <natus/nsl/parser.hpp>
 #include <natus/nsl/database.hpp>
+#include <natus/nsl/dependency_resolver.hpp>
+#include <natus/nsl/api/glsl.hpp>
+
 #include <natus/format/global.h>
 #include <natus/io/database.h>
 #include <natus/log/global.h>
@@ -40,10 +45,28 @@ int main( int argc, char ** argv )
         } ) ;
     }
 
-    {
-        natus::nsl::dependency_resolver_t dep_res( nsl_db ) ;
+    natus::nsl::generateable_t res ;
 
-        dep_res.resolve( natus::nsl::symbol("myconfig") ) ;
+    // resolve all dependencies
+    {
+        res = natus::nsl::dependency_resolver_t().resolve( nsl_db, natus::nsl::symbol("myconfig") ) ;
+        if( res.missing.size() != 0 )
+        {
+            natus::log::global_t::warning("We have missing symbols.") ;
+            for( auto const & s : res.missing )
+            {
+                natus::log::global_t::status( s.expand() ) ;
+            }
+        }
+    }
+
+    // generate code
+    {
+        natus::nsl::glsl::generator_t gen( std::move( res ) ) ;
+
+        auto const gen_code = gen.generate() ;
+
+        auto const sc = natus::graphcis::nsl_bridge_t().create( gen_code ) ;
     }
 
     return 0 ;

@@ -10,6 +10,11 @@ library math
         vec3 xyz( in vec3 vin ) {
             return vin ;
         }
+
+        vec4 to_vec4( in vec3 vin ) {
+            return vec4( nsl.math.xyz( vin ), 1.0 ) ;
+        }
+
     }
 }
 
