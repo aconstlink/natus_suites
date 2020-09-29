@@ -66,7 +66,7 @@ int main( int argc, char ** argv )
 
         auto const gen_code = gen.generate() ;
 
-        auto const sc = natus::graphcis::nsl_bridge_t().create( gen_code ) ;
+        auto const sc = natus::graphics::nsl_bridge_t().create( gen_code ) ;
     }
 
     return 0 ;

@@ -1,5 +1,5 @@
 
-//*
+
 config myconfig
 {
     render_states
@@ -22,17 +22,12 @@ config myconfig
 
         shader glsl
         {
-            struct mystuff
-            {
-                vec3 xyz ;
-            } ;
-
             void main()
             {
                 // build in function
-                vec3 pos = nsl.math.xyz( nsl.math.xyz( in.pos * vec3( nsl.mylib.inner.pi) ) );
+                //vec3 pos = nsl.math.xyz( nsl.math.xyz( in.pos * vec3( nsl.mylib.inner.pi) ) );
 
-                gl_Position = proj * view * nsl.math.to_vec4( pos ) ;
+                gl_Position = proj * view * vec4( in.pos, 1.0 ) ; //nsl.math.to_vec4( pos ) ;
             }
         }
 
@@ -54,9 +49,7 @@ config myconfig
         {
             void main()
             {
-                out.color = vec4(1) ;
-                out.color = vec4(12) ;
-                out.color = vec4(hello) * texture( some_texture, in.tex0 ) ;
+                out.color = vec4(1) ;// * texture( some_texture, in.tex0 ) ;
             }
         }
     }
