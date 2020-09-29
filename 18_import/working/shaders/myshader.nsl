@@ -10,10 +10,6 @@ config myconfig
         mat4 proj : projection ;
         mat4 view : view ;
 
-        float some_var ;
-
-        tex2d some_texture ;
-
         in vec3 pos : position ;
         in vec2 tx : texcoord0 ;
 
@@ -24,15 +20,12 @@ config myconfig
         {
             void main()
             {
-                // build in function
-                //vec3 pos = nsl.math.xyz( nsl.math.xyz( in.pos * vec3( nsl.mylib.inner.pi) ) );
-
                 out.tex0 = in.tx ;
-                gl_Position = proj * view * vec4( in.pos, 1.0 ) ; //nsl.math.to_vec4( pos ) ;
+                gl_Position = proj * view * vec4( in.pos, 1.0 ) ;
             }
         }
 
-        // not implemented at the moment
+        // hlsl not possible at the moment
         shader hlsl
         {}
     }
