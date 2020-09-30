@@ -21,6 +21,13 @@
 
 #include <thread>
 
+//
+// This project tests 
+// - importing nsl files (format)
+// - parsing and generating glsl code (nsl)
+// - using the generated code for rendering (graphics)
+//
+
 namespace this_file
 {
     using namespace natus::core::types ;

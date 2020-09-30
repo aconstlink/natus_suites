@@ -15,7 +15,9 @@
 using namespace natus::core::types ;
 
 //
-// 
+// This project tests plain 
+// - loading of nsl files (io)
+// - parsing and generating code (nsl)
 //
 int main( int argc, char ** argv )
 {
