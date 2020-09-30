@@ -28,7 +28,7 @@ set( subdirs
     "15_import"
     "16_nsl"
     "17_nsl"
-    "18_import"
+    "18_nsl"
     "19_audio"
     "20_audio"
     )
