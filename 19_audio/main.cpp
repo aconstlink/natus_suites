@@ -14,6 +14,10 @@
 #include <chrono>
 #include <limits>
 
+//
+// - just tests some OpenAL functions
+// - test audio capture
+//
 int main( int argc, char ** argv )
 {
     auto const res = alcIsExtensionPresent( NULL, "ALC_ENUMERATION_EXT" ) ;
@@ -104,8 +108,6 @@ int main( int argc, char ** argv )
                 {
                     for( size_t j=0; j<channels; ++j )
                     {
-                        #if defined(__BYTE_ORDER)
-                        #endif
                         size_t const idx = i * frame_size + j ;
                         avg[j] += int( buffer[ idx ]  ) ;
                         mm[j] = natus::math::vec2i_t( 
