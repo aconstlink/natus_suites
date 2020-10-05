@@ -200,14 +200,14 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_update( void_t ) 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
         { 
             std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) ) ;
 
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_render( void_t ) 
+        virtual natus::application::result on_render( natus::application::app_t::render_data_in_t ) 
         { 
             // per frame update of variables
             _rc->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )

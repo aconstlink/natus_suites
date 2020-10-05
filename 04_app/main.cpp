@@ -295,7 +295,7 @@ namespace this_file
         float value = 0.0f ;
         size_t ucount = 0 ;
 
-        virtual natus::application::result on_update( void_t ) 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
         { 
             
             auto const dif = ::std::chrono::duration_cast< ::std::chrono::microseconds >( __clock_t::now() - _tp ) ;
@@ -338,7 +338,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_render( void_t ) 
+        virtual natus::application::result on_render( natus::application::app_t::render_data_in_t ) 
         { 
             static float_t v = 0.0f ;
             v += 0.01f ;

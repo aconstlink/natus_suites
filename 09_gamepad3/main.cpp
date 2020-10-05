@@ -240,7 +240,7 @@ namespace this_file
             
         }
 
-        virtual natus::application::result on_update( void_t ) 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
         { 
             this_t::test_device() ;
 
@@ -253,7 +253,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_render( void_t ) 
+        virtual natus::application::result on_render( natus::application::app_t::render_data_in_t ) 
         { 
             return natus::application::result::ok ; 
         }
