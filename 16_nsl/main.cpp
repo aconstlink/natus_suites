@@ -17,7 +17,7 @@ T make_some_components( T && nin )
 {
     {
         natus::nsl::version_component_t comp ;
-        comp.add( "natus" ).add( { "gl3", "es3" } ) ;
+        comp.add( {"natus"} ).add( { "gl3", "es3" } ) ;
         nin.add_component( std::move( comp ) ) ;
     }
 

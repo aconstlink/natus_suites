@@ -13,7 +13,8 @@
 #include <cstdlib>
 #include <chrono>
 #include <limits>
-
+#include <cstring>
+#include <thread>
 //
 // - generate some tones
 //
@@ -162,7 +163,7 @@ static ALuint CreateWave(enum WaveType type, ALuint freq, ALuint srate)
             {
                 ALuint rng0 = dither_rng(&seed);
                 ALuint rng1 = dither_rng(&seed);
-                data[i] = (ALfloat)(rng0*(1.0/UINT_MAX) - rng1*(1.0/UINT_MAX));
+                data[i] = (ALfloat)(rng0*(1.0/std::numeric_limits<natus::core::uint_t>::max()) - rng1*(1.0/std::numeric_limits<natus::core::uint_t>::max()));
             }
             break;
     }
@@ -187,7 +188,7 @@ static ALuint CreateWave(enum WaveType type, ALuint freq, ALuint srate)
 
 int main( int argc, char ** argv )
 {
-    enum WaveType wavetype = WT_WhiteNoise;
+    enum WaveType wavetype = WT_Sine;
     const char* appname = argv[ 0 ];
     ALuint source, buffer;
     ALint last_pos, num_loops;
