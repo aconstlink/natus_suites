@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <chrono>
 #include <limits>
+#include <thread>
 
 //
 // - just tests some OpenAL functions
