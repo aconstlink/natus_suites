@@ -52,6 +52,10 @@ int main( int argc, char ** argv )
         ALCdevice* dev = alcCaptureOpenDevice( whatuhear.c_str(), 96000, AL_FORMAT_STEREO16, 32768 ) ;
         auto const* s = alcGetString( dev, ALC_CAPTURE_DEVICE_SPECIFIER ) ;
         natus::log::global_t::status( s ) ;
+
+        ALCint size[20] ;
+        alcGetIntegerv( dev, ALC_ALL_ATTRIBUTES, 9, size ) ;
+
         alcCaptureCloseDevice( dev ) ;
     }
 
@@ -68,7 +72,7 @@ int main( int argc, char ** argv )
     // Make some capture on "What U Hear"
     {
         natus::log::global_t::status( "Make some capture" ) ;
-        ALCdevice* dev = alcCaptureOpenDevice( whatuhear.c_str(), 96000, AL_FORMAT_STEREO8, 32768 ) ;
+        ALCdevice* dev = alcCaptureOpenDevice( whatuhear.c_str(), 96000, AL_FORMAT_STEREO16, 32768 ) ;
 
         alcCaptureStart( dev ) ;
 
@@ -80,7 +84,7 @@ int main( int argc, char ** argv )
         size_t const channels = 2 ;
 
         // format stereo and 16
-        size_t const frame_size = channels * 8 / 8 ;
+        size_t const frame_size = channels * 16 / 8 ;
 
         while( true ) 
         {
@@ -109,10 +113,13 @@ int main( int argc, char ** argv )
                     for( size_t j=0; j<channels; ++j )
                     {
                         size_t const idx = i * frame_size + j ;
-                        avg[j] += int( buffer[ idx ]  ) ;
+
+                        int value = int( buffer[ idx + 1 ] << 8 ) & int( buffer[ idx + 0 ] << 0 ) ;
+
+                        avg[j] += int( value ) ;
                         mm[j] = natus::math::vec2i_t( 
-                            std::min( mm[j].x(), int(buffer[idx] ) ),
-                            std::max( mm[j].y(), int(buffer[idx]  ) ) ) ;
+                            std::min( mm[j].x(), int(value ) ),
+                            std::max( mm[j].y(), int(value  ) ) ) ;
                     }
                 }
                 for( size_t j=0; j<channels; ++j )
