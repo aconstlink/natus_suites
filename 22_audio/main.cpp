@@ -54,6 +54,7 @@ namespace this_file
         bool_t _captured_rendered = true ;
         natus::ntd::vector< float_t > _captured ;
         natus::ntd::vector< float_t > _frequencies0 ;
+        natus::ntd::vector< float_t > _frequencies1 ;
         natus::ntd::vector< float_t > _freq_bands ;
 
     public:
@@ -205,12 +206,18 @@ namespace this_file
 
         virtual natus::application::result on_audio( natus::application::app_t::audio_data_in_t )
         {
-            
+            _frequencies1.resize( _frequencies0.size() ) ;
+            for( size_t i=0; i<_frequencies0.size(); ++i )
+            {
+                _frequencies1[ i ] = _frequencies0[ i ] ;
+            }
+
             _audio.begin() ;
             _audio.capture( _capture ) ;
             _audio.end() ;
             _capture->copy_samples_to( _captured ) ;
             _capture->copy_frequencies_to( _frequencies0 ) ;
+            _frequencies1.resize( _frequencies0.size() ) ;
 
             /*float_t max_value = std::numeric_limits<float_t>::min() ;
             size_t const width = _frequencies0.size() / _freq_bands.size() ;
@@ -264,16 +271,30 @@ namespace this_file
 
                 static int func_type = 0, display_count = ( int ) _captured.size() ;
 
-                float_t max_value = std::numeric_limits<float_t>::min() ;
-                for( size_t i = 0; i < _frequencies0.size(); ++i )
-                    max_value = std::max( _frequencies0[ i ], max_value ) ;
-
-                
-                //float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
-                //ImGui::PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr), 0, 0, -1.0f, 1.0f, ImVec2( 100, 80)  );
                 ImGui::PlotLines( "Samples", _captured.data(), _captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
 
-                ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), _frequencies0.size(), 0, 0, 0.0f, max_value, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                {
+                    float_t max_value = std::numeric_limits<float_t>::min() ;
+                    for( size_t i = 0; i < _frequencies0.size(); ++i )
+                        max_value = std::max( _frequencies0[ i ], max_value ) ;
+
+                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), _frequencies0.size(), 0, 0, 0.0f, max_value, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                }
+
+
+                {
+                    natus::ntd::vector< float_t > difs( _frequencies0.size() ) ;
+                    for( size_t i = 0; i < _frequencies0.size(); ++i )
+                    {
+                        difs[ i ] = _frequencies0[ i ] - _frequencies1[ i ] ;
+                        difs[ i ] = difs[ i ] < 0.00001f ? 0.0f : difs[ i ] ;
+                    }
+
+                    float_t max_value = std::numeric_limits<float_t>::min() ;
+                    for( size_t i = 0; i < difs.size(); ++i )
+                        max_value = std::max( difs[ i ], max_value ) ;
+                    ImGui::PlotHistogram( "Difs", difs.data(), difs.size(), 0, 0, 0.0f, max_value, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                }
 
                 /*{
                     std::array< float_t, 14 > freqs ;
