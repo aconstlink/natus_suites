@@ -153,41 +153,6 @@ namespace this_file
                 }
             }
 
-
-
-            /*{
-                static natus::math::dsp::fft<float_t>::samples_t smps ;
-                static natus::math::dsp::fft<float_t> fft ;
-
-                size_t const nsmps = _sds->nsmps ;
-                _sds->nsmps = 0 ;
-
-                smps.resize( nsmps ) ;
-                for( size_t i = 0; i < nsmps; ++i )
-                {
-                    smps[ i ] = _sds->smps[ i ] ;
-                }
-
-                _sds->fft_render.resize( fft.n() ) ;
-                if( fft.update( smps[ std::slice( 0, nsmps, 1 ) ], _sds->smps_freqs ) )
-                {
-                    for( size_t i = 0; i < fft.n(); ++i )
-                    {
-                        _sds->fft_render[ i ] = ( float_t ) std::abs( _sds->smps_freqs[ i ] ) /
-                            float_t( fft.n() ) ;
-                    }
-
-                    fft.sort_abs( _sds->smps_freqs[ std::slice( 0, _sds->smps_freqs.size(), 1 ) ],
-                        _sds->smps_sorted ) ;
-
-                    for( auto& item : _sds->smps_sorted )
-                    {
-                        item.first = item.first / float_t( fft.n() ) ;
-                    }
-
-                }
-            }*/
-
             typedef std::chrono::high_resolution_clock clk_t ;
             static size_t count = 0 ;
             count++ ;
@@ -218,23 +183,6 @@ namespace this_file
             _capture->copy_samples_to( _captured ) ;
             _capture->copy_frequencies_to( _frequencies0 ) ;
             _frequencies1.resize( _frequencies0.size() ) ;
-
-            /*float_t max_value = std::numeric_limits<float_t>::min() ;
-            size_t const width = _frequencies0.size() / _freq_bands.size() ;
-            for( size_t i = 0; i < _freq_bands.size(); ++i )
-            {
-
-                float_t band_value = 0.0f ;
-                size_t start = width * i ;
-                for( size_t j = start; j < start + width; ++j )
-                {
-                    max_value = std::max( _frequencies0[j], max_value ) ;
-                    band_value += _frequencies0[ j ] ;
-                }
-
-                _freq_bands[ i ] = band_value ;
-            }*/
-
 
             typedef std::chrono::high_resolution_clock clk_t ;
             static size_t count = 0 ;
@@ -271,8 +219,12 @@ namespace this_file
 
                 static int func_type = 0, display_count = ( int ) _captured.size() ;
 
-                ImGui::PlotLines( "Samples", _captured.data(), _captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                // print wave form
+                {
+                    ImGui::PlotLines( "Samples", _captured.data(), _captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                }
 
+                // print frequencies
                 {
                     float_t max_value = std::numeric_limits<float_t>::min() ;
                     for( size_t i = 0 ; i < 30/*_frequencies0.size()*/; ++i )
@@ -284,7 +236,7 @@ namespace this_file
                     smax_value = max_value ;
                 }
 
-
+                // tried some sort of peaking, but sucks.
                 {
                     natus::ntd::vector< float_t > difs( _frequencies0.size() ) ;
                     for( size_t i = 0; i < _frequencies0.size(); ++i )
@@ -302,26 +254,7 @@ namespace this_file
                     ImGui::PlotHistogram( "Difs", difs.data(), 30/*difs.size()*/, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
                     smax_value = max_value ;
                 }
-
-                /*{
-                    std::array< float_t, 14 > freqs ;
-                    for( size_t i = 0; i < freqs.size(); ++i )
-                    {
-                        freqs[ i ] = 0.0f ;
-                    }
-                    size_t start = 0 ;
-                    size_t const width = _frequencies0.size() / freqs.size() ;
-                    for( size_t i = 0; i < freqs.size(); ++i )
-                    {
-                        for( size_t j = 0; j < width; ++j )
-                        {
-                            freqs[ i ] += _frequencies0[ start + j ] ;
-                        }
-                        freqs[ i ] /= float_t( width ) ;
-                        start += width ;
-                    }
-                    ImGui::PlotHistogram( "Frequencies", freqs.data(), freqs.size() , 0, 0, 0.0f, 0.00001f, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
-                }*/
+                
                 ImGui::End() ;
             } ) ;
 
