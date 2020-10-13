@@ -81,7 +81,7 @@ namespace this_file
 
             _audio = std::move( rhv._audio ) ;
 
-            _frequencies0= std::move( rhv._frequencies0 ) ;
+            _frequencies0 = std::move( rhv._frequencies0 ) ;
             _freq_bands = std::move( rhv._freq_bands ) ;
         }
         virtual ~test_app( void_t )
@@ -207,7 +207,7 @@ namespace this_file
         virtual natus::application::result on_audio( natus::application::app_t::audio_data_in_t )
         {
             _frequencies1.resize( _frequencies0.size() ) ;
-            for( size_t i=0; i<_frequencies0.size(); ++i )
+            for( size_t i = 0; i < _frequencies0.size(); ++i )
             {
                 _frequencies1[ i ] = _frequencies0[ i ] ;
             }
@@ -223,7 +223,7 @@ namespace this_file
             size_t const width = _frequencies0.size() / _freq_bands.size() ;
             for( size_t i = 0; i < _freq_bands.size(); ++i )
             {
-                
+
                 float_t band_value = 0.0f ;
                 size_t start = width * i ;
                 for( size_t j = start; j < start + width; ++j )
@@ -235,7 +235,7 @@ namespace this_file
                 _freq_bands[ i ] = band_value ;
             }*/
 
-           
+
             typedef std::chrono::high_resolution_clock clk_t ;
             static size_t count = 0 ;
             count++ ;
@@ -275,10 +275,13 @@ namespace this_file
 
                 {
                     float_t max_value = std::numeric_limits<float_t>::min() ;
-                    for( size_t i = 0; i < _frequencies0.size(); ++i )
+                    for( size_t i = 0 ; i < 30/*_frequencies0.size()*/; ++i )
                         max_value = std::max( _frequencies0[ i ], max_value ) ;
 
-                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), _frequencies0.size(), 0, 0, 0.0f, max_value, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                    static float_t smax_value = 0.0f ;
+                    float_t const mm = ( max_value + smax_value ) * 0.5f;
+                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), 30/*_frequencies0.size() / 4*/, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                    smax_value = max_value ;
                 }
 
 
@@ -291,9 +294,13 @@ namespace this_file
                     }
 
                     float_t max_value = std::numeric_limits<float_t>::min() ;
-                    for( size_t i = 0; i < difs.size(); ++i )
+                    for( size_t i = 0; i < 30/*difs.size()*/; ++i )
                         max_value = std::max( difs[ i ], max_value ) ;
-                    ImGui::PlotHistogram( "Difs", difs.data(), difs.size(), 0, 0, 0.0f, max_value, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+
+                    static float_t smax_value = 0.0f ;
+                    float_t const mm = ( max_value + smax_value ) * 0.5f;
+                    ImGui::PlotHistogram( "Difs", difs.data(), 30/*difs.size()*/, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                    smax_value = max_value ;
                 }
 
                 /*{
