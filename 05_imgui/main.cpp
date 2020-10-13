@@ -165,7 +165,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_render( natus::application::app_t::render_data_in_t ) 
+        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
         {
             _imgui->begin() ;
             _imgui->execute( [&] ( ImGuiContext* ctx )

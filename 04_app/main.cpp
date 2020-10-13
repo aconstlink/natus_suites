@@ -338,7 +338,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_render( natus::application::app_t::render_data_in_t ) 
+        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
         { 
             static float_t v = 0.0f ;
             v += 0.01f ;
