@@ -2,4 +2,4 @@
 
 Actually, currently just a test dump!
 
-Examples will go into natus itself later on.
+There will be a clean example repo later on.
