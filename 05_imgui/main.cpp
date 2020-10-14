@@ -32,7 +32,7 @@ namespace this_file
         float_t _demo_width = 10.0f ;
         float_t _demo_height = 10.0f ;
 
-        natus::graphics::image_configuration_res_t _checkerboard = natus::graphics::image_configuration_t() ;
+        natus::graphics::image_object_res_t _checkerboard = natus::graphics::image_object_t() ;
 
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
@@ -118,7 +118,7 @@ namespace this_file
                     }
                 } ) ;
 
-                _checkerboard = natus::graphics::image_configuration_t( "user.checkerboard", ::std::move( img ) )
+                _checkerboard = natus::graphics::image_object_t( "user.checkerboard", ::std::move( img ) )
                     .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
                     .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
                     .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )

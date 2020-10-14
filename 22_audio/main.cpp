@@ -85,7 +85,9 @@ namespace this_file
             _freq_bands = std::move( rhv._freq_bands ) ;
         }
         virtual ~test_app( void_t )
-        {}
+        {
+            ( void_t ) 50 ;
+        }
 
     private:
 
@@ -227,12 +229,12 @@ namespace this_file
                 // print frequencies
                 {
                     float_t max_value = std::numeric_limits<float_t>::min() ;
-                    for( size_t i = 0 ; i < 30/*_frequencies0.size()*/; ++i )
+                    for( size_t i = 0 ; i < _frequencies0.size(); ++i )
                         max_value = std::max( _frequencies0[ i ], max_value ) ;
 
                     static float_t smax_value = 0.0f ;
                     float_t const mm = ( max_value + smax_value ) * 0.5f;
-                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), 30/*_frequencies0.size() / 4*/, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), _frequencies0.size(), 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
                     smax_value = max_value ;
                 }
 

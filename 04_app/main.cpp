@@ -24,9 +24,9 @@ namespace this_file
         app::window_async_t _wid_async ;
         
         natus::graphics::render_state_sets_res_t _render_states = natus::graphics::render_state_sets_t() ;
-        natus::graphics::render_configuration_res_t _rc = natus::graphics::render_configuration_t() ;
-        natus::graphics::geometry_configuration_res_t _gconfig = natus::graphics::geometry_configuration_t() ;
-        natus::graphics::image_configuration_res_t _imgconfig = natus::graphics::image_configuration_t() ;
+        natus::graphics::render_object_res_t _rc = natus::graphics::render_object_t() ;
+        natus::graphics::geometry_object_res_t _gconfig = natus::graphics::geometry_object_t() ;
+        natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
 
         struct vertex { natus::math::vec3f_t pos ; natus::math::vec2f_t tx ; } ;
         
@@ -95,7 +95,7 @@ namespace this_file
                     array[ 5 ] = 3 ;
                 } ) ;
 
-                _gconfig = natus::graphics::geometry_configuration_t( "quad",
+                _gconfig = natus::graphics::geometry_object_t( "quad",
                     natus::graphics::primitive_type::triangles, ::std::move( vb ), ::std::move( ib ) ) ;
 
                 _wid_async.second.configure( _gconfig ) ;
@@ -126,7 +126,7 @@ namespace this_file
                     }
                 } ) ;
 
-                _imgconfig = natus::graphics::image_configuration_t( "checker_board", ::std::move( img ) )
+                _imgconfig = natus::graphics::image_object_t( "checker_board", ::std::move( img ) )
                     .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
                     .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
                     .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
@@ -137,7 +137,7 @@ namespace this_file
 
             // shader configuration
             {
-                natus::graphics::shader_configuration_t sc( "quad" ) ;
+                natus::graphics::shader_object_t sc( "quad" ) ;
 
                 // shaders : ogl 3.0
                 {
