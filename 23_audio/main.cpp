@@ -9,7 +9,8 @@
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
-#include <natus/audio/backend/oal/oal.h>
+#include <natus/profiling/macros.h>
+#include <natus/audio/buffer.hpp>
 
 #include <natus/device/layouts/three_mouse.hpp>
 #include <natus/device/global.h>
@@ -36,6 +37,8 @@ namespace this_file
 
         app::window_async_t _wid_async ;
 
+        natus::audio::async_access_t _audio ;
+
         natus::gfx::imgui_res_t _imgui ;
 
         float_t _demo_width = 10.0f ;
@@ -47,12 +50,10 @@ namespace this_file
         bool_t _fullscreen = false ;
         bool_t _vsync = true ;
 
-        natus::audio::oal_backend_t _audio ;
-
         natus::audio::capture_object_res_t _capture = natus::audio::capture_object_t() ;
 
         bool_t _captured_rendered = true ;
-        natus::ntd::vector< float_t > _captured ;
+        natus::audio::buffer_t _captured = natus::audio::buffer_t( 48000 ) ;
         natus::ntd::vector< float_t > _frequencies0 ;
         natus::ntd::vector< float_t > _frequencies1 ;
         natus::ntd::vector< float_t > _freq_bands ;
@@ -69,6 +70,8 @@ namespace this_file
             _imgui = natus::gfx::imgui_res_t( natus::gfx::imgui_t() ) ;
 
             _freq_bands.resize( 14 ) ;
+
+            _audio = this_t::create_audio_engine() ;
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) )
@@ -155,19 +158,8 @@ namespace this_file
                 }
             }
 
-            typedef std::chrono::high_resolution_clock clk_t ;
-            static size_t count = 0 ;
-            count++ ;
-            static clk_t::time_point tp = clk_t::now() ;
-
-
-            if( std::chrono::duration_cast< std::chrono::milliseconds >( clk_t::now() - tp ).count() > 1000 )
-            {
-                tp = clk_t::now() ;
-                natus::log::global_t::status( "Update Clock : " + std::to_string( count ) ) ;
-                count = 0 ;
-            }
-
+            NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
+            
             return natus::application::result::ok ;
         }
 
@@ -178,28 +170,14 @@ namespace this_file
             {
                 _frequencies1[ i ] = _frequencies0[ i ] ;
             }
-
-            _audio.begin() ;
             _audio.capture( _capture ) ;
-            _audio.end() ;
-            _capture->copy_samples_to( _captured ) ;
+
+            _capture->append_samples_to( _captured ) ;
             _capture->copy_frequencies_to( _frequencies0 ) ;
             _frequencies1.resize( _frequencies0.size() ) ;
 
-            typedef std::chrono::high_resolution_clock clk_t ;
-            static size_t count = 0 ;
-            count++ ;
-            static clk_t::time_point tp = clk_t::now() ;
+            NATUS_PROFILING_COUNTER_HERE( "Audio Clock" ) ;
 
-
-            if( std::chrono::duration_cast< std::chrono::milliseconds >( clk_t::now() - tp ).count() > 1000 )
-            {
-                tp = clk_t::now() ;
-                natus::log::global_t::status( "Audio Clock : " + std::to_string( count ) ) ;
-                count = 0 ;
-            }
-
-            //natus::log::global_t::status( std::to_string(_captured.size()) ) ;
             return natus::application::result::ok ;
         }
 
@@ -223,22 +201,23 @@ namespace this_file
 
                 // print wave form
                 {
-                    ImGui::PlotLines( "Samples", _captured.data(), (int)_captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                    ImGui::PlotLines( "Samples", _captured.data(), _captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
                 }
 
                 // print frequencies
                 {
                     float_t max_value = std::numeric_limits<float_t>::min() ;
-                    for( size_t i = 5 ; i < _frequencies0.size(); ++i )
+                    for( size_t i = 10 ; i < _frequencies0.size(); ++i )
                         max_value = std::max( _frequencies0[ i ], max_value ) ;
 
                     static float_t smax_value = 0.0f ;
                     float_t const mm = ( max_value + smax_value ) * 0.5f;
-                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), (int)_frequencies0.size()/4, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), _frequencies0.size(), 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
                     smax_value = max_value ;
                 }
 
                 // tried some sort of peaking, but sucks.
+                if( _frequencies0.size() > 0 )
                 {
                     natus::ntd::vector< float_t > difs( _frequencies0.size() ) ;
                     for( size_t i = 0; i < _frequencies0.size(); ++i )
@@ -261,6 +240,8 @@ namespace this_file
             } ) ;
 
             _imgui->render( _wid_async.second ) ;
+
+            NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
             return natus::application::result::ok ;
         }
