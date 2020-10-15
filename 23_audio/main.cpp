@@ -21,8 +21,8 @@
 #include <array>
 
 //
-// This file just test the direct capture of sound data through the OpenAL backend.
-// In later versions, this is done differently.
+// This test prints the captured "What U Hear" samples using Imgui.
+// The program uses the async audio system.
 //
 
 namespace this_file
@@ -73,6 +73,7 @@ namespace this_file
 
             _audio = this_t::create_audio_engine() ;
         }
+
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) )
         {
@@ -87,10 +88,9 @@ namespace this_file
             _frequencies0 = std::move( rhv._frequencies0 ) ;
             _freq_bands = std::move( rhv._freq_bands ) ;
         }
+
         virtual ~test_app( void_t )
-        {
-            ( void_t ) 50 ;
-        }
+        {}
 
     private:
 
