@@ -21,8 +21,7 @@
 #include <array>
 
 //
-// This test prints the captured "What U Hear" samples using Imgui.
-// The program uses the async audio system.
+// 
 //
 
 namespace this_file
@@ -50,13 +49,9 @@ namespace this_file
         bool_t _fullscreen = false ;
         bool_t _vsync = true ;
 
-        natus::audio::capture_object_res_t _capture = natus::audio::capture_object_t() ;
+        natus::audio::result_res_t _play_res = natus::audio::result_t(natus::audio::result::initial) ;
+        natus::audio::buffer_object_res_t _play = natus::audio::buffer_object_t() ;
 
-        bool_t _captured_rendered = true ;
-        natus::audio::buffer_t _captured = natus::audio::buffer_t( 48000 ) ;
-        natus::ntd::vector< float_t > _frequencies0 ;
-        natus::ntd::vector< float_t > _frequencies1 ;
-        natus::ntd::vector< float_t > _freq_bands ;
 
     public:
 
@@ -68,8 +63,6 @@ namespace this_file
             _wid_async.first.vsync( _vsync ) ;
 
             _imgui = natus::gfx::imgui_res_t( natus::gfx::imgui_t() ) ;
-
-            _freq_bands.resize( 14 ) ;
 
             _audio = this_t::create_audio_engine() ;
         }
@@ -85,8 +78,7 @@ namespace this_file
 
             _audio = std::move( rhv._audio ) ;
 
-            _frequencies0 = std::move( rhv._frequencies0 ) ;
-            _freq_bands = std::move( rhv._freq_bands ) ;
+            _play = std::move( rhv._play ) ;
         }
 
         virtual ~test_app( void_t )
@@ -108,20 +100,45 @@ namespace this_file
                 }
             } ) ;
 
-            if( !_dev_mouse.is_valid() )
-            {
-                natus::log::global_t::status( "no three mosue found" ) ;
-            }
-
-            if( !_dev_ascii.is_valid() )
-            {
-                natus::log::global_t::status( "no ascii keyboard found" ) ;
-            }
+            if( !_dev_mouse.is_valid() ) natus::log::global_t::status( "no three mouse found" ) ;
+            if( !_dev_ascii.is_valid() ) natus::log::global_t::status( "no ascii keyboard found" ) ;
 
             _imgui->init( _wid_async.second ) ;
 
-            _audio.configure( natus::audio::capture_type::what_u_hear, _capture ) ;
+            //
+            // prepare the audio buffer for playing
+            //
+            {
+                _play = natus::audio::buffer_object_res_t( natus::audio::buffer_object_t( "gen.sine" ) ) ;
+                
+                natus::audio::channels channels = natus::audio::channels::stereo ;
 
+                size_t const sample_rate = 96000 ;
+                size_t const num_channels = natus::audio::to_number( channels ) ;
+                size_t const num_seconds = 4 ;
+
+                double_t const freq = 100.0 ;
+                double_t const smps_per_cycle = (double_t)sample_rate / freq;
+
+                // only fill the left channel
+                {
+                    natus::ntd::vector< float_t > floats( sample_rate * num_seconds * num_channels ) ;
+
+                    for( size_t i = 0; i < floats.size(); ++i )
+                    {
+                        size_t const idx = i / num_channels ;
+                        double_t const a = 1.0 ;
+                        double_t const f = natus::math::fn<double_t>::mod( 
+                            double_t( i ) / double_t( sample_rate ), 1.0 ) ;
+
+                        double_t const value = a * std::sin( 50 * f * 2.0 * natus::math::constants<double_t>::pi() ) ;
+                        floats[ idx ] = float_t( value ) ;
+                    }
+                    _play->set_samples( channels, sample_rate, floats ) ;
+                }
+                _audio.configure( _play ) ;
+            }
+            
             return natus::application::result::ok ;
         }
 
@@ -165,16 +182,16 @@ namespace this_file
 
         virtual natus::application::result on_audio( natus::application::app_t::audio_data_in_t )
         {
-            _frequencies1.resize( _frequencies0.size() ) ;
-            for( size_t i = 0; i < _frequencies0.size(); ++i )
+            if( *_play_res == natus::audio::result::initial )
             {
-                _frequencies1[ i ] = _frequencies0[ i ] ;
+                natus::audio::backend::execute_detail ed ;
+                ed.to = natus::audio::execution_options::play ;
+                _audio.execute( _play, ed, _play_res ) ;
             }
-            _audio.capture( _capture ) ;
-
-            _capture->append_samples_to( _captured ) ;
-            _capture->copy_frequencies_to( _frequencies0 ) ;
-            _frequencies1.resize( _frequencies0.size() ) ;
+            else if( *_play_res == natus::audio::result::ok )
+            {
+                natus::log::global_t::status("status ok") ;
+            }
 
             NATUS_PROFILING_COUNTER_HERE( "Audio Clock" ) ;
 
@@ -192,51 +209,6 @@ namespace this_file
                 bool_t open = true ;
                 //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
                 ImGui::ShowDemoWindow( &open ) ;
-
-                ImGui::Begin( "Capture" ) ;
-
-                auto const mm = _capture->minmax() ;
-
-                static int func_type = 0, display_count = ( int ) _captured.size() ;
-
-                // print wave form
-                {
-                    ImGui::PlotLines( "Samples", _captured.data(), _captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
-                }
-
-                // print frequencies
-                {
-                    float_t max_value = std::numeric_limits<float_t>::min() ;
-                    for( size_t i = 0 ; i < _frequencies0.size(); ++i )
-                        max_value = std::max( _frequencies0[ i ], max_value ) ;
-
-                    static float_t smax_value = 0.0f ;
-                    float_t const mm = ( max_value + smax_value ) * 0.5f;
-                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), _frequencies0.size(), 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
-                    smax_value = max_value ;
-                }
-
-                // tried some sort of peaking, but sucks.
-                if( _frequencies0.size() > 0 )
-                {
-                    natus::ntd::vector< float_t > difs( _frequencies0.size() ) ;
-                    for( size_t i = 0; i < _frequencies0.size(); ++i )
-                    {
-                        difs[ i ] = _frequencies0[ i ] - _frequencies1[ i ] ;
-                        difs[ i ] = difs[ i ] < 0.00001f ? 0.0f : difs[ i ] ;
-                    }
-
-                    float_t max_value = std::numeric_limits<float_t>::min() ;
-                    for( size_t i = 0; i < 30/*difs.size()*/; ++i )
-                        max_value = std::max( difs[ i ], max_value ) ;
-
-                    static float_t smax_value = 0.0f ;
-                    float_t const mm = ( max_value + smax_value ) * 0.5f;
-                    ImGui::PlotHistogram( "Difs", difs.data(), 30/*difs.size()*/, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
-                    smax_value = max_value ;
-                }
-                
-                ImGui::End() ;
             } ) ;
 
             _imgui->render( _wid_async.second ) ;

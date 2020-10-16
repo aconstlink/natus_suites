@@ -194,7 +194,7 @@ int main( int argc, char ** argv )
     ALint last_pos, num_loops;
     ALint max_loops = 4;
     ALint srate = -1;
-    ALint tone_freq = 440;
+    ALint tone_freq = 100;
     ALCint dev_rate;
     ALenum state;
     int i;

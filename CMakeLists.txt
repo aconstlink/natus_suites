@@ -34,6 +34,7 @@ set( subdirs
     "21_audio"
     "22_audio"
     "23_audio"
+    "24_audio"
     )
 
 foreach( _subdir ${subdirs} )
