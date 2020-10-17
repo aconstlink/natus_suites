@@ -49,6 +49,8 @@ namespace this_file
         natus::audio::result_res_t _play_res = natus::audio::result_t(natus::audio::result::initial) ;
         natus::audio::buffer_object_res_t _play = natus::audio::buffer_object_t() ;
 
+        natus::audio::execution_options _eo = natus::audio::execution_options::undefined ;
+
     public:
 
         test_app( void_t )
@@ -109,31 +111,31 @@ namespace this_file
                 
                 natus::audio::channels channels = natus::audio::channels::stereo ;
 
-                size_t const sample_rate = 48000 ;
+                size_t const sample_rate = 96000 ;
                 size_t const num_channels = natus::audio::to_number( channels ) ;
                 size_t const num_seconds = 4 ;
 
                 size_t const freq = 100 ;
 
-                // only fill the left channel
                 {
                     natus::ntd::vector< float_t > floats( sample_rate * num_seconds * num_channels ) ;
 
                     for( size_t i = 0; i < floats.size()/num_channels; ++i )
                     {
                         size_t const idx = i * num_channels ;
-                        double_t const a = 0.1f ;
+                        double_t const a = 0.3f ;
                         double_t const f = natus::math::fn<double_t>::mod( 
                             double_t( i ) / double_t( sample_rate-num_channels  ), 1.0 ) ;
                         
                         double_t const value = a * std::sin( freq * f * 2.0 * natus::math::constants<double_t>::pi() ) ;
                         
                         floats[ idx + 0 ] = float_t( value ) ;
-                        floats[ idx + 1 ] = 0.0f ;
+                        floats[ idx + 1 ] = float_t( value ) ;
                     }
                     _play->set_samples( channels, sample_rate, floats ) ;
                 }
                 _audio.configure( _play ) ;
+                _eo = natus::audio::execution_options::play ;
             }
             
             return natus::application::result::ok ;
@@ -180,7 +182,7 @@ namespace this_file
             if( *_play_res == natus::audio::result::initial )
             {
                 natus::audio::backend::execute_detail ed ;
-                ed.to = natus::audio::execution_options::play ;
+                ed.to = _eo ;
                 _audio.execute( _play, ed, _play_res ) ;
             }
             else if( *_play_res == natus::audio::result::ok )
@@ -200,6 +202,22 @@ namespace this_file
             _imgui->execute( [&] ( ImGuiContext* ctx )
             {
                 ImGui::SetCurrentContext( ctx ) ;
+
+                ImGui::SetNextWindowSize( ImVec2( 200, 200 ) ) ;
+                ImGui::Begin( "Audio" ) ;
+
+                if( ImGui::Button( "Play" ) )
+                {
+                    *_play_res = natus::audio::result::initial ;
+                    _eo = natus::audio::execution_options::play ;
+                }
+                else if( ImGui::Button( "Stop" ) )
+                {
+                    *_play_res = natus::audio::result::initial ;
+                    _eo = natus::audio::execution_options::stop ;
+                }
+
+                ImGui::End() ;
             } ) ;
 
             _imgui->render( _wid_async.second ) ;
