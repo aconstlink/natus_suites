@@ -41,9 +41,6 @@ namespace this_file
 
         natus::gfx::imgui_res_t _imgui ;
 
-        float_t _demo_width = 10.0f ;
-        float_t _demo_height = 10.0f ;
-
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
 
@@ -63,7 +60,9 @@ namespace this_file
         test_app( void_t )
         {
             natus::application::app::window_info_t wi ;
-            _wid_async = this_t::create_window( "An Imgui Rendering Test", wi ) ;
+            wi.w = 1200 ;
+            wi.h = 400 ;
+            _wid_async = this_t::create_window( "Frequencies", wi ) ;
             _wid_async.first.fullscreen( _fullscreen ) ;
             _wid_async.first.vsync( _vsync ) ;
 
@@ -132,8 +131,6 @@ namespace this_file
             wd.height = wei.h ;
             _imgui->update( wd ) ;
 
-            _demo_width = float_t( wei.w ) ;
-            _demo_height = float_t( wei.h ) ;
             return natus::application::result::ok ;
         }
 
@@ -188,20 +185,12 @@ namespace this_file
             {
                 ImGui::SetCurrentContext( ctx ) ;
 
-
-                bool_t open = true ;
-                //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
-                ImGui::ShowDemoWindow( &open ) ;
-
                 ImGui::Begin( "Capture" ) ;
-
-                auto const mm = _capture->minmax() ;
-
-                static int func_type = 0, display_count = ( int ) _captured.size() ;
 
                 // print wave form
                 {
-                    ImGui::PlotLines( "Samples", _captured.data(), _captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                    auto const mm = _capture->minmax() ;
+                    ImGui::PlotLines( "Waveform", _captured.data(), (int_t)_captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth() - 100.0f , 100.0f ) );
                 }
 
                 // print frequencies
@@ -212,7 +201,7 @@ namespace this_file
 
                     static float_t smax_value = 0.0f ;
                     float_t const mm = ( max_value + smax_value ) * 0.5f;
-                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), _frequencies0.size(), 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), (int_t)_frequencies0.size(), 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth() - 100.0f , 100.0f ) );
                     smax_value = max_value ;
                 }
 
@@ -232,7 +221,7 @@ namespace this_file
 
                     static float_t smax_value = 0.0f ;
                     float_t const mm = ( max_value + smax_value ) * 0.5f;
-                    ImGui::PlotHistogram( "Difs", difs.data(), 30/*difs.size()*/, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                    ImGui::PlotHistogram( "Difs", difs.data(), 30/*difs.size()*/, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth()-100.0f , 100.0f ) );
                     smax_value = max_value ;
                 }
                 
