@@ -49,7 +49,6 @@ namespace this_file
         natus::audio::result_res_t _play_res = natus::audio::result_t(natus::audio::result::initial) ;
         natus::audio::buffer_object_res_t _play = natus::audio::buffer_object_t() ;
 
-
     public:
 
         test_app( void_t )
