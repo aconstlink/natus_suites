@@ -21,7 +21,7 @@
 #include <array>
 
 //
-// 
+// Generate Sound and Play
 //
 
 namespace this_file
@@ -40,9 +40,6 @@ namespace this_file
 
         natus::gfx::imgui_res_t _imgui ;
 
-        float_t _demo_width = 10.0f ;
-        float_t _demo_height = 10.0f ;
-
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
 
@@ -58,7 +55,7 @@ namespace this_file
         test_app( void_t )
         {
             natus::application::app::window_info_t wi ;
-            _wid_async = this_t::create_window( "An Imgui Rendering Test", wi ) ;
+            _wid_async = this_t::create_window( "Generate Some Audio", wi ) ;
             _wid_async.first.fullscreen( _fullscreen ) ;
             _wid_async.first.vsync( _vsync ) ;
 
@@ -127,7 +124,7 @@ namespace this_file
                     for( size_t i = 0; i < floats.size(); ++i )
                     {
                         size_t const idx = i / num_channels ;
-                        double_t const a = 1.0 ;
+                        double_t const a = 0.1f ;
                         double_t const f = natus::math::fn<double_t>::mod( 
                             double_t( i ) / double_t( sample_rate ), 1.0 ) ;
 
@@ -149,8 +146,6 @@ namespace this_file
             wd.height = wei.h ;
             _imgui->update( wd ) ;
 
-            _demo_width = float_t( wei.w ) ;
-            _demo_height = float_t( wei.h ) ;
             return natus::application::result::ok ;
         }
 
@@ -204,11 +199,6 @@ namespace this_file
             _imgui->execute( [&] ( ImGuiContext* ctx )
             {
                 ImGui::SetCurrentContext( ctx ) ;
-
-
-                bool_t open = true ;
-                //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
-                ImGui::ShowDemoWindow( &open ) ;
             } ) ;
 
             _imgui->render( _wid_async.second ) ;
