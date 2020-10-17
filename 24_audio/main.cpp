@@ -186,6 +186,7 @@ namespace this_file
             else if( *_play_res == natus::audio::result::ok )
             {
                 natus::log::global_t::status("status ok") ;
+                *_play_res = natus::audio::result::idle ;
             }
 
             NATUS_PROFILING_COUNTER_HERE( "Audio Clock" ) ;
