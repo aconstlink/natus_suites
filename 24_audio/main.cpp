@@ -110,26 +110,27 @@ namespace this_file
                 
                 natus::audio::channels channels = natus::audio::channels::stereo ;
 
-                size_t const sample_rate = 96000 ;
+                size_t const sample_rate = 48000 ;
                 size_t const num_channels = natus::audio::to_number( channels ) ;
                 size_t const num_seconds = 4 ;
 
-                double_t const freq = 100.0 ;
-                double_t const smps_per_cycle = (double_t)sample_rate / freq;
+                size_t const freq = 100 ;
 
                 // only fill the left channel
                 {
                     natus::ntd::vector< float_t > floats( sample_rate * num_seconds * num_channels ) ;
 
-                    for( size_t i = 0; i < floats.size(); ++i )
+                    for( size_t i = 0; i < floats.size()/num_channels; ++i )
                     {
-                        size_t const idx = i / num_channels ;
+                        size_t const idx = i * num_channels ;
                         double_t const a = 0.1f ;
                         double_t const f = natus::math::fn<double_t>::mod( 
-                            double_t( i ) / double_t( sample_rate ), 1.0 ) ;
-
-                        double_t const value = a * std::sin( 50 * f * 2.0 * natus::math::constants<double_t>::pi() ) ;
-                        floats[ idx ] = float_t( value ) ;
+                            double_t( i ) / double_t( sample_rate-num_channels  ), 1.0 ) ;
+                        
+                        double_t const value = a * std::sin( freq * f * 2.0 * natus::math::constants<double_t>::pi() ) ;
+                        
+                        floats[ idx + 0 ] = float_t( value ) ;
+                        floats[ idx + 1 ] = 0.0f ;
                     }
                     _play->set_samples( channels, sample_rate, floats ) ;
                 }
