@@ -197,7 +197,7 @@ int main( int argc, char ** argv )
     ALint tone_freq = 100;
     ALCint dev_rate;
     ALenum state;
-    int i;
+    //int i;
 
     argv++; argc--;
     if( InitAL( &argv, &argc ) != 0 )
