@@ -119,7 +119,7 @@ namespace this_file
                 _play = natus::audio::buffer_object_res_t( natus::audio::buffer_object_t( "audio.file" ) ) ;
 
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                auto fitem1 = mod_reg->import_from( natus::io::location_t( "audio.some_test.wav" ), _db ) ;
+                auto fitem1 = mod_reg->import_from( natus::io::location_t( "audio.laser.wav" ), _db ) ;
 
                 // do the lib
                 {
@@ -129,9 +129,6 @@ namespace this_file
                         _play = ii->obj ;
                     }
                 }
-
-                
-                
                 
                 _audio.configure( _play ) ;
                 _eo = natus::audio::execution_options::play ;
