@@ -119,14 +119,15 @@ namespace this_file
                 _play = natus::audio::buffer_object_res_t( natus::audio::buffer_object_t( "audio.file" ) ) ;
 
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                auto fitem1 = mod_reg->import_from( natus::io::location_t( "audio.laser.wav" ), _db ) ;
+                auto fitem1 = mod_reg->import_from( natus::io::location_t( "audio.Bugseed - Bohemian Beatnik LP - 01 harlot.ogg" ), _db ) ;
+                //auto fitem1 = mod_reg->import_from( natus::io::location_t( "audio.laser.wav" ), _db ) ;
 
                 // do the lib
                 {
                     natus::format::audio_item_res_t ii = fitem1.get() ;
                     if( ii.is_valid() ) 
                     {
-                        _play = ii->obj ;
+                        *_play = *(ii->obj) ;
                     }
                 }
                 

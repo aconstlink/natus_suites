@@ -201,7 +201,7 @@ namespace this_file
 
                     static float_t smax_value = 0.0f ;
                     float_t const mm = ( max_value + smax_value ) * 0.5f;
-                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), (int_t)_frequencies0.size(), 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth() - 100.0f , 100.0f ) );
+                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), (int_t)_frequencies0.size()/4, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth() - 100.0f , 100.0f ) );
                     smax_value = max_value ;
                 }
 
