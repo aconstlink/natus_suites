@@ -1,5 +1,5 @@
 cmake_minimum_required( VERSION 3.6 )
-project( "natus_examples" )
+project( "natus_tests" )
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build )
@@ -41,7 +41,7 @@ foreach( _subdir ${subdirs} )
 
   set( app_name "${_subdir}" )
   add_subdirectory( ${_subdir} )
-  set_target_properties( ${app_name} PROPERTIES FOLDER "natus_examples" )
+  set_target_properties( ${app_name} PROPERTIES FOLDER "natus_tests" )
 endforeach()
 
 natus_vs_gen_bat_for_dlls()
