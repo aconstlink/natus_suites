@@ -15,7 +15,6 @@ natus_emacs_default_directory( "${CMAKE_CURRENT_LIST_DIR}/natus" )
 
 #set( CMAKE_CXX_STANDARD 17 )
 set( subdirs
-
     "04_app"
     "05_imgui"
     "06_devices"

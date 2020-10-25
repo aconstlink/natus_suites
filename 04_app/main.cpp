@@ -22,6 +22,8 @@ namespace this_file
     private:
 
         app::window_async_t _wid_async ;
+
+        //app::window_async_t _wid_async_b ;
         
         natus::graphics::render_state_sets_res_t _render_states = natus::graphics::render_state_sets_t() ;
         natus::graphics::render_object_res_t _rc = natus::graphics::render_object_t() ;
@@ -42,15 +44,18 @@ namespace this_file
         {
             natus::application::app::window_info_t wi ;
             _wid_async = this_t::create_window( "A Render Window", wi ) ;
+
+            //_wid_async_b = this_t::create_window( "A Second Render Window", wi, 
+               // { natus::graphics::backend_type::d3d11, natus::graphics::backend_type::gl3 } ) ;
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
-            _wid_async = ::std::move( rhv._wid_async ) ;
-            _camera_0 = ::std::move( rhv._camera_0 ) ;
-            _camera_1 = ::std::move( rhv._camera_1 ) ;
-            _gconfig = ::std::move( rhv._gconfig ) ;
-            _rc = ::std::move( rhv._rc) ;
+            _wid_async = std::move( rhv._wid_async ) ;
+            _camera_0 = std::move( rhv._camera_0 ) ;
+            _camera_1 = std::move( rhv._camera_1 ) ;
+            _gconfig = std::move( rhv._gconfig ) ;
+            _rc = std::move( rhv._rc) ;
         }
         virtual ~test_app( void_t ) 
         {}

@@ -62,13 +62,15 @@ namespace this_file
         test_app( void_t )
         {
             natus::application::app::window_info_t wi ;
-            _wid_async = this_t::create_window( "An Imgui Rendering Test", wi ) ;
+            _wid_async = this_t::create_window( "OpenAL Backend Test", wi ) ;
             _wid_async.first.fullscreen( _fullscreen ) ;
             _wid_async.first.vsync( _vsync ) ;
 
             _imgui = natus::gfx::imgui_res_t( natus::gfx::imgui_t() ) ;
 
             _freq_bands.resize( 14 ) ;
+
+            _audio.init() ;
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) )
