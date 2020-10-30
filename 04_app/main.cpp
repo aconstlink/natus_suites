@@ -43,10 +43,12 @@ namespace this_file
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
+            #if 1
             _wid_async = this_t::create_window( "A Render Window", wi ) ;
-
-            //_wid_async_b = this_t::create_window( "A Second Render Window", wi, 
-               // { natus::graphics::backend_type::d3d11, natus::graphics::backend_type::gl3 } ) ;
+            #else
+            _wid_async = this_t::create_window( "A Render Window", wi, 
+                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
+            #endif
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
@@ -175,7 +177,7 @@ namespace this_file
                                 out_color = u_color * texture( u_tex, var_tx0 ) ;
                             } )" ) ) ;
                     
-                    sc.insert( natus::graphics::backend_type::gl3, ::std::move(ss) ) ;
+                    sc.insert( natus::graphics::backend_type::gl3, std::move(ss) ) ;
                 }
 
                 // shaders : es 3.0
@@ -210,7 +212,44 @@ namespace this_file
                                 out_color = u_color * texture( u_tex, var_tx0 ) ;
                             } )" ) ) ;
 
-                    sc.insert( natus::graphics::backend_type::es3, ::std::move(ss) ) ;
+                    sc.insert( natus::graphics::backend_type::es3, std::move(ss) ) ;
+                }
+
+                // shaders : hlsl 11
+                {
+                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
+
+                        set_vertex_shader( natus::graphics::shader_t( R"(
+                            struct VS_OUTPUT
+                            {
+                                float4 pos : SV_POSITION;
+                                float2 tx : TEXCOORD0;
+                            };
+
+                            VS_OUTPUT VS( float4 in_pos : POSITION, float2 in_tx : TEXCOORD0 )
+                            {
+                                VS_OUTPUT output = (VS_OUTPUT)0;
+                                //output.Pos = mul( Pos, World );
+                                //output.Pos = mul( output.Pos, View );
+                                //output.pos = mul( output.Pos, Projection );
+                                output.pos = in_pos ;
+                                output.tx = in_tx ;
+                                return output;
+                            } )" ) ).
+
+                        set_pixel_shader( natus::graphics::shader_t( R"(
+                            struct VS_OUTPUT
+                            {
+                                float4 Pos : SV_POSITION;
+                                float2 tx : TEXCOORD0;
+                            };
+
+                            float4 PS( VS_OUTPUT input ) : SV_Target
+                            {
+                                return float4( input.tx.x, input.tx.y, 0.0f, 1.0f );    // Yellow, with Alpha = 1
+                            } )" ) ) ;
+
+                    sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
                 }
 
                 // configure more details
