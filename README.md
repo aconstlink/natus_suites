@@ -1,5 +1,5 @@
-# natus_examples
+# natus_tests
 
-Actually, currently just a test dump!
+Adding manual tests here. Those can be seen as examples though.
 
-There will be a clean example repo later on.
+A real sample repo will be created later on.
