@@ -220,6 +220,12 @@ namespace this_file
                     natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
 
                         set_vertex_shader( natus::graphics::shader_t( R"(
+                            cbuffer ConstantBuffer : register( b0 ) 
+                            {
+                                matrix u_proj ;
+                                matrix u_view ;
+                            }
+
                             struct VS_OUTPUT
                             {
                                 float4 pos : SV_POSITION;
@@ -228,11 +234,10 @@ namespace this_file
 
                             VS_OUTPUT VS( float4 in_pos : POSITION, float2 in_tx : TEXCOORD0 )
                             {
-                                VS_OUTPUT output = (VS_OUTPUT)0;
+                                VS_OUTPUT output = (VS_OUTPUT)0;                                
                                 //output.Pos = mul( Pos, World );
-                                //output.Pos = mul( output.Pos, View );
-                                //output.pos = mul( output.Pos, Projection );
-                                output.pos = in_pos ;
+                                output.pos = mul( in_pos, u_view );
+                                output.pos = mul( output.pos, u_proj );
                                 output.tx = in_tx ;
                                 return output;
                             } )" ) ).
