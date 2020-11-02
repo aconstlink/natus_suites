@@ -243,6 +243,11 @@ namespace this_file
                             } )" ) ).
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
+                            // texture and sampler needs to be on the same slot.
+                            
+                            Texture2D u_tex : register( t0 );
+                            SamplerState smp_u_tex : register( s0 );
+
                             struct VS_OUTPUT
                             {
                                 float4 Pos : SV_POSITION;
@@ -251,7 +256,7 @@ namespace this_file
 
                             float4 PS( VS_OUTPUT input ) : SV_Target
                             {
-                                return float4( input.tx.x, input.tx.y, 0.0f, 1.0f );    // Yellow, with Alpha = 1
+                                return u_tex.Sample( smp_u_tex, input.tx )  ;
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;

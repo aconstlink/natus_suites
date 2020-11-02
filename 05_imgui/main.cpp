@@ -45,6 +45,8 @@ namespace this_file
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
+            wi.w = 1000 ;
+            wi.h = 1000 ;
             _wid_async = this_t::create_window( "An Imgui Rendering Test", wi ) ;
             _wid_async.first.fullscreen( _fullscreen ) ;
             _wid_async.first.vsync( _vsync ) ;
