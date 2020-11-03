@@ -119,7 +119,7 @@ namespace this_file
                 _gconfig = natus::graphics::geometry_object_t( "quad",
                     natus::graphics::primitive_type::triangles, ::std::move( vb ), ::std::move( ib ) ) ;
 
-                _wid_async.second.configure( _gconfig ) ;
+                _wid_async.async().configure( _gconfig ) ;
             }
 
             // image configuration
@@ -139,7 +139,7 @@ namespace this_file
                 }
                 
 
-                _wid_async.second.configure( _imgconfig ) ;
+                _wid_async.async().configure( _imgconfig ) ;
             }
 
             {
@@ -175,7 +175,7 @@ namespace this_file
                     auto const sc = natus::graphics::nsl_bridge_t().create( 
                         natus::nsl::glsl::generator_t( std::move( res ) ).generate() ).set_name("quad") ;
 
-                    _wid_async.second.configure( sc ) ;
+                    _wid_async.async().configure( sc ) ;
                 }
             }
 
@@ -195,7 +195,7 @@ namespace this_file
                 _rc->add_variable_set( ::std::move( vars ) ) ;
             }
 
-            _wid_async.second.configure( _rc ) ;
+            _wid_async.async().configure( _rc ) ;
 
             return natus::application::result::ok ; 
         }
@@ -227,7 +227,7 @@ namespace this_file
                 natus::graphics::backend_t::render_detail_t detail ;
                 detail.start = 0 ;
                 detail.render_states = _render_states ;
-                _wid_async.second.render( _rc, detail ) ;
+                _wid_async.async().render( _rc, detail ) ;
             }
             return natus::application::result::ok ; 
         }

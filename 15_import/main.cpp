@@ -101,7 +101,7 @@ namespace this_file
                 _gconfig = natus::graphics::geometry_object_t( "quad",
                     natus::graphics::primitive_type::triangles, ::std::move( vb ), ::std::move( ib ) ) ;
 
-                _wid_async.second.configure( _gconfig ) ;
+                _wid_async.async().configure( _gconfig ) ;
             }
 
             // image configuration
@@ -121,7 +121,7 @@ namespace this_file
                 }
                 
 
-                _wid_async.second.configure( _imgconfig ) ;
+                _wid_async.async().configure( _imgconfig ) ;
             }
 
             // shader configuration
@@ -195,6 +195,53 @@ namespace this_file
                     sc.insert( natus::graphics::backend_type::es3, ::std::move(ss) ) ;
                 }
 
+                // shaders : hlsl 11(5.0)
+                {
+                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
+
+                        set_vertex_shader( natus::graphics::shader_t( R"(
+                            cbuffer ConstantBuffer : register( b0 ) 
+                            {
+                                matrix u_proj ;
+                                matrix u_view ;
+                            }
+
+                            struct VS_OUTPUT
+                            {
+                                float4 pos : SV_POSITION;
+                                float2 tx : TEXCOORD0;
+                            };
+
+                            VS_OUTPUT VS( float4 in_pos : POSITION, float2 in_tx : TEXCOORD0 )
+                            {
+                                VS_OUTPUT output = (VS_OUTPUT)0 ;
+                                //output.Pos = mul( Pos, World ) ;
+                                output.pos = mul( in_pos, u_view ) ;
+                                output.pos = mul( output.pos, u_proj ) ;
+                                output.tx = in_tx ;
+                                return output;
+                            } )" ) ).
+
+                        set_pixel_shader( natus::graphics::shader_t( R"(
+                            // texture and sampler needs to be on the same slot.
+                            
+                            Texture2D u_tex : register( t0 );
+                            SamplerState smp_u_tex : register( s0 );
+                            
+                            struct VS_OUTPUT
+                            {
+                                float4 Pos : SV_POSITION;
+                                float2 tx : TEXCOORD0;
+                            };
+
+                            float4 PS( VS_OUTPUT input ) : SV_Target
+                            {
+                                return u_tex.Sample( smp_u_tex, input.tx ) ;
+                            } )" ) ) ;
+
+                    sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
+                }
+
                 // configure more details
                 {
                     sc
@@ -204,7 +251,7 @@ namespace this_file
                         .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
                 }
 
-                _wid_async.second.configure( sc ) ;
+                _wid_async.async().configure( sc ) ;
             }
 
             {
@@ -223,7 +270,7 @@ namespace this_file
                 _rc->add_variable_set( ::std::move( vars ) ) ;
             }
 
-            _wid_async.second.configure( _rc ) ;
+            _wid_async.async().configure( _rc ) ;
 
             return natus::application::result::ok ; 
         }
@@ -255,7 +302,7 @@ namespace this_file
                 natus::graphics::backend_t::render_detail_t detail ;
                 detail.start = 0 ;
                 detail.render_states = _render_states ;
-                _wid_async.second.render( _rc, detail ) ;
+                _wid_async.async().render( _rc, detail ) ;
             }
             return natus::application::result::ok ; 
         }

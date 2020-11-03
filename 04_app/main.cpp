@@ -105,7 +105,7 @@ namespace this_file
                 _gconfig = natus::graphics::geometry_object_t( "quad",
                     natus::graphics::primitive_type::triangles, ::std::move( vb ), ::std::move( ib ) ) ;
 
-                _wid_async.second.configure( _gconfig ) ;
+                _wid_async.async().configure( _gconfig ) ;
             }
 
             // image configuration
@@ -139,7 +139,7 @@ namespace this_file
                     .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
                     .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
 
-                _wid_async.second.configure( _imgconfig ) ;
+                _wid_async.async().configure( _imgconfig ) ;
             }
 
             // shader configuration
@@ -215,7 +215,7 @@ namespace this_file
                     sc.insert( natus::graphics::backend_type::es3, std::move(ss) ) ;
                 }
 
-                // shaders : hlsl 11
+                // shaders : hlsl 11(5.0)
                 {
                     natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
 
@@ -273,7 +273,7 @@ namespace this_file
                         .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
                 }
 
-                _wid_async.second.configure( sc ) ;
+                _wid_async.async().configure( sc ) ;
             }
 
             {
@@ -343,7 +343,7 @@ namespace this_file
                 _rc->add_variable_set( ::std::move( vars ) ) ;
             }
 
-            _wid_async.second.configure( _rc ) ;
+            _wid_async.async().configure( _rc ) ;
 
             return natus::application::result::ok ; 
         }
@@ -411,7 +411,7 @@ namespace this_file
                     array[ 2 ].pos = natus::math::vec3f_t( +x, +0.5f, 0.0f ) ;
                     array[ 3 ].pos = natus::math::vec3f_t( +0.5f, -0.5f, 0.0f ) ;
                 } );
-                _wid_async.second.update( _gconfig ) ;
+                _wid_async.async().update( _gconfig ) ;
             }
 
             // per frame update of variables
@@ -466,7 +466,7 @@ namespace this_file
                 //detail.num_elems = 3 ;
                 detail.varset = 2 ;
                 detail.render_states = _render_states ;
-                _wid_async.second.render( _rc, detail ) ;
+                _wid_async.async().render( _rc, detail ) ;
             }
 
             {
@@ -485,7 +485,7 @@ namespace this_file
                 //detail.num_elems = 3 ;
                 detail.varset = 0 ;
                 detail.render_states = rs ;
-                _wid_async.second.render( _rc, detail ) ;
+                _wid_async.async().render( _rc, detail ) ;
             }
 
             // print calls from run-time per second

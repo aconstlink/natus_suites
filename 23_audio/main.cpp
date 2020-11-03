@@ -63,8 +63,8 @@ namespace this_file
             wi.w = 1200 ;
             wi.h = 400 ;
             _wid_async = this_t::create_window( "Frequencies", wi ) ;
-            _wid_async.first.fullscreen( _fullscreen ) ;
-            _wid_async.first.vsync( _vsync ) ;
+            _wid_async.window().fullscreen( _fullscreen ) ;
+            _wid_async.window().vsync( _vsync ) ;
 
             _imgui = natus::gfx::imgui_res_t( natus::gfx::imgui_t() ) ;
 
@@ -117,7 +117,7 @@ namespace this_file
                 natus::log::global_t::status( "no ascii keyboard found" ) ;
             }
 
-            _imgui->init( _wid_async.second ) ;
+            _imgui->init( _wid_async.async() ) ;
 
             _audio.configure( natus::audio::capture_type::what_u_hear, _capture ) ;
 
@@ -145,13 +145,13 @@ namespace this_file
                     natus::device::components::key_state::released )
                 {
                     _fullscreen = !_fullscreen ;
-                    _wid_async.first.fullscreen( _fullscreen ) ;
+                    _wid_async.window().fullscreen( _fullscreen ) ;
                 }
                 else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f9 ) ==
                     natus::device::components::key_state::released )
                 {
                     _vsync = !_vsync ;
-                    _wid_async.first.vsync( _vsync ) ;
+                    _wid_async.window().vsync( _vsync ) ;
                 }
             }
 
@@ -228,7 +228,7 @@ namespace this_file
                 ImGui::End() ;
             } ) ;
 
-            _imgui->render( _wid_async.second ) ;
+            _imgui->render( _wid_async.async() ) ;
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 

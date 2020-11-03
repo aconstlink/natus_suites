@@ -62,8 +62,8 @@ namespace this_file
         {
             natus::application::app::window_info_t wi ;
             _wid_async = this_t::create_window( "Generate Some Audio", wi ) ;
-            _wid_async.first.fullscreen( _fullscreen ) ;
-            _wid_async.first.vsync( _vsync ) ;
+            _wid_async.window().fullscreen( _fullscreen ) ;
+            _wid_async.window().vsync( _vsync ) ;
 
             _imgui = natus::gfx::imgui_res_t( natus::gfx::imgui_t() ) ;
 
@@ -110,7 +110,7 @@ namespace this_file
             if( !_dev_mouse.is_valid() ) natus::log::global_t::status( "no three mouse found" ) ;
             if( !_dev_ascii.is_valid() ) natus::log::global_t::status( "no ascii keyboard found" ) ;
 
-            _imgui->init( _wid_async.second ) ;
+            _imgui->init( _wid_async.async() ) ;
 
             //
             // prepare the audio buffer for playing
@@ -159,13 +159,13 @@ namespace this_file
                     natus::device::components::key_state::released )
                 {
                     _fullscreen = !_fullscreen ;
-                    _wid_async.first.fullscreen( _fullscreen ) ;
+                    _wid_async.window().fullscreen( _fullscreen ) ;
                 }
                 else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f9 ) ==
                     natus::device::components::key_state::released )
                 {
                     _vsync = !_vsync ;
-                    _wid_async.first.vsync( _vsync ) ;
+                    _wid_async.window().vsync( _vsync ) ;
                 }
             }
 
@@ -217,7 +217,7 @@ namespace this_file
                 ImGui::End() ;
             } ) ;
 
-            _imgui->render( _wid_async.second ) ;
+            _imgui->render( _wid_async.async() ) ;
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
