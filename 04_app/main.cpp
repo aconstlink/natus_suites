@@ -247,6 +247,8 @@ namespace this_file
                             
                             Texture2D u_tex : register( t0 );
                             SamplerState smp_u_tex : register( s0 );
+                            
+                            float4 u_color ;
 
                             struct VS_OUTPUT
                             {
@@ -256,7 +258,7 @@ namespace this_file
 
                             float4 PS( VS_OUTPUT input ) : SV_Target
                             {
-                                return u_tex.Sample( smp_u_tex, input.tx )  ;
+                                return u_tex.Sample( smp_u_tex, input.tx ) * u_color ;
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
