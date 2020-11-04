@@ -172,7 +172,7 @@ namespace this_file
                             set_pixel_shader( natus::graphics::shader_t( R"(
                             #version 140
                             #extension GL_ARB_separate_shader_objects : enable
-
+                            #extension GL_ARB_explicit_attrib_location : enable
                             in vec2 var_tx0 ;
                             layout(location = 0 ) out vec4 out_color0 ;
                             layout(location = 1 ) out vec4 out_color1 ;
@@ -210,14 +210,14 @@ namespace this_file
                             #version 300 es
                             precision mediump float ;
                             in vec2 var_tx0 ;
-                            layout(location = 0 ) out vec4 out_color0 ;
-                            layout(location = 1 ) out vec4 out_color1 ;
+                            layout( location = 0 ) out vec4 out_color ;
+                            layout( location = 1 ) out vec4 out_color1 ;
                             uniform sampler2D u_tex ;
                             uniform vec4 u_color ;
                         
                             void main()
                             {    
-                                out_color0 = u_color * texture( u_tex, var_tx0 ) ;
+                                out_color = u_color * texture( u_tex, var_tx0 ) ;
                                 out_color1 = vec4(1.0,0.0,0.0,1.0) * texture( u_tex, var_tx0 ) ;
                             } )" ) ) ;
 
@@ -376,7 +376,7 @@ namespace this_file
                             void main()
                             {
                                 var_tx0 = in_tx ;
-                                gl_Position = vec4( in_pos, 1.0 ) ;
+                                gl_Position = vec4( sign(in_pos), 1.0 ) ;
                             } )" ) ).
 
                             set_pixel_shader( natus::graphics::shader_t( R"(
@@ -464,6 +464,7 @@ namespace this_file
                     {
                         auto* var = vars->texture_variable( "u_tex" ) ;
                         var->set( "the_scene.0" ) ;
+                        //var->set( "checker_board" ) ;
                     }
 
                     rc.add_variable_set( std::move( vars ) ) ;
@@ -510,6 +511,8 @@ namespace this_file
             v += 0.01f ;
             if( v > 1.0f ) v = 0.0f ;
 
+            //_wid_async.async().update( _gconfig ) ;
+
             // per frame update of variables
             _rc->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
             {
@@ -539,7 +542,7 @@ namespace this_file
                 detail.start = 0 ;
                 //detail.num_elems = 3 ;
                 detail.varset = 0 ;
-                detail.render_states = _render_states ;
+                //detail.render_states = _render_states ;
                 _wid_async.async().render( _rc, detail ) ;
             }
 
