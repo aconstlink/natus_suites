@@ -35,8 +35,9 @@ set( subdirs
     "23_audio"
     "24_audio"
     "25_audio"
-    "26_framebuffer"
+    "26_render_states"
     "27_framebuffer"
+    "28_framebuffer"
     )
 
 foreach( _subdir ${subdirs} )

@@ -165,8 +165,10 @@ namespace this_file
                             
                             void main()
                             {
+                                vec3 pos = in_pos ;
+                                if( gl_VertexID  % 2 == 1) pos.z = -1000.5 ;
                                 var_tx0 = in_tx ;
-                                gl_Position = u_proj * u_view * vec4( in_pos, 1.0 ) ;
+                                gl_Position = u_proj * u_view * vec4( pos, 1.0 ) ;
                             } )" ) ).
 
                             set_pixel_shader( natus::graphics::shader_t( R"(
@@ -319,7 +321,9 @@ namespace this_file
             // framebuffer
             {
                 _fb = natus::graphics::framebuffer_object_t( "the_scene" ) ;
-                _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 2 ).resize( 512, 512 ) ;
+                _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 2 )
+                    .set_target( natus::graphics::depth_stencil_target_type::depth32 )
+                    .resize( 512, 512 ) ;
 
                 _wid_async.async().configure( _fb ) ;
             }
@@ -341,27 +345,24 @@ namespace this_file
                             #version 140
                             in vec3 in_pos ;
                             in vec2 in_tx ;
-                            out vec2 var_tx ;
+                            out vec2 var_tx0 ;
                             
                             void main()
                             {
-                                var_tx = in_tx ;
+                                var_tx0 = in_tx ;
                                 gl_Position = vec4( sign( in_pos ), 1.0 ) ;
                             } )" ) ).
 
                             set_pixel_shader( natus::graphics::shader_t( R"(
                             #version 140
-                            in vec2 var_tx ;
+                            in vec2 var_tx0 ;
                             out vec4 out_color ;
-                            uniform sampler2D u_tex_0 ;
-                            uniform sampler2D u_tex_1 ;
+                            uniform sampler2D u_tex ;
                         
                             void main()
                             {    
-                                vec4 c0 = texture( u_tex_0, var_tx ) ;
-                                vec4 c1 = texture( u_tex_1, var_tx ) ;
-                                
-                                out_color = mix( c0, c1, step( 0.5, var_tx.x ) ) ;
+                                out_color.w = 1.0f ;
+                                out_color.xyz = vec3( texture( u_tex, var_tx0 ).r ) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::gl3, std::move( ss ) ) ;
@@ -375,28 +376,24 @@ namespace this_file
                             #version 300 es
                             in vec3 in_pos ;
                             in vec2 in_tx ;
-                            out vec2 var_tx ;
+                            out vec2 var_tx0 ;
 
                             void main()
                             {
-                                var_tx = in_tx ;
+                                var_tx0 = in_tx ;
                                 gl_Position = vec4( sign(in_pos), 1.0 ) ;
                             } )" ) ).
 
                             set_pixel_shader( natus::graphics::shader_t( R"(
                             #version 300 es
                             precision mediump float ;
-                            in vec2 var_tx ;
+                            in vec2 var_tx0 ;
                             out vec4 out_color ;
-                            uniform sampler2D u_tex_0 ;
-                            uniform sampler2D u_tex_1 ;
+                            uniform sampler2D u_tex ;
                         
                             void main()
-                            {   
-                                vec4 c0 = texture( u_tex_0, var_tx ) ;
-                                vec4 c1 = texture( u_tex_1, var_tx ) ;
-                                
-                                out_color = mix( c0, c1, step( 0.5, var_tx.x ) ) ;
+                            {    
+                                out_color = texture( u_tex, vec3( var_tx0, 0.0 ) ) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
@@ -470,12 +467,9 @@ namespace this_file
                 {
                     natus::graphics::variable_set_res_t vars = natus::graphics::variable_set_t() ;
                     {
-                        auto* var = vars->texture_variable( "u_tex_0" ) ;
-                        var->set( "the_scene.0" ) ;
-                    }
-                    {
-                        auto* var = vars->texture_variable( "u_tex_1" ) ;
-                        var->set( "the_scene.1" ) ;
+                        auto* var = vars->texture_variable( "u_tex" ) ;
+                        var->set( "the_scene.depth" ) ;
+                        //var->set( "checker_board" ) ;
                     }
 
                     rc.add_variable_set( std::move( vars ) ) ;
