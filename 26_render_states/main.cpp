@@ -45,7 +45,7 @@ namespace this_file
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
-            #if 1
+            #if 0
             _wid_async = this_t::create_window( "A Render Window", wi ) ;
             _wid_async2 = this_t::create_window( "A Render Window", wi,
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 }) ;
@@ -56,7 +56,7 @@ namespace this_file
             _wid_async2.window().resize( 500, 500 ) ;
             #else
             _wid_async = this_t::create_window( "A Render Window", wi, 
-                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
+                { natus::graphics::backend_type::es3, natus::graphics::backend_type::d3d11 } ) ;
             #endif
         }
         test_app( this_cref_t ) = delete ;
@@ -123,7 +123,7 @@ namespace this_file
                     natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
                 _wid_async.async().configure( geo ) ;
-                _wid_async2.async().configure( geo ) ;
+                //_wid_async2.async().configure( geo ) ;
                 _geometries.emplace_back( std::move( geo ) ) ;
             }
 
@@ -159,7 +159,7 @@ namespace this_file
                     .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
 
                 _wid_async.async().configure( _imgconfig ) ;
-                _wid_async2.async().configure( _imgconfig ) ;
+                //_wid_async2.async().configure( _imgconfig ) ;
             }
 
             
@@ -301,7 +301,7 @@ namespace this_file
                 }
 
                 _wid_async.async().configure( sc ) ;
-                _wid_async2.async().configure( sc ) ;
+                //_wid_async2.async().configure( sc ) ;
             }
 
             // the rendering objects
@@ -356,7 +356,7 @@ namespace this_file
                 }
                 
                 _wid_async.async().configure( rc ) ;
-                _wid_async2.async().configure( rc ) ;
+                //_wid_async2.async().configure( rc ) ;
                 _render_objects.emplace_back( std::move( rc ) ) ;
             }
             
@@ -427,7 +427,7 @@ namespace this_file
                 detail.varset = 0 ;
                 //detail.render_states = _render_states ;
                 _wid_async.async().render( _render_objects[i], detail ) ;
-                _wid_async2.async().render( _render_objects[i], detail ) ;
+                //_wid_async2.async().render( _render_objects[i], detail ) ;
             }
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
