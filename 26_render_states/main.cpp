@@ -292,15 +292,13 @@ namespace this_file
                         #version 300 es
                         precision mediump float ;
                         in vec2 var_tx0 ;
-                        layout( location = 0 ) out vec4 out_color ;
-                        layout( location = 1 ) out vec4 out_color1 ;
+                        out vec4 out_color ;
                         uniform sampler2D u_tex ;
                         uniform vec4 u_color ;
                         
                         void main()
                         {    
                             out_color = u_color * texture( u_tex, var_tx0 ) ;
-                            out_color1 = vec4(1.0,0.0,0.0,1.0) * texture( u_tex, var_tx0 ) ;
                         } )" ) ) ;
 
                     sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
