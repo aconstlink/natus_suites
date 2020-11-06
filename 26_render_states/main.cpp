@@ -9,6 +9,10 @@
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
 #include <natus/profiling/macros.h>
+
+#include <natus/geometry/mesh/tri_mesh.h>
+#include <natus/geometry/mesh/flat_tri_mesh.h>
+#include <natus/geometry/3d/cube.h>
 #include <natus/math/utility/angle.hpp>
 #include <natus/math/utility/3d/transformation.hpp>
 
@@ -30,6 +34,7 @@ namespace this_file
         natus::graphics::render_state_sets_res_t _render_states = natus::graphics::render_state_sets_t() ;
         natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
 
+        natus::graphics::state_object_res_t _root_render_states ;
         natus::ntd::vector< natus::graphics::render_object_res_t > _render_objects ;
         natus::ntd::vector< natus::graphics::geometry_object_res_t > _geometries ;
 
@@ -84,8 +89,67 @@ namespace this_file
         virtual natus::application::result on_init( void_t )
         { 
             {
-                _camera_0.look_at( natus::math::vec3f_t( 100.0f, 100.0f, -100.0f ),
+                _camera_0.look_at( natus::math::vec3f_t( 100.0f, 60.0f, -100.0f ),
                         natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
+            }
+
+            // root render states
+            {
+                natus::graphics::state_object_t so = natus::graphics::state_object_t(
+                    "root_render_states" ) ;
+
+
+                {
+                    natus::graphics::render_state_sets_t rss ;
+                    rss.depth_s.do_depth_test = true ;
+                    rss.depth_s.do_depth_write = true ;
+                    so.add_render_state_set( rss ) ;
+                }
+
+                _root_render_states = std::move( so ) ;
+                _wid_async.async().configure( _root_render_states ) ;
+                _wid_async2.async().configure( _root_render_states ) ;
+            }
+
+            // cube
+            {
+                natus::geometry::cube_t::input_params ip ;
+                ip.scale = natus::math::vec3f_t( 1.0f ) ;
+                ip.tess = 100 ;
+
+                natus::geometry::tri_mesh_t tm ;
+                natus::geometry::cube_t::make( &tm, ip ) ;
+                
+                natus::geometry::flat_tri_mesh_t ftm ;
+                tm.flatten( ftm ) ;
+
+                auto vb = natus::graphics::vertex_buffer_t()
+                    .add_layout_element( natus::graphics::vertex_attribute::position, natus::graphics::type::tfloat, natus::graphics::type_struct::vec3 )
+                    .add_layout_element( natus::graphics::vertex_attribute::texcoord0, natus::graphics::type::tfloat, natus::graphics::type_struct::vec2 )
+                    .resize( ftm.get_num_vertices() ).update<vertex>( [&] ( vertex* array, size_t const ne )
+                {
+                    for( size_t i=0; i<ne; ++i )
+                    {
+                        {
+                            array[ i ].pos = ftm.get_vertex_position_3d( i ) ;
+                            array[ i ].tx = ftm.get_vertex_texcoord( 0, i ) ;
+                        }
+                    }
+                } );
+
+                auto ib = natus::graphics::index_buffer_t().
+                    set_layout_element( natus::graphics::type::tuint ).resize( ftm.indices.size() ).
+                    update<uint_t>( [&] ( uint_t* array, size_t const ne )
+                {
+                    for( size_t i = 0; i < ne; ++i ) array[ i ] = ftm.indices[ i ] ;
+                } ) ;
+
+                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "cube",
+                    natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
+
+                _wid_async.async().configure( geo ) ;
+                _wid_async2.async().configure( geo ) ;
+                _geometries.emplace_back( std::move( geo ) ) ;
             }
 
             // geometry configuration
@@ -183,7 +247,7 @@ namespace this_file
                         void main()
                         {
                             vec3 pos = in_pos ;
-                            pos.xy *= 20.0 ;
+                            pos.xyz *= 20.0 ;
                             var_tx0 = in_tx ;
                             gl_Position = u_proj * u_view * u_world * vec4( pos, 1.0 ) ;
                         } )" ) ).
@@ -220,7 +284,7 @@ namespace this_file
                         {
                             var_tx0 = in_tx ;
                             vec3 pos = in_pos ;
-                            pos.xy *= 20.0 ;
+                            pos.xyz *= 20.0 ;
                             gl_Position = u_proj * u_view * u_world * vec4( pos, 1.0 ) ;
                         } )" ) ).
 
@@ -264,7 +328,7 @@ namespace this_file
                         {
                             VS_OUTPUT output = (VS_OUTPUT)0;                                
                             //output.Pos = mul( Pos, World );
-                            float4 pos = in_pos * float4( 20.0, 20.0, 1.0, 1.0 ) ;
+                            float4 pos = in_pos * float4( 20.0, 20.0, 20.0, 1.0 ) ;
                             output.pos = mul( pos, u_world );
                             output.pos = mul( output.pos, u_view );
                             output.pos = mul( output.pos, u_proj );
@@ -315,7 +379,7 @@ namespace this_file
                     "object." + std::to_string(i)  ) ;
 
                 {
-                    rc.link_geometry( "quad" ) ;
+                    rc.link_geometry( "cube" ) ;
                     rc.link_shader( "just_render" ) ;
                 }
 
@@ -340,16 +404,17 @@ namespace this_file
                     {
                         float_t const angle = ( float( i ) / float_t( num_object - 1 ) ) * 2.0f * natus::math::constants<float_t>::pi() ;
 
-                        natus::math::m3d::trafof_t trans ;
                         
+                        natus::math::m3d::trafof_t trans ;
+
                         natus::math::m3d::trafof_t rotation ;
                         rotation.rotate_by_axis_fr( natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), angle ) ;
                         natus::math::m3d::trafof_t translation ;
                         translation.translate_fr( natus::math::vec3f_t( 0.0f, 0.0f, -50.0f ) ) ;
 
-                        trans.transform_fr( translation ) ;
                         trans.transform_fl( rotation ) ;
-
+                        trans.transform_fl( translation ) ;
+                        trans.transform_fl( rotation ) ;
 
                         auto* var = vars->data_variable< natus::math::mat4f_t >( "u_world" ) ;
                         var->set( trans.get_transformation() ) ;
@@ -401,6 +466,19 @@ namespace this_file
             v += 0.01f ;
             if( v > 1.0f ) v = 0.0f ;
 
+            static __clock_t::time_point tp = __clock_t::now() ;
+
+            size_t const num_object = _render_objects.size() ;
+
+            float_t const dt = float_t ( double_t( std::chrono::duration_cast< std::chrono::milliseconds >( __clock_t::now() - tp ).count() ) / 1000.0 ) ;
+            
+            // render the root render state sets render object
+            // this will set the root render states
+            {
+                _wid_async.async().use( 0, _root_render_states ) ;
+                _wid_async2.async().use( 0, _root_render_states ) ;
+            }
+
             // per frame update of variables
             for( auto & rc : _render_objects )
             {
@@ -420,8 +498,27 @@ namespace this_file
                         auto* var = vs->data_variable< natus::math::vec4f_t >( "u_color" ) ;
                         var->set( natus::math::vec4f_t( v, 0.0f, 1.0f, 0.5f ) ) ;
                     }
+
+                    {
+                        static float_t  angle = 0.0f ;
+                        angle = ( ( (dt/10.0f)  ) * 2.0f * natus::math::constants<float_t>::pi() ) ;
+                        if( angle > 2.0f * natus::math::constants<float_t>::pi() ) angle = 0.0f ;
+                        
+                        auto* var = vs->data_variable< natus::math::mat4f_t >( "u_world" ) ;
+                        natus::math::m3d::trafof_t trans( var->get() ) ;
+
+                        natus::math::m3d::trafof_t rotation ;
+                        rotation.rotate_by_axis_fr( natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), angle ) ;
+                        
+                        trans.transform_fl( rotation ) ;
+
+                        var->set( trans.get_transformation() ) ;
+                    }
                 } ) ;
             }
+
+            tp = __clock_t::now() ;
+
             for( size_t i=0; i<_render_objects.size(); ++i )
             {
                 natus::graphics::backend_t::render_detail_t detail ;
