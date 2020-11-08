@@ -100,8 +100,13 @@ namespace this_file
 
                 {
                     natus::graphics::render_state_sets_t rss ;
+                    rss.clear_s.do_clear = true ;
+                    rss.clear_s.do_color = true ;
+                    rss.clear_s.do_depth = true ;
                     rss.depth_s.do_depth_test = true ;
                     rss.depth_s.do_depth_write = true ;
+                    rss.polygon_s.do_culling = true ;
+                    rss.polygon_s.ff = natus::graphics::front_face::clock_wise ;
                     so.add_render_state_set( rss ) ;
                 }
 
