@@ -24,11 +24,13 @@ namespace this_file
 
         app::window_async_t _wid_async ;
         
-        natus::graphics::render_state_sets_res_t _render_states = natus::graphics::render_state_sets_t() ;
+        
         natus::graphics::render_object_res_t _rc = natus::graphics::render_object_t() ;
         natus::graphics::geometry_object_res_t _gconfig = natus::graphics::geometry_object_t() ;
         natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
         natus::graphics::framebuffer_object_res_t _fb = natus::graphics::framebuffer_object_t() ;
+
+        natus::graphics::state_object_res_t _root_render_states ;
 
         // blit framebuffer to backbuffer
         natus::graphics::render_object_res_t _rc_map = natus::graphics::render_object_t() ;
@@ -72,6 +74,23 @@ namespace this_file
                 _camera_0.orthographic( 4.0f, 4.0f, 1.0f, 1000.0f ) ;
             }
 
+            // root render states
+            {
+                natus::graphics::state_object_t so = natus::graphics::state_object_t(
+                    "root_render_states" ) ;
+
+
+                {
+                    natus::graphics::render_state_sets_t rss ;
+                    rss.depth_s.do_depth_test = false ;
+                    rss.depth_s.do_depth_write = false ;
+                    so.add_render_state_set( rss ) ;
+                }
+
+                _root_render_states = std::move( so ) ;
+                _wid_async.async().configure( _root_render_states ) ;
+            }
+
             // geometry configuration
             {
                 auto vb = natus::graphics::vertex_buffer_t()
@@ -95,12 +114,12 @@ namespace this_file
                     update<uint_t>( [] ( uint_t* array, size_t const ne )
                 {
                     array[ 0 ] = 0 ;
-                    array[ 1 ] = 1 ;
-                    array[ 2 ] = 2 ;
+                    array[ 1 ] = 2 ;
+                    array[ 2 ] = 1 ;
 
                     array[ 3 ] = 0 ;
-                    array[ 4 ] = 2 ;
-                    array[ 5 ] = 3 ;
+                    array[ 4 ] = 3 ;
+                    array[ 5 ] = 2 ;
                 } ) ;
 
                 _gconfig = natus::graphics::geometry_object_t( "quad",
@@ -265,9 +284,18 @@ namespace this_file
                                 float2 tx : TEXCOORD0;
                             };
 
-                            float4 PS( VS_OUTPUT input ) : SV_Target
+                            struct MRT_OUT 
                             {
-                                return u_tex.Sample( smp_u_tex, input.tx ) * u_color ;
+                                float4 color1 : SV_Target0 ;
+                                float4 color2 : SV_Target1 ;
+                            } ;
+
+                            MRT_OUT PS( VS_OUTPUT input )
+                            {
+                                MRT_OUT o = (MRT_OUT)0;
+                                o.color1 = u_tex.Sample( smp_u_tex, input.tx ) * u_color ;
+                                o.color2 = float4(1.0f,0.0f,0.0f,1.0f) ; //u_tex.Sample( smp_u_tex, input.tx ).rrra ;
+                                return o ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
@@ -361,7 +389,7 @@ namespace this_file
                                 vec4 c0 = texture( u_tex_0, var_tx ) ;
                                 vec4 c1 = texture( u_tex_1, var_tx ) ;
                                 
-                                out_color = mix( c0, c1, step( 0.5, var_tx.x ) ) ;
+                                out_color = vec4(1) + 0.00001f * mix( c0, c1, step( 0.5, var_tx.x ) ) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::gl3, std::move( ss ) ) ;
@@ -407,11 +435,6 @@ namespace this_file
                         natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
 
                             set_vertex_shader( natus::graphics::shader_t( R"(
-                            cbuffer ConstantBuffer : register( b0 ) 
-                            {
-                                matrix u_proj ;
-                                matrix u_view ;
-                            }
 
                             struct VS_OUTPUT
                             {
@@ -421,10 +444,8 @@ namespace this_file
 
                             VS_OUTPUT VS( float4 in_pos : POSITION, float2 in_tx : TEXCOORD0 )
                             {
-                                VS_OUTPUT output = (VS_OUTPUT)0;                                
-                                //output.Pos = mul( Pos, World );
-                                output.pos = mul( in_pos, u_view );
-                                output.pos = mul( output.pos, u_proj );
+                                VS_OUTPUT output = (VS_OUTPUT)0;
+                                output.pos = float4( sign( in_pos.xy ), 0.0f, 1.0f ) ;
                                 output.tx = in_tx ;
                                 return output;
                             } )" ) ).
@@ -432,11 +453,12 @@ namespace this_file
                             set_pixel_shader( natus::graphics::shader_t( R"(
                             // texture and sampler needs to be on the same slot.
                             
-                            Texture2D u_tex : register( t0 );
-                            SamplerState smp_u_tex : register( s0 );
-                            
-                            float4 u_color ;
+                            Texture2D u_tex_0 : register( t0 );
+                            SamplerState smp_u_tex_0 : register( s0 );
 
+                            Texture2D u_tex_1 : register( t1 );
+                            SamplerState smp_u_tex_1 : register( s1 );
+                            
                             struct VS_OUTPUT
                             {
                                 float4 Pos : SV_POSITION;
@@ -445,7 +467,8 @@ namespace this_file
 
                             float4 PS( VS_OUTPUT input ) : SV_Target
                             {
-                                return u_tex.Sample( smp_u_tex, input.tx ) * u_color ;
+                                return u_tex_0.Sample( smp_u_tex_0, input.tx ) *
+                                   u_tex_1.Sample( smp_u_tex_1, input.tx ) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
@@ -472,10 +495,12 @@ namespace this_file
                     {
                         auto* var = vars->texture_variable( "u_tex_0" ) ;
                         var->set( "the_scene.0" ) ;
+                        //var->set( "checker_board" ) ;
                     }
                     {
                         auto* var = vars->texture_variable( "u_tex_1" ) ;
                         var->set( "the_scene.1" ) ;
+                        //var->set( "checker_board" ) ;
                     }
 
                     rc.add_variable_set( std::move( vars ) ) ;
@@ -522,6 +547,8 @@ namespace this_file
             v += 0.01f ;
             if( v > 1.0f ) v = 0.0f ;
 
+            
+
             // per frame update of variables
             _rc->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
             {
@@ -541,10 +568,20 @@ namespace this_file
                 }
             } ) ;
 
+            // render the root render state sets render object
+            // this will set the root render states
+            {
+                _wid_async.async().use( 0, _root_render_states ) ;
+                //_wid_async2.async().use( 0, _root_render_states ) ;
+            }
+
+            
             // use the framebuffer
             {
                 _wid_async.async().use( _fb ) ;
             }
+
+            
 
             {
                 natus::graphics::backend_t::render_detail_t detail ;
@@ -559,7 +596,6 @@ namespace this_file
             {
                 _wid_async.async().use( natus::graphics::framebuffer_object_res_t() ) ;
             }
-
             // perform mapping
             _wid_async.async().render( _rc_map ) ;
 

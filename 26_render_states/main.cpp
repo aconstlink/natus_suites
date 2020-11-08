@@ -31,7 +31,6 @@ namespace this_file
         app::window_async_t _wid_async ;
         app::window_async_t _wid_async2 ;
         
-        natus::graphics::render_state_sets_res_t _render_states = natus::graphics::render_state_sets_t() ;
         natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
 
         natus::graphics::state_object_res_t _root_render_states ;
