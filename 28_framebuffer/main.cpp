@@ -531,7 +531,7 @@ namespace this_file
                         
                             void main()
                             {    
-                                out_color = texture( u_tex, vec3( var_tx0, 0.0 ) ) ;
+                                out_color = texture( u_tex, var_tx0 ) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
