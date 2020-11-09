@@ -564,18 +564,19 @@ namespace this_file
                             #version 300 es
                             in vec3 in_pos ;
                             in vec2 in_tx ;
-                            out vec2 var_tx0 ;
+                            out vec2 var_tx ;
 
                             void main()
                             {
-                                var_tx0 = in_tx ;
+                                var_tx = in_tx ;
                                 gl_Position = vec4( sign(in_pos), 1.0 ) ;
                             } )" ) ).
 
                             set_pixel_shader( natus::graphics::shader_t( R"(
                             #version 300 es
                             precision mediump float ;
-                            in vec2 var_tx0 ;
+                            out vec4 out_color ;
+                            in vec2 var_tx ;
                             uniform sampler2D u_tex_0 ;
                             uniform sampler2D u_tex_1 ;
                             uniform sampler2D u_tex_2 ;
@@ -603,7 +604,7 @@ namespace this_file
                                 else if( var_tx.x < 0.5 && var_tx.y < 0.5 )
                                 {
                                     vec2 tx = (var_tx - vec2( 0.0, 0.0 ) ) * 2.0 ; 
-                                    out_color = vec4( vec3(pow( texture( u_tex_3, tx ).r,2.0)), 1.0 ); 
+                                    out_color = vec4( texture( u_tex_3, tx ).rgb, 1.0 ); 
                                 }
                             } )" ) ) ;
 
