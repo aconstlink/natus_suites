@@ -47,8 +47,7 @@ namespace this_file
             natus::application::app::window_info_t wi ;
             wi.w = 1000 ;
             wi.h = 1000 ;
-            _wid_async = this_t::create_window( "An Imgui Rendering Test", wi, 
-                { natus::graphics::backend_type::d3d11} ) ;
+            _wid_async = this_t::create_window( "An Imgui Rendering Test", wi ) ;
             _wid_async.window().fullscreen( _fullscreen ) ;
             _wid_async.window().vsync( _vsync ) ;
 
