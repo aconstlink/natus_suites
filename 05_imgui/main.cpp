@@ -47,7 +47,8 @@ namespace this_file
             natus::application::app::window_info_t wi ;
             wi.w = 1000 ;
             wi.h = 1000 ;
-            _wid_async = this_t::create_window( "An Imgui Rendering Test", wi ) ;
+            _wid_async = this_t::create_window( "An Imgui Rendering Test", wi, 
+                { natus::graphics::backend_type::d3d11} ) ;
             _wid_async.window().fullscreen( _fullscreen ) ;
             _wid_async.window().vsync( _vsync ) ;
 
@@ -56,11 +57,11 @@ namespace this_file
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
-            _wid_async = ::std::move( rhv._wid_async ) ;
-            _imgui = ::std::move( rhv._imgui ) ;
+            _wid_async = std::move( rhv._wid_async ) ;
+            _imgui = std::move( rhv._imgui ) ;
 
-            _dev_mouse = ::std::move( rhv._dev_mouse ) ;
-            _dev_ascii = ::std::move( rhv._dev_ascii ) ;
+            _dev_mouse = std::move( rhv._dev_mouse ) ;
+            _dev_ascii = std::move( rhv._dev_ascii ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -69,8 +70,6 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t )
         { 
-            
-
             natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
             {
                 if( natus::device::three_device_res_t::castable( dev_in ) )

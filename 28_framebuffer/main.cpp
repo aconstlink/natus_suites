@@ -103,16 +103,20 @@ namespace this_file
                 natus::graphics::state_object_t so = natus::graphics::state_object_t(
                     "root_render_states" ) ;
 
-
                 {
                     natus::graphics::render_state_sets_t rss ;
-                    rss.clear_s.do_clear = true ;
-                    rss.clear_s.do_color = true ;
-                    rss.clear_s.do_depth = true ;
-                    rss.depth_s.do_depth_test = true ;
-                    rss.depth_s.do_depth_write = true ;
-                    rss.polygon_s.do_culling = true ;
-                    rss.polygon_s.ff = natus::graphics::front_face::clock_wise ;
+
+                    rss.depth_s.do_change = true ;
+                    rss.depth_s.ss.do_activate = true ;
+                    rss.depth_s.ss.do_depth_write = true ;
+
+                    rss.polygon_s.do_change = true ;
+                    rss.polygon_s.ss.do_activate = true ;
+                    rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
+                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
+                    rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
+
+                   
                     so.add_render_state_set( rss ) ;
                 }
 
@@ -814,17 +818,17 @@ namespace this_file
 
             tp = __clock_t::now() ;
 
-            // use the framebuffer
-            {
-                _wid_async.async().use( _fb ) ;
-                _wid_async2.async().use( _fb ) ;
-            }
-
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( 0, _root_render_states ) ;
-                _wid_async2.async().use( 0, _root_render_states ) ;
+                _wid_async.async().use( _root_render_states ) ;
+                _wid_async2.async().use( _root_render_states ) ;
+            }
+
+            // use the framebuffer
+            {
+                _wid_async.async().use( _fb, true, true, false ) ;
+                _wid_async2.async().use( _fb, true, true, false ) ;
             }
 
             for( size_t i=0; i<_render_objects.size(); ++i )
@@ -840,15 +844,15 @@ namespace this_file
 
             // un-use the framebuffer
             {
-                _wid_async.async().use( natus::graphics::framebuffer_object_res_t() ) ;
-                _wid_async2.async().use( natus::graphics::framebuffer_object_res_t() ) ;
+                _wid_async.async().use( natus::graphics::framebuffer_object_t() ) ;
+                _wid_async2.async().use( natus::graphics::framebuffer_object_t() ) ;
             }
 
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( 0, natus::graphics::state_object_t() ) ;
-                _wid_async2.async().use( 0, natus::graphics::state_object_t() ) ;
+                _wid_async.async().use( natus::graphics::state_object_t(), 10 ) ;
+                _wid_async2.async().use( natus::graphics::state_object_t(), 10 ) ;
             }
 
             // perform mapping

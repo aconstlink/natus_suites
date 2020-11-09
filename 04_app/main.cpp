@@ -473,10 +473,11 @@ namespace this_file
                 natus::graphics::render_state_sets_res_t rs = natus::graphics::render_state_sets_t() ;
 
                 {
-                    natus::graphics::blend_state_set bs ;
-                    bs.do_blend = true ;
-                    bs.src_blend_factor = natus::graphics::blend_factor::one ;
-                    bs.dst_blend_factor = natus::graphics::blend_factor::one_minus_src_alpha ;
+                    natus::graphics::blend_states_set_t bs ;
+                    bs.do_change = true ;
+                    bs.ss.do_activate = true ;
+                    bs.ss.src_blend_factor = natus::graphics::blend_factor::one ;
+                    bs.ss.dst_blend_factor = natus::graphics::blend_factor::one_minus_src_alpha ;
                     rs->blend_s = bs ;
                 }
 

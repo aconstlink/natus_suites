@@ -100,13 +100,12 @@ namespace this_file
 
                 {
                     natus::graphics::render_state_sets_t rss ;
-                    rss.clear_s.do_clear = true ;
-                    rss.clear_s.do_color = true ;
-                    rss.clear_s.do_depth = true ;
-                    rss.depth_s.do_depth_test = true ;
-                    rss.depth_s.do_depth_write = true ;
-                    rss.polygon_s.do_culling = true ;
-                    rss.polygon_s.ff = natus::graphics::front_face::clock_wise ;
+                    rss.depth_s.do_change = true ;
+                    rss.depth_s.ss.do_activate = true ;
+                    rss.depth_s.ss.do_depth_write = true ;
+                    rss.polygon_s.do_change = true ;
+                    rss.polygon_s.ss.do_activate = true ;
+                    rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
                     so.add_render_state_set( rss ) ;
                 }
 
@@ -477,8 +476,8 @@ namespace this_file
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( 0, _root_render_states ) ;
-                _wid_async2.async().use( 0, _root_render_states ) ;
+                _wid_async.async().use( _root_render_states ) ;
+                _wid_async2.async().use( _root_render_states ) ;
             }
 
             // per frame update of variables

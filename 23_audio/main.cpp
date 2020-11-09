@@ -55,6 +55,8 @@ namespace this_file
         natus::ntd::vector< float_t > _frequencies1 ;
         natus::ntd::vector< float_t > _freq_bands ;
 
+        natus::graphics::state_object_res_t _root_render_states ;
+
     public:
 
         test_app( void_t )
@@ -62,7 +64,7 @@ namespace this_file
             natus::application::app::window_info_t wi ;
             wi.w = 1200 ;
             wi.h = 400 ;
-            _wid_async = this_t::create_window( "Frequencies", wi ) ;
+            _wid_async = this_t::create_window( "Frequencies", wi, { natus::graphics::backend_type::d3d11 } ) ;
             _wid_async.window().fullscreen( _fullscreen ) ;
             _wid_async.window().vsync( _vsync ) ;
 
@@ -115,6 +117,32 @@ namespace this_file
             if( !_dev_ascii.is_valid() )
             {
                 natus::log::global_t::status( "no ascii keyboard found" ) ;
+            }
+
+            // root render states
+            {
+                natus::graphics::state_object_t so = natus::graphics::state_object_t(
+                    "root_render_states" ) ;
+
+
+                {
+                    natus::graphics::render_state_sets_t rss ;
+                    
+                    rss.polygon_s.do_change = true ;
+                    rss.polygon_s.ss.do_activate = true ;
+                    rss.polygon_s.ss.ff = natus::graphics::front_face::counter_clock_wise ;
+                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
+                    rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
+                    
+                    rss.blend_s.do_change = true ;
+                    rss.blend_s.ss.do_activate = true ;
+                    rss.blend_s.ss.src_blend_factor = natus::graphics::blend_factor::src_alpha ;
+                    rss.blend_s.ss.dst_blend_factor = natus::graphics::blend_factor::one_minus_src_alpha ;
+                    so.add_render_state_set( rss ) ;
+                }
+
+                _root_render_states = std::move( so ) ;
+                _wid_async.async().configure( _root_render_states ) ;
             }
 
             _imgui->init( _wid_async.async() ) ;
@@ -180,6 +208,8 @@ namespace this_file
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t )
         {
+            _wid_async.async().use( _root_render_states ) ;
+
             _imgui->begin() ;
             _imgui->execute( [&] ( ImGuiContext* ctx )
             {
@@ -229,6 +259,8 @@ namespace this_file
             } ) ;
 
             _imgui->render( _wid_async.async() ) ;
+
+            _wid_async.async().use( natus::graphics::state_object_t() ) ;
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 

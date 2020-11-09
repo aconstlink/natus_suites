@@ -82,8 +82,9 @@ namespace this_file
 
                 {
                     natus::graphics::render_state_sets_t rss ;
-                    rss.depth_s.do_depth_test = false ;
-                    rss.depth_s.do_depth_write = false ;
+                    rss.depth_s.do_change = true ;
+                    rss.depth_s.ss.do_activate = false ;
+                    rss.depth_s.ss.do_depth_write = false ;
                     so.add_render_state_set( rss ) ;
                 }
 
@@ -571,7 +572,7 @@ namespace this_file
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( 0, _root_render_states ) ;
+                _wid_async.async().use( _root_render_states ) ;
                 //_wid_async2.async().use( 0, _root_render_states ) ;
             }
 
