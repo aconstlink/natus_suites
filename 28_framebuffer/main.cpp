@@ -347,9 +347,9 @@ namespace this_file
                         set_vertex_shader( natus::graphics::shader_t( R"(
                             cbuffer ConstantBuffer : register( b0 ) 
                             {
-                                matrix u_proj ;
-                                matrix u_view ;
-                                matrix u_world ;
+                                float4x4 u_proj ;
+                                float4x4 u_view ;
+                                float4x4 u_world ;
                             }
 
                             struct VS_OUTPUT
@@ -374,10 +374,12 @@ namespace this_file
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
                             // texture and sampler needs to be on the same slot.
-                            
-                            Texture2D u_tex : register( t0 );
-                            SamplerState smp_u_tex : register( s0 );
-                            
+                            cbuffer ConstantBuffer : register( b0 ) 
+                            {
+                                Texture2D u_tex : register( t0 );
+                                SamplerState smp_u_tex : register( s0 );
+                            }                            
+
                             float4 u_color ;
 
                             struct VS_OUTPUT
