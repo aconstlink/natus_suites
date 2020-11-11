@@ -352,6 +352,12 @@ namespace this_file
                                 float4x4 u_world ;
                             }
 
+                            struct VS_INPUT
+                            {
+                                float4 pos : POSITION ; 
+                                float3 nrm : NORMAL ;
+                                float2 tx : TEXCOORD0 ;
+                            } ;
                             struct VS_OUTPUT
                             {
                                 float4 pos : SV_POSITION;
@@ -359,16 +365,15 @@ namespace this_file
                                 float2 tx : TEXCOORD0;
                             };
 
-                            VS_OUTPUT VS( float4 in_pos : POSITION, float3 in_nrm : NORMAL, float2 in_tx : TEXCOORD0 )
+                            VS_OUTPUT VS( VS_INPUT input )
                             {
-                                VS_OUTPUT output = (VS_OUTPUT)0;                                
-                                //output.Pos = mul( Pos, World );
-                                float4 pos = in_pos * float4( 10.0, 10.0, 10.0, 1.0 ) ;
+                                VS_OUTPUT output = (VS_OUTPUT)0;
+                                float4 pos = input.pos * float4( 10.0, 10.0, 10.0, 1.0 ) ;
                                 output.pos = mul( pos, u_world );
                                 output.pos = mul( output.pos, u_view );
                                 output.pos = mul( output.pos, u_proj );
-                                output.tx = in_tx ;
-                                output.nrm = mul( float4( in_nrm, 0.0 ), u_world ) ;
+                                output.tx = input.tx ;
+                                output.nrm = mul( float4( input.nrm, 0.0 ), u_world ) ;
                                 return output;
                             } )" ) ).
 
