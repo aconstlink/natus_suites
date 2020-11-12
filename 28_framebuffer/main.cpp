@@ -354,9 +354,9 @@ namespace this_file
 
                             struct VS_INPUT
                             {
-                                float4 pos : POSITION ; 
-                                float3 nrm : NORMAL ;
-                                float2 tx : TEXCOORD0 ;
+                                float4 in_pos : POSITION ; 
+                                float3 in_nrm : NORMAL ;
+                                float2 in_tx : TEXCOORD0 ;
                             } ;
                             struct VS_OUTPUT
                             {
@@ -368,24 +368,27 @@ namespace this_file
                             VS_OUTPUT VS( VS_INPUT input )
                             {
                                 VS_OUTPUT output = (VS_OUTPUT)0;
-                                float4 pos = input.pos * float4( 10.0, 10.0, 10.0, 1.0 ) ;
+                                float4 pos = input.in_pos * float4( 10.0, 10.0, 10.0, 1.0 ) ;
                                 output.pos = mul( pos, u_world );
                                 output.pos = mul( output.pos, u_view );
                                 output.pos = mul( output.pos, u_proj );
-                                output.tx = input.tx ;
-                                output.nrm = mul( float4( input.nrm, 0.0 ), u_world ) ;
+                                output.tx = input.in_tx ;
+                                output.nrm = mul( float4( input.in_nrm, 0.0 ), u_world ) ;
                                 return output;
                             } )" ) ).
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
                             // texture and sampler needs to be on the same slot.
+                            
+                            Texture2D u_tex : register( t0 );
+                                SamplerState smp_u_tex : register( s0 );
+
                             cbuffer ConstantBuffer : register( b0 ) 
                             {
-                                Texture2D u_tex : register( t0 );
-                                SamplerState smp_u_tex : register( s0 );
+                                float4 u_color ;
                             }                            
 
-                            float4 u_color ;
+                            
 
                             struct VS_OUTPUT
                             {

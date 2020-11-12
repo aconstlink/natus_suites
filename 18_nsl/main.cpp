@@ -13,7 +13,7 @@
 #include <natus/io/database.h>
 #include <natus/nsl/database.hpp>
 #include <natus/nsl/dependency_resolver.hpp>
-#include <natus/nsl/api/glsl.hpp>
+#include <natus/nsl/generator_structs.hpp>
 
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
@@ -40,7 +40,7 @@ namespace this_file
 
         app::window_async_t _wid_async ;
         
-        natus::graphics::render_state_sets_res_t _render_states = natus::graphics::render_state_sets_t() ;
+        natus::graphics::state_object_res_t _root_render_states ;
         natus::graphics::render_object_res_t _rc = natus::graphics::render_object_t() ;
         natus::graphics::geometry_object_res_t _gconfig = natus::graphics::geometry_object_t() ;
         natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
@@ -60,7 +60,7 @@ namespace this_file
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
-            _wid_async = this_t::create_window( "A Render Window", wi ) ;
+            _wid_async = this_t::create_window( "A Render Window", wi, { natus::graphics::backend_type::gl3 } ) ;
             _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
             _ndb = natus::nsl::database_t() ;
         }
@@ -83,6 +83,28 @@ namespace this_file
         { 
             {
                 _camera_0.orthographic( 2.0f, 2.0f, 1.0f, 1000.0f ) ;
+            }
+
+            // root render states
+            {
+                natus::graphics::state_object_t so = natus::graphics::state_object_t(
+                    "root_render_states" ) ;
+
+
+                {
+                    natus::graphics::render_state_sets_t rss ;
+                    rss.depth_s.do_change = true ;
+                    rss.depth_s.ss.do_activate = false ;
+                    rss.depth_s.ss.do_depth_write = false ;
+                    rss.polygon_s.do_change = true ;
+                    rss.polygon_s.ss.do_activate = true ;
+                    rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
+                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
+                    so.add_render_state_set( rss ) ;
+                }
+
+                _root_render_states = std::move( so ) ;
+                _wid_async.async().configure( _root_render_states ) ;
             }
 
             // geometry configuration
@@ -160,7 +182,7 @@ namespace this_file
                 }
                
                 {
-                    natus::nsl::generateable_t res = natus::nsl::dependency_resolver_t().resolve( 
+                    natus::nsl::generatable_t res = natus::nsl::dependency_resolver_t().resolve( 
                         _ndb, natus::nsl::symbol( "myconfig" ) ) ;
 
                     if( res.missing.size() != 0 )
@@ -173,7 +195,7 @@ namespace this_file
                     }
 
                     auto const sc = natus::graphics::nsl_bridge_t().create( 
-                        natus::nsl::glsl::generator_t( std::move( res ) ).generate() ).set_name("quad") ;
+                        natus::nsl::generator_t( std::move( res ) ).generate() ).set_name("quad") ;
 
                     _wid_async.async().configure( sc ) ;
                 }
@@ -187,6 +209,10 @@ namespace this_file
             // add variable set 0
             {
                 natus::graphics::variable_set_res_t vars = natus::graphics::variable_set_t() ;
+                {
+                    auto* var = vars->data_variable< natus::math::vec4f_t >( "some_color" ) ;
+                    var->set( natus::math::vec4f_t( 0.0f, 1.0f, 0.5f, 1.0f ) ) ;
+                }
                 {
                     auto * var = vars->texture_variable( "some_texture" ) ;
                     var->set( "loaded_image" ) ;
@@ -209,16 +235,18 @@ namespace this_file
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
         { 
+            _wid_async.async().use( _root_render_states ) ;
+
             // per frame update of variables
             _rc->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
             {
                 {
-                    auto* var = vs->data_variable< natus::math::mat4f_t >( "u_view" ) ;
+                    auto* var = vs->data_variable< natus::math::mat4f_t >( "view" ) ;
                     var->set( _camera_0.mat_view() ) ;
                 }
 
                 {
-                    auto* var = vs->data_variable< natus::math::mat4f_t >( "u_proj" ) ;
+                    auto* var = vs->data_variable< natus::math::mat4f_t >( "proj" ) ;
                     var->set( _camera_0.mat_proj() ) ;
                 }
             } ) ;
@@ -226,7 +254,6 @@ namespace this_file
             {
                 natus::graphics::backend_t::render_detail_t detail ;
                 detail.start = 0 ;
-                detail.render_states = _render_states ;
                 _wid_async.async().render( _rc, detail ) ;
             }
             return natus::application::result::ok ; 

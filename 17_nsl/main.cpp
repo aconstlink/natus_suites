@@ -6,7 +6,7 @@
 #include <natus/nsl/parser.hpp>
 #include <natus/nsl/database.hpp>
 #include <natus/nsl/dependency_resolver.hpp>
-#include <natus/nsl/api/glsl.hpp>
+#include <natus/nsl/api/glsl/generator.hpp>
 
 #include <natus/format/global.h>
 #include <natus/io/database.h>
@@ -47,7 +47,7 @@ int main( int argc, char ** argv )
         } ) ;
     }
 
-    natus::nsl::generateable_t res ;
+    natus::nsl::generatable_t res ;
 
     // resolve all dependencies
     {
@@ -64,7 +64,7 @@ int main( int argc, char ** argv )
 
     // generate code
     {
-        natus::nsl::glsl::generator_t gen( std::move( res ) ) ;
+        natus::nsl::generator_t gen( std::move( res ) ) ;
 
         auto const gen_code = gen.generate() ;
 

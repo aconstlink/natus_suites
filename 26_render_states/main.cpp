@@ -350,10 +350,17 @@ namespace this_file
                             float4 Pos : SV_POSITION;
                             float2 tx : TEXCOORD0;
                         };
-
-                        float4 PS( VS_OUTPUT input ) : SV_Target
+            
+                        struct PS_OUTPUT
                         {
-                            return u_tex.Sample( smp_u_tex, input.tx ) * u_color ;
+                            float4 out_color : SV_TARGET0 ;
+                        } ;
+
+                        PS_OUTPUT PS( VS_OUTPUT input ) 
+                        {
+                            PS_OUTPUT output = (PS_OUTPUT)0 ;
+                            output.out_color = u_tex.Sample( smp_u_tex, input.tx ) * u_color ;
+                            return output ;
                         } )" ) ) ;
 
                     sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
