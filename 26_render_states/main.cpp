@@ -105,7 +105,7 @@ namespace this_file
                     rss.depth_s.ss.do_depth_write = true ;
                     rss.polygon_s.do_change = true ;
                     rss.polygon_s.ss.do_activate = true ;
-                    rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
+                    rss.polygon_s.ss.ff = natus::graphics::front_face::counter_clock_wise ;
                     so.add_render_state_set( rss ) ;
                 }
 

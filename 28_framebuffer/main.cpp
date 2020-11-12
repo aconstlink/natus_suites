@@ -112,7 +112,7 @@ namespace this_file
 
                     rss.polygon_s.do_change = true ;
                     rss.polygon_s.ss.do_activate = true ;
-                    rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
+                    rss.polygon_s.ss.ff = natus::graphics::front_face::counter_clock_wise ;
                     rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
 
@@ -189,12 +189,12 @@ namespace this_file
                     update<uint_t>( [] ( uint_t* array, size_t const ne )
                 {
                     array[ 0 ] = 0 ;
-                    array[ 1 ] = 2 ;
-                    array[ 2 ] = 1 ;
+                    array[ 1 ] = 1 ;
+                    array[ 2 ] = 2 ;
 
                     array[ 3 ] = 0 ;
-                    array[ 4 ] = 3 ;
-                    array[ 5 ] = 2 ;
+                    array[ 4 ] = 2 ;
+                    array[ 5 ] = 3 ;
                 } ) ;
 
                 natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "quad",
