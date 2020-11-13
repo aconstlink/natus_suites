@@ -38,8 +38,6 @@ namespace this_file
 
         natus::audio::async_access_t _audio ;
 
-        natus::gfx::imgui_res_t _imgui ;
-
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
 
@@ -61,9 +59,6 @@ namespace this_file
             _wid_async = this_t::create_window( "Generate Some Audio", wi ) ;
             _wid_async.window().fullscreen( _fullscreen ) ;
             _wid_async.window().vsync( _vsync ) ;
-
-            _imgui = natus::gfx::imgui_res_t( natus::gfx::imgui_t() ) ;
-
             _audio = this_t::create_audio_engine() ;
         }
 
@@ -71,7 +66,6 @@ namespace this_file
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) )
         {
             _wid_async = ::std::move( rhv._wid_async ) ;
-            _imgui = ::std::move( rhv._imgui ) ;
 
             _dev_mouse = ::std::move( rhv._dev_mouse ) ;
             _dev_ascii = ::std::move( rhv._dev_ascii ) ;
@@ -102,8 +96,6 @@ namespace this_file
 
             if( !_dev_mouse.is_valid() ) natus::log::global_t::status( "no three mouse found" ) ;
             if( !_dev_ascii.is_valid() ) natus::log::global_t::status( "no ascii keyboard found" ) ;
-
-            _imgui->init( _wid_async.async() ) ;
 
             //
             // prepare the audio buffer for playing
@@ -145,19 +137,11 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )
         {
-            natus::gfx::imgui_t::window_data_t wd ;
-            wd.width = wei.w ;
-            wd.height = wei.h ;
-            _imgui->update( wd ) ;
-
             return natus::application::result::ok ;
         }
 
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t )
         {
-            _imgui->update( _dev_mouse ) ;
-            _imgui->update( _dev_ascii ) ;
-
             {
                 natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
                 if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f8 ) ==
@@ -198,34 +182,31 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
+        virtual natus::application::result on_tool( natus::gfx::imgui_view_t imgui )
+        {
+            ImGui::SetNextWindowSize( ImVec2( 200, 200 ) ) ;
+
+            ImGui::Begin( "Audio" ) ;
+
+            if( ImGui::Button( "Play" ) )
+            {
+                *_play_res = natus::audio::result::initial ;
+                _eo = natus::audio::execution_options::play ;
+            }
+            else if( ImGui::Button( "Stop" ) )
+            {
+                *_play_res = natus::audio::result::initial ;
+                _eo = natus::audio::execution_options::stop ;
+            }
+
+            ImGui::End() ;
+            NATUS_PROFILING_COUNTER_HERE( "ImGui Clock" ) ;
+            return natus::application::result::ok ;
+        } 
+
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t )
         {
-            _imgui->begin() ;
-            _imgui->execute( [&] ( ImGuiContext* ctx )
-            {
-                ImGui::SetCurrentContext( ctx ) ;
-
-                ImGui::SetNextWindowSize( ImVec2( 200, 200 ) ) ;
-                ImGui::Begin( "Audio" ) ;
-
-                if( ImGui::Button( "Play" ) )
-                {
-                    *_play_res = natus::audio::result::initial ;
-                    _eo = natus::audio::execution_options::play ;
-                }
-                else if( ImGui::Button( "Stop" ) )
-                {
-                    *_play_res = natus::audio::result::initial ;
-                    _eo = natus::audio::execution_options::stop ;
-                }
-
-                ImGui::End() ;
-            } ) ;
-
-            _imgui->render( _wid_async.async() ) ;
-
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
-
             return natus::application::result::ok ;
         }
 

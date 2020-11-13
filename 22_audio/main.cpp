@@ -36,8 +36,6 @@ namespace this_file
 
         app::window_async_t _wid_async ;
 
-        natus::gfx::imgui_res_t _imgui ;
-
         float_t _demo_width = 10.0f ;
         float_t _demo_height = 10.0f ;
 
@@ -66,8 +64,6 @@ namespace this_file
             _wid_async.window().fullscreen( _fullscreen ) ;
             _wid_async.window().vsync( _vsync ) ;
 
-            _imgui = natus::gfx::imgui_res_t( natus::gfx::imgui_t() ) ;
-
             _freq_bands.resize( 14 ) ;
 
             _audio.init() ;
@@ -76,7 +72,6 @@ namespace this_file
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) )
         {
             _wid_async = ::std::move( rhv._wid_async ) ;
-            _imgui = ::std::move( rhv._imgui ) ;
 
             _dev_mouse = ::std::move( rhv._dev_mouse ) ;
             _dev_ascii = ::std::move( rhv._dev_ascii ) ;
@@ -117,8 +112,6 @@ namespace this_file
                 natus::log::global_t::status( "no ascii keyboard found" ) ;
             }
 
-            _imgui->init( _wid_async.async() ) ;
-
             _audio.configure( natus::audio::capture_type::what_u_hear, _capture ) ;
 
             return natus::application::result::ok ;
@@ -126,11 +119,6 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )
         {
-            natus::gfx::imgui_t::window_data_t wd ;
-            wd.width = wei.w ;
-            wd.height = wei.h ;
-            _imgui->update( wd ) ;
-
             _demo_width = float_t( wei.w ) ;
             _demo_height = float_t( wei.h ) ;
             return natus::application::result::ok ;
@@ -138,9 +126,6 @@ namespace this_file
 
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t )
         {
-            _imgui->update( _dev_mouse ) ;
-            _imgui->update( _dev_ascii ) ;
-
             {
                 natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
                 if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f8 ) ==
@@ -205,65 +190,61 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
+        virtual natus::application::result on_tool( natus::gfx::imgui_res_t imgui )
+        {
+            bool_t open = true ;
+            //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
+            ImGui::ShowDemoWindow( &open ) ;
+
+            ImGui::Begin( "Capture" ) ;
+
+            auto const mm = _capture->minmax() ;
+
+            static int func_type = 0, display_count = ( int ) _captured.size() ;
+
+            // print wave form
+            {
+                ImGui::PlotLines( "Samples", _captured.data(), ( int ) _captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+            }
+
+            // print frequencies
+            {
+                float_t max_value = std::numeric_limits<float_t>::min() ;
+                for( size_t i = 5 ; i < _frequencies0.size(); ++i )
+                    max_value = std::max( _frequencies0[ i ], max_value ) ;
+
+                static float_t smax_value = 0.0f ;
+                float_t const mm = ( max_value + smax_value ) * 0.5f;
+                ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), ( int ) _frequencies0.size() / 4, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                smax_value = max_value ;
+            }
+
+            // tried some sort of peaking, but sucks.
+            {
+                natus::ntd::vector< float_t > difs( _frequencies0.size() ) ;
+                for( size_t i = 0; i < _frequencies0.size(); ++i )
+                {
+                    difs[ i ] = _frequencies0[ i ] - _frequencies1[ i ] ;
+                    difs[ i ] = difs[ i ] < 0.00001f ? 0.0f : difs[ i ] ;
+                }
+
+                float_t max_value = std::numeric_limits<float_t>::min() ;
+                for( size_t i = 0; i < 30/*difs.size()*/; ++i )
+                    max_value = std::max( difs[ i ], max_value ) ;
+
+                static float_t smax_value = 0.0f ;
+                float_t const mm = ( max_value + smax_value ) * 0.5f;
+                ImGui::PlotHistogram( "Difs", difs.data(), 30/*difs.size()*/, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
+                smax_value = max_value ;
+            }
+
+            ImGui::End() ;
+
+            return natus::application::result::ok ;
+        }
+
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t )
         {
-            _imgui->begin() ;
-            _imgui->execute( [&] ( ImGuiContext* ctx )
-            {
-                ImGui::SetCurrentContext( ctx ) ;
-
-
-                bool_t open = true ;
-                //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
-                ImGui::ShowDemoWindow( &open ) ;
-
-                ImGui::Begin( "Capture" ) ;
-
-                auto const mm = _capture->minmax() ;
-
-                static int func_type = 0, display_count = ( int ) _captured.size() ;
-
-                // print wave form
-                {
-                    ImGui::PlotLines( "Samples", _captured.data(), (int)_captured.size(), 0, 0, mm.x(), mm.y(), ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
-                }
-
-                // print frequencies
-                {
-                    float_t max_value = std::numeric_limits<float_t>::min() ;
-                    for( size_t i = 5 ; i < _frequencies0.size(); ++i )
-                        max_value = std::max( _frequencies0[ i ], max_value ) ;
-
-                    static float_t smax_value = 0.0f ;
-                    float_t const mm = ( max_value + smax_value ) * 0.5f;
-                    ImGui::PlotHistogram( "Frequencies", _frequencies0.data(), (int)_frequencies0.size()/4, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
-                    smax_value = max_value ;
-                }
-
-                // tried some sort of peaking, but sucks.
-                {
-                    natus::ntd::vector< float_t > difs( _frequencies0.size() ) ;
-                    for( size_t i = 0; i < _frequencies0.size(); ++i )
-                    {
-                        difs[ i ] = _frequencies0[ i ] - _frequencies1[ i ] ;
-                        difs[ i ] = difs[ i ] < 0.00001f ? 0.0f : difs[ i ] ;
-                    }
-
-                    float_t max_value = std::numeric_limits<float_t>::min() ;
-                    for( size_t i = 0; i < 30/*difs.size()*/; ++i )
-                        max_value = std::max( difs[ i ], max_value ) ;
-
-                    static float_t smax_value = 0.0f ;
-                    float_t const mm = ( max_value + smax_value ) * 0.5f;
-                    ImGui::PlotHistogram( "Difs", difs.data(), 30/*difs.size()*/, 0, 0, 0.0f, mm, ImVec2( ImGui::GetWindowWidth(), 100.0f ) );
-                    smax_value = max_value ;
-                }
-                
-                ImGui::End() ;
-            } ) ;
-
-            _imgui->render( _wid_async.async() ) ;
-
             return natus::application::result::ok ;
         }
 
