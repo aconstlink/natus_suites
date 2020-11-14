@@ -741,6 +741,25 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        #if 1
+        virtual natus::application::result on_tool( natus::gfx::imgui_view_t imgui )
+        {
+            bool_t open = true ;
+            //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
+
+            ImGui::ShowDemoWindow( &open ) ;
+            
+            ImGui::Begin( "Framebuffer" ) ;
+
+            {
+                ImVec2 const dims = ImGui::GetWindowSize() ;
+                ImGui::Image( imgui.texture( "the_scene.0" ), dims ) ;
+            }
+
+            ImGui::End() ;
+            return natus::application::result::ok ;
+        }
+        #endif
         virtual natus::application::result on_shutdown( void_t ) 
         { return natus::application::result::ok ; }
     };
