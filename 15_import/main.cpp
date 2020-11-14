@@ -44,7 +44,7 @@ namespace this_file
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
-            _wid_async = this_t::create_window( "A Render Window", wi ) ;
+            _wid_async = this_t::create_window( "A Render Window", wi, ) ;
             _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
         }
         test_app( this_cref_t ) = delete ;
@@ -107,7 +107,7 @@ namespace this_file
             // image configuration
             {
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                auto fitem = mod_reg->import_from( natus::io::location_t( "images.checker.png" ), _db ) ;
+                auto fitem = mod_reg->import_from( natus::io::location_t( "images.test.jpg" ), _db ) ;
                 natus::format::image_item_res_t ii = fitem.get() ;
                 if( ii.is_valid() )
                 {

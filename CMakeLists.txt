@@ -39,6 +39,7 @@ set( subdirs
     "27_framebuffer_simple"
     "28_framebuffer_mrt"
     "29_framebuffer_nsl"
+    "30_reconfig"
     )
 
 foreach( _subdir ${subdirs} )
