@@ -19,9 +19,11 @@
 #include <natus/nsl/dependency_resolver.hpp>
 #include <natus/nsl/generator_structs.hpp>
 
+#include <natus/geometry/mesh/polygon_mesh.h>
 #include <natus/geometry/mesh/tri_mesh.h>
 #include <natus/geometry/mesh/flat_tri_mesh.h>
 #include <natus/geometry/3d/cube.h>
+#include <natus/geometry/3d/tetra.h>
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
@@ -209,7 +211,7 @@ namespace this_file
                     for( size_t i = 0; i < ne; ++i ) array[ i ] = ftm.indices[ i ] ;
                 } ) ;
 
-                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "cube",
+                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "geometry",
                     natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
                 _wid_async.async().configure( geo ) ;
@@ -344,7 +346,7 @@ namespace this_file
                     "object." + std::to_string(i)  ) ;
 
                 {
-                    rc.link_geometry( "cube" ) ;
+                    rc.link_geometry( "geometry" ) ;
                     rc.link_shader( "just_render" ) ;
                 }
 
@@ -618,7 +620,7 @@ namespace this_file
 
             ImGui::Begin( "Reconfig Objects" ) ;
 
-            if( ImGui::Button( "reconfig image" ) )
+            if( ImGui::Button( "Reconfig Image" ) )
             {
                 _tasks.emplace_back( std::async( std::launch::async, [=] ( void_t )
                 {
@@ -670,6 +672,93 @@ namespace this_file
                 _tasks.emplace_back( std::async( std::launch::async, [=] ( void_t )
                 {
                     
+                } ) ) ;
+            }
+
+            if( ImGui::Button( "Reconfig Geometry" ) )
+            {
+                _tasks.emplace_back( std::async( std::launch::async, [=] ( void_t )
+                {
+                    // tet
+                    {
+                        natus::geometry::tetra::input_params ip ;
+                        ip.scale = natus::math::vec3f_t( 1.0f ) ;
+
+                        natus::geometry::polygon_mesh_t tm ;
+                        natus::geometry::tetra::make( &tm, ip ) ;
+
+                        natus::geometry::flat_tri_mesh_t ftm ;
+                        tm.flatten( ftm ) ;
+
+                        auto vb = natus::graphics::vertex_buffer_t()
+                            .add_layout_element( natus::graphics::vertex_attribute::position, natus::graphics::type::tfloat, natus::graphics::type_struct::vec3 )
+                            .add_layout_element( natus::graphics::vertex_attribute::normal, natus::graphics::type::tfloat, natus::graphics::type_struct::vec3 )
+                            .add_layout_element( natus::graphics::vertex_attribute::texcoord0, natus::graphics::type::tfloat, natus::graphics::type_struct::vec2 )
+                            .resize( ftm.get_num_vertices() ).update<vertex>( [&] ( vertex* array, size_t const ne )
+                        {
+                            for( size_t i = 0; i < ne; ++i )
+                            {
+                                array[ i ].pos = ftm.get_vertex_position_3d( i ) ;
+                                array[ i ].nrm = ftm.get_vertex_normal_3d( i ) ;
+                                array[ i ].tx = ftm.get_vertex_texcoord( 0, i ) ;
+                            }
+                        } );
+
+                        auto ib = natus::graphics::index_buffer_t().
+                            set_layout_element( natus::graphics::type::tuint ).resize( ftm.indices.size() ).
+                            update<uint_t>( [&] ( uint_t* array, size_t const ne )
+                        {
+                            for( size_t i = 0; i < ne; ++i ) array[ i ] = ftm.indices[ i ] ;
+                        } ) ;
+
+                        natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "geometry",
+                            natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
+
+                        _wid_async.async().configure( geo ) ;
+                        _wid_async2.async().configure( geo ) ;
+                    }
+
+                    std::this_thread::sleep_for( std::chrono::seconds( 2 ) ) ;
+
+                    // cube
+                    {
+                        natus::geometry::cube_t::input_params ip ;
+                        ip.scale = natus::math::vec3f_t( 1.0f ) ;
+                        ip.tess = 100 ;
+
+                        natus::geometry::tri_mesh_t tm ;
+                        natus::geometry::cube_t::make( &tm, ip ) ;
+
+                        natus::geometry::flat_tri_mesh_t ftm ;
+                        tm.flatten( ftm ) ;
+
+                        auto vb = natus::graphics::vertex_buffer_t()
+                            .add_layout_element( natus::graphics::vertex_attribute::position, natus::graphics::type::tfloat, natus::graphics::type_struct::vec3 )
+                            .add_layout_element( natus::graphics::vertex_attribute::normal, natus::graphics::type::tfloat, natus::graphics::type_struct::vec3 )
+                            .add_layout_element( natus::graphics::vertex_attribute::texcoord0, natus::graphics::type::tfloat, natus::graphics::type_struct::vec2 )
+                            .resize( ftm.get_num_vertices() ).update<vertex>( [&] ( vertex* array, size_t const ne )
+                        {
+                            for( size_t i = 0; i < ne; ++i )
+                            {
+                                array[ i ].pos = ftm.get_vertex_position_3d( i ) ;
+                                array[ i ].nrm = ftm.get_vertex_normal_3d( i ) ;
+                                array[ i ].tx = ftm.get_vertex_texcoord( 0, i ) ;
+                            }
+                        } );
+
+                        auto ib = natus::graphics::index_buffer_t().
+                            set_layout_element( natus::graphics::type::tuint ).resize( ftm.indices.size() ).
+                            update<uint_t>( [&] ( uint_t* array, size_t const ne )
+                        {
+                            for( size_t i = 0; i < ne; ++i ) array[ i ] = ftm.indices[ i ] ;
+                        } ) ;
+
+                        natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "geometry",
+                            natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
+
+                        _wid_async.async().configure( geo ) ;
+                        _wid_async2.async().configure( geo ) ;
+                    }
                 } ) ) ;
             }
 
