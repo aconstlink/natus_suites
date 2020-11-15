@@ -68,6 +68,10 @@ namespace this_file
 
         bool_t _do_tool = false ;
 
+        typedef std::function< void_t ( void_t ) > work_task_t ;
+
+        natus::ntd::vector< std::future<void_t> > _tasks ;
+
     public:
 
         test_app( void_t ) 
@@ -491,6 +495,20 @@ namespace this_file
                 }
             }
 
+            // clear futures
+            {
+                auto iter = _tasks.begin();
+                while( iter != _tasks.end() )
+                {
+                    if( iter->wait_for( std::chrono::milliseconds(0) ) == std::future_status::ready )
+                    {
+                        iter = _tasks.erase( iter ) ;
+                        continue ;
+                    }
+                    ++iter ;
+                }
+            }
+
             NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
 
             return natus::application::result::ok ; 
@@ -598,11 +616,61 @@ namespace this_file
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
 
-            ImGui::Begin( "Framebuffer" ) ;
+            ImGui::Begin( "Reconfig Objects" ) ;
 
+            if( ImGui::Button( "reconfig image" ) )
             {
-                ImVec2 const dims = ImGui::GetWindowSize() ;
-                ImGui::Image( imgui.texture( "the_scene.0" ), dims ) ;
+                _tasks.emplace_back( std::async( std::launch::async, [=] ( void_t )
+                {
+                    // image configuration
+                    {
+                        natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
+                        auto fitem = mod_reg->import_from( natus::io::location_t( "images.test.png" ), _db ) ;
+                        natus::format::image_item_res_t ii = fitem.get() ;
+                        if( ii.is_valid() )
+                        {
+                            natus::graphics::image_t img = *ii->img ;
+
+                            natus::graphics::image_object_res_t _img_ = natus::graphics::image_object_t( "loaded_image", std::move( img ) )
+                                .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
+                                .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
+                                .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
+                                .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
+
+
+                            _wid_async.async().configure( _img_ ) ;
+                            _wid_async2.async().configure( _img_ ) ;
+                        }
+                    }
+                    
+                    std::this_thread::sleep_for( std::chrono::seconds( 2 ) ) ;
+
+                    // image configuration 
+                    {
+                        natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
+                        auto fitem = mod_reg->import_from( natus::io::location_t( "images.checker.png" ), _db ) ;
+                        natus::format::image_item_res_t ii = fitem.get() ;
+                        if( ii.is_valid() )
+                        {
+                            natus::graphics::image_t img = *ii->img ;
+
+                            natus::graphics::image_object_res_t _img_ = natus::graphics::image_object_t( "loaded_image", std::move( img ) )
+                                .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
+                                .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
+                                .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
+                                .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
+
+
+                            _wid_async.async().configure( _img_ ) ;
+                            _wid_async2.async().configure( _img_ ) ;
+                        }
+                    }
+                } ) ) ;
+
+                _tasks.emplace_back( std::async( std::launch::async, [=] ( void_t )
+                {
+                    
+                } ) ) ;
             }
 
             ImGui::End() ;
