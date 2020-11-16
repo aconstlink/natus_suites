@@ -1,0 +1,11 @@
+
+library dep
+{
+    shader glsl hlsl
+    {
+        float pulse( float a, float b, float x ) 
+        {
+            return nsl.dep.step( a, x ) - nsl.dep.step( b, x ) ;
+        }
+    }
+}

@@ -1,0 +1,81 @@
+config just_render
+{
+    vertex_shader
+    {
+        mat4_t proj : projection ;
+        mat4_t view : view ;
+        mat4_t world : world ;
+
+        // the order must match the geometry 
+        // attribute binding order
+        in vec3_t pos : position ;
+        in vec3_t nrm : normal ;
+        in vec2_t tx : texcoord ;
+
+
+        out vec4_t pos : position ;
+        out vec2_t tx : texcoord ;
+        out vec3_t nrm : normal ;
+
+        shader glsl
+        {
+        void main()
+            {
+                vec3 pos = in_pos ;//+ vec3( 10.5, 0.0, 0.5 ) ;
+                pos.xyz = pos.xyz * 10.0 ;
+                out.tx = in.tx ;
+                out.pos = proj * view * world * vec4( pos, 1.0 ) ;
+                out.nrm = normalize( world * vec4( in.nrm, 0.0 ) ).xyz ;
+            }
+        }
+
+        shader hlsl
+        {
+            void main()
+            {
+                out.pos = float4( in.pos, 1.0 ) * float4( 10.0, 10.0, 10.0, 1.0 ) ; 
+                out.pos = mul( out.pos, world ) ;
+                out.pos = mul( out.pos, view ) ;
+                out.pos = mul( out.pos, proj ) ;
+                out.tx = in.tx ;
+                out.nrm = mul( float4( in.nrm, 0.0 ), world ) ;
+            }
+        }
+    }
+
+    pixel_shader
+    {
+        tex2d_t tex ;
+        vec4_t color ;
+
+        in vec2_t tx : texcoord ;
+        in vec3_t nrm : normal ;
+        out vec4_t color0 : color0 ;
+        out vec4_t color1 : color1 ;
+        out vec4_t color2 : color2 ;
+
+        shader glsl
+        {
+            void main()
+            {
+                out.color0 = color * texture( tex, in.tx ) ;//+ vec4( 0.0, 1.0, 1.0, 1.0);
+                out.color0 = out.color0 + 0.3  * nsl.dep.pulse( 0.4, 0.6, in.tx.x ) ;
+                out.color1 = vec4( in.nrm, 1.0 ) ;
+                out.color2 = vec4( 
+                    vec3( dot( normalize( in.nrm ), normalize( vec3( 1.0, 1.0, 0.5) ) ) ), 
+                    1.0 ) ;
+            }
+        }
+
+        shader hlsl
+        {
+            void main()
+            {
+                out.color0 = tex.Sample( smp_tex, in.tx ) * color ;//* float4(1.0f,1.0f,0.0f,1.0f);
+                out.color0 = out.color0 + 0.3 * nsl.dep.pulse( 0.4f, 0.6f, in.tx.x ) ;
+                out.color1 = float4( normalize( in.nrm ), 1.0f ) ;
+                out.color2 = dot( normalize( in.nrm ), normalize( float3( 1.0f, 1.0f, 1.0f ) ) ) ;
+            }
+        }
+    }
+}
