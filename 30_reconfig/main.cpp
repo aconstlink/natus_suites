@@ -762,6 +762,39 @@ namespace this_file
                 } ) ) ;
             }
 
+            if( ImGui::Button( "Reconfig Object Shader" ) )
+            {
+                _tasks.emplace_back( std::async( std::launch::async, [=] ( void_t )
+                {
+                    natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
+                    auto fitem2 = mod_reg->import_from( natus::io::location_t( "shaders.just_render.nsl" ), _db ) ;
+
+                    // do the config
+                    {
+                        natus::format::nsl_item_res_t ii = fitem2.get() ;
+                        if( ii.is_valid() ) _ndb->insert( std::move( std::move( ii->doc ) ) ) ;
+                    }
+
+                    natus::nsl::generatable_t res = natus::nsl::dependency_resolver_t().resolve(
+                        _ndb, natus::nsl::symbol( "just_render" ) ) ;
+
+                    if( res.missing.size() != 0 )
+                    {
+                        natus::log::global_t::warning( "We have missing symbols." ) ;
+                        for( auto const& s : res.missing )
+                        {
+                            natus::log::global_t::status( s.expand() ) ;
+                        }
+                    }
+
+                    auto const sc = natus::graphics::nsl_bridge_t().create(
+                        natus::nsl::generator_t( std::move( res ) ).generate() ).set_name( "just_render" ) ;
+
+                    _wid_async.async().configure( sc ) ;
+                    _wid_async2.async().configure( sc ) ;
+                } ) ) ;
+            }
+
             ImGui::End() ;
             return natus::application::result::ok ;
         }

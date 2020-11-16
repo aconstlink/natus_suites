@@ -21,7 +21,7 @@ config just_render
         {
         void main()
             {
-                vec3 pos = in_pos ;
+                vec3 pos = in_pos ;//+ vec3( 0.5, 0.0, 0.5 ) ;
                 pos.xyz = pos.xyz * 10.0 ;
                 out.tx = in.tx ;
                 out.pos = proj * view * world * vec4( pos, 1.0 ) ;
@@ -33,7 +33,7 @@ config just_render
         {
             void main()
             {
-                out.pos = float4( in.pos, 1.0 ) * float4( 10.0, 10.0, 10.0, 1.0 ) ;
+                out.pos = float4( in.pos, 1.0 ) * float4( 10.0, 10.0, 10.0, 1.0 ) ; 
                 out.pos = mul( out.pos, world ) ;
                 out.pos = mul( out.pos, view ) ;
                 out.pos = mul( out.pos, proj ) ;
