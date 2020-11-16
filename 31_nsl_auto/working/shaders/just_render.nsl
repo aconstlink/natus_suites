@@ -1,4 +1,4 @@
-config just_render
+config myshaders.just_render
 {
     vertex_shader
     {
