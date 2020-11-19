@@ -1,19 +1,5 @@
 
 library math
 {
-    shader glsl hlsl
-    {
-        float pulse( float a, float b, float x ) 
-        {
-            return step( a, x ) - step( b, x ) ;
-        }
-    }
-
-    /*shader hlsl
-    {
-        float pulse( float a, float b, float x )
-        {
-            return step( a, x ) - step( b, x ) ;
-        }
-    }*/
-}
+    
+} 

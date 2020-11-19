@@ -10,65 +10,62 @@ config post_blit
         out vec4_t pos : position ;
         out vec2_t tx : texcoord ;
 
-        shader glsl
+        void main()
         {
-            void main()
-            {
-                out.tx = in.tx ;
-                out.pos = vec4( sign( in_pos ), 1.0 ) ;
-            }
+            out.tx = in.tx ;
+            out.pos = vec4_t( sign( in_pos ), 1.0 ) ;
         }
 
-        shader hlsl
+        /*shader hlsl
         {
             void main()
             {
                 out.pos = float4( sign( in.pos.xy ), 0.0f, 1.0f ) ;
                 out.tx = in.tx ;
             }
-        }
+        }*/
     }
 
     pixel_shader
     {
         in vec2_t tx : texcoord ;
         out vec4_t color : color0 ;
-                            
+
         tex2d_t u_tex_0 ;
         tex2d_t u_tex_1 ;
         tex2d_t u_tex_2 ;
         tex2d_t u_tex_3 ;
 
-        shader glsl
+        
+        
+        void main()
         {
-            void main()
-            {
-                out.color = vec4(0.5,0.5,0.5,1.0) ;
+            out.color = vec4_t(0.5,0.5,0.5,1.0) ;
 
-                if( in.tx.x < 0.5 && in.tx.y > 0.5 )
-                {
-                    vec2 tx = (in.tx - vec2( 0.0, 0.5 ) ) * 2.0 ; 
-                    out.color = texture( u_tex_0, tx ) ; 
-                }
-                else if( in.tx.x > 0.5 && in.tx.y > 0.5 )
-                {
-                    vec2 tx = (in.tx - vec2( 0.5, 0.5 ) ) * 2.0 ; 
-                    out.color = texture( u_tex_1, tx ) ; 
-                }
-                else if( in.tx.x > 0.5 && in.tx.y < 0.5 )
-                {
-                    vec2 tx = (in.tx - vec2( 0.5, 0.0 ) ) * 2.0 ; 
-                    out.color = vec4( texture( u_tex_2, tx ).xyz, 1.0 ); 
-                }
-                else if( in.tx.x < 0.5 && in.tx.y < 0.5 )
-                {
-                    vec2 tx = (in.tx - vec2( 0.0, 0.0 ) ) * 2.0 ; 
-                    out.color = vec4( vec3(pow( texture( u_tex_3, tx ).r,2.0)), 1.0 ); 
-                }
+            if( in.tx.x < 0.5 && in.tx.y > 0.5 )
+            {
+                vec2_t tx = (in.tx - vec2_t( 0.0, 0.5 ) ) * 2.0 ; 
+                out.color = texture( u_tex_0, tx ) ; 
+            }
+            else if( in.tx.x > 0.5 && in.tx.y > 0.5 )
+            {
+                vec2_t tx = (in.tx - vec2_t( 0.5, 0.5 ) ) * 2.0 ; 
+                out.color = texture( u_tex_1, tx ) ; 
+            }
+            else if( in.tx.x > 0.5 && in.tx.y < 0.5 )
+            {
+                vec2_t tx = (in.tx - vec2_t( 0.5, 0.0 ) ) * 2.0 ; 
+                out.color = vec4_t( texture( u_tex_2, tx ).xyz, 1.0 ); 
+            }
+            else if( in.tx.x < 0.5 && in.tx.y < 0.5 )
+            {
+                vec2_t tx = (in.tx - vec2_t( 0.0, 0.0 ) ) * 2.0 ; 
+                out.color = vec4_t( vec3_t(pow( texture( u_tex_3, tx ).r,2.0)), 1.0 ); 
             }
         }
+        
 
-        shader hlsl
+        /*shader hlsl
         {
             void main()
             {
@@ -101,6 +98,6 @@ config post_blit
                 }
                 out.color = color ;
             }
-        }
+        }*/
     }
 }

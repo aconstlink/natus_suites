@@ -1,11 +1,8 @@
 
 library dep
 {
-    shader glsl hlsl
+    vec4_t my_color( vec4_t color )
     {
-        float pulse( float a, float b, float x ) 
-        {
-            return nsl.dep.step( a, x ) - nsl.dep.step( b, x ) ;
-        }
+        return color + vec4_t( 1.0,0.0,0.0,0.0);
     }
 }

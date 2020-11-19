@@ -1,10 +1,6 @@
 library dep
 {
-    shader glsl hlsl
-    {
-        float step( float a, float x )   
-        {
-            return step( a, x ) ;
-        }
-    }
+    
+        
+    
 }
