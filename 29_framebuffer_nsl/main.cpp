@@ -273,29 +273,13 @@ namespace this_file
                             out vec2_t tx : texcoord ;
                             out vec3_t nrm : normal ;
 
-                            shader glsl
+                            void main()
                             {
-                                void main()
-                                {
-                                    vec3 pos = in_pos ;
-                                    pos.xyz = pos.xyz * 10.0 ;
-                                    out.tx = in.tx ;
-                                    out.pos = proj * view * world * vec4( pos, 1.0 ) ;
-                                    out.nrm = normalize( world * vec4( in.nrm, 0.0 ) ).xyz ;
-                                }
-                            }
-
-                            shader hlsl
-                            {
-                                void main()
-                                {
-                                    out.pos = float4( in.pos, 1.0 ) * float4( 10.0, 10.0, 10.0, 1.0 ) ;
-                                    out.pos = mul( out.pos, world ) ;
-                                    out.pos = mul( out.pos, view ) ;
-                                    out.pos = mul( out.pos, proj ) ;
-                                    out.tx = in.tx ;
-                                    out.nrm = mul( float4( in.nrm, 0.0 ), world ) ;
-                                }
+                                vec3_t pos = in.pos ;
+                                pos.xyz = pos.xyz * 10.0 ;
+                                out.tx = in.tx ;
+                                out.pos = proj * view * world * vec4_t( pos, 1.0 ) ;
+                                out.nrm = normalize( world * vec4_t( in.nrm, 0.0 ) ).xyz ;
                             }
                         }
 
@@ -310,26 +294,12 @@ namespace this_file
                             out vec4_t color1 : color1 ;
                             out vec4_t color2 : color2 ;
 
-                            shader glsl
+                            void main()
                             {
-                                void main()
-                                {
-                                    out.color0 = color * texture( tex, in.tx ) ;
-                                    out.color1 = vec4( in.nrm, 1.0 ) ;
-                                    out.color2 = vec4( 
-                                        vec3( dot( normalize( in.nrm ), normalize( vec3( 1.0, 1.0, 0.5) ) ) ), 
-                                        1.0 ) ;
-                                }
-                            }
-
-                            shader hlsl
-                            {
-                                void main()
-                                {
-                                    out.color0 = tex.Sample( smp_tex, in.tx ) * color ;
-                                    out.color1 = float4( normalize( in.nrm ), 1.0f ) ;
-                                    out.color2 = dot( normalize( in.nrm ), normalize( float3( 1.0f, 1.0f, 1.0f ) ) ) ;
-                                }
+                                float_t light = dot( normalize( in.nrm ), normalize( vec3_t( 1.0, 1.0, 0.5) ) ) ;
+                                out.color0 = color * texture( tex, in.tx ) ;
+                                out.color1 = vec4_t( in.nrm, 1.0 ) ;
+                                out.color2 = vec4_t( light, light, light , 1.0 ) ;
                             }
                         }
                     }
@@ -446,22 +416,10 @@ namespace this_file
                             out vec4_t pos : position ;
                             out vec2_t tx : texcoord ;
 
-                            shader glsl
+                            void main()
                             {
-                                void main()
-                                {
-                                    out.tx = in.tx ;
-                                    out.pos = vec4( sign( in_pos ), 1.0 ) ;
-                                }
-                            }
-
-                            shader hlsl
-                            {
-                                void main()
-                                {
-                                    out.pos = float4( sign( in.pos.xy ), 0.0f, 1.0f ) ;
-                                    out.tx = in.tx ;
-                                }
+                                out.tx = in.tx ;
+                                out.pos = vec4_t( sign( in.pos.xy ), 0.0, 1.0 ) ;
                             }
                         }
 
@@ -475,35 +433,33 @@ namespace this_file
                             tex2d_t u_tex_2 ;
                             tex2d_t u_tex_3 ;
 
-                            shader glsl
+                            void main()
                             {
-                                void main()
-                                {
-                                    out.color = vec4(0.5,0.5,0.5,1.0) ;
+                                out.color = vec4_t(0.5,0.5,0.5,1.0) ;
 
-                                    if( in.tx.x < 0.5 && in.tx.y > 0.5 )
-                                    {
-                                        vec2 tx = (in.tx - vec2( 0.0, 0.5 ) ) * 2.0 ; 
-                                        out.color = texture( u_tex_0, tx ) ; 
-                                    }
-                                    else if( in.tx.x > 0.5 && in.tx.y > 0.5 )
-                                    {
-                                        vec2 tx = (in.tx - vec2( 0.5, 0.5 ) ) * 2.0 ; 
-                                        out.color = texture( u_tex_1, tx ) ; 
-                                    }
-                                    else if( in.tx.x > 0.5 && in.tx.y < 0.5 )
-                                    {
-                                        vec2 tx = (in.tx - vec2( 0.5, 0.0 ) ) * 2.0 ; 
-                                        out.color = vec4( texture( u_tex_2, tx ).xyz, 1.0 ); 
-                                    }
-                                    else if( in.tx.x < 0.5 && in.tx.y < 0.5 )
-                                    {
-                                        vec2 tx = (in.tx - vec2( 0.0, 0.0 ) ) * 2.0 ; 
-                                        out.color = vec4( vec3(pow( texture( u_tex_3, tx ).r,2.0)), 1.0 ); 
-                                    }
+                                if( in.tx.x < 0.5 && in.tx.y > 0.5 )
+                                {
+                                    vec2_t tx = (in.tx - vec2_t( 0.0, 0.5 ) ) * 2.0 ; 
+                                    out.color = texture( u_tex_0, tx ) ; 
+                                }
+                                else if( in.tx.x > 0.5 && in.tx.y > 0.5 )
+                                {
+                                    vec2_t tx = (in.tx - vec2_t( 0.5, 0.5 ) ) * 2.0 ; 
+                                    out.color = texture( u_tex_1, tx ) ; 
+                                }
+                                else if( in.tx.x > 0.5 && in.tx.y < 0.5 )
+                                {
+                                    vec2_t tx = (in.tx - vec2_t( 0.5, 0.0 ) ) * 2.0 ; 
+                                    out.color = vec4_t( texture( u_tex_2, tx ).xyz, 1.0 ); 
+                                }
+                                else if( in.tx.x < 0.5 && in.tx.y < 0.5 )
+                                {
+                                    vec2_t tx = (in.tx - vec2_t( 0.0, 0.0 ) ) * 2.0 ; 
+                                    float_t p = pow( texture( u_tex_3, tx ).r, 2.0 ) ;
+                                    out.color = vec4_t( vec3_t(p,p,p), 1.0 ); 
                                 }
                             }
-
+                            /*
                             shader hlsl
                             {
                                 void main()
@@ -537,7 +493,7 @@ namespace this_file
                                     }
                                     out.color = color ;
                                 }
-                            }
+                            }*/
                         }
                     }
                 )" ;

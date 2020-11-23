@@ -10,22 +10,10 @@ config post_blit
         out vec4_t pos : position ;
         out vec2_t tx : texcoord ;
 
-        shader glsl
+        void main()
         {
-            void main()
-            {
-                out.tx = in.tx ;
-                out.pos = vec4( sign( in_pos ), 1.0 ) ;
-            }
-        }
-
-        shader hlsl
-        {
-            void main()
-            {
-                out.pos = float4( sign( in.pos.xy ), 0.0f, 1.0f ) ;
-                out.tx = in.tx ;
-            }
+            out.tx = in.tx ;
+            out.pos = vec4_t( sign( in.pos.xy ), 0.0, 1.0 ) ;
         }
     }
 
@@ -33,73 +21,36 @@ config post_blit
     {
         in vec2_t tx : texcoord ;
         out vec4_t color : color0 ;
-                            
+
         tex2d_t u_tex_0 ;
         tex2d_t u_tex_1 ;
         tex2d_t u_tex_2 ;
         tex2d_t u_tex_3 ;
 
-        shader glsl
+        void main()
         {
-            void main()
-            {
-                out.color = vec4(0.5,0.5,0.5,1.0) ;
+            out.color = vec4_t(0.5,0.5,0.5,1.0) ;
 
-                if( in.tx.x < 0.5 && in.tx.y > 0.5 )
-                {
-                    vec2 tx = (in.tx - vec2( 0.0, 0.5 ) ) * 2.0 ; 
-                    out.color = texture( u_tex_0, tx ) ; 
-                }
-                else if( in.tx.x > 0.5 && in.tx.y > 0.5 )
-                {
-                    vec2 tx = (in.tx - vec2( 0.5, 0.5 ) ) * 2.0 ; 
-                    out.color = texture( u_tex_1, tx ) ; 
-                }
-                else if( in.tx.x > 0.5 && in.tx.y < 0.5 )
-                {
-                    vec2 tx = (in.tx - vec2( 0.5, 0.0 ) ) * 2.0 ; 
-                    out.color = vec4( texture( u_tex_2, tx ).xyz, 1.0 ); 
-                }
-                else if( in.tx.x < 0.5 && in.tx.y < 0.5 )
-                {
-                    vec2 tx = (in.tx - vec2( 0.0, 0.0 ) ) * 2.0 ; 
-                    out.color = vec4( vec3(pow( texture( u_tex_3, tx ).r,2.0)), 1.0 ); 
-                }
+            if( in.tx.x < 0.5 && in.tx.y > 0.5 )
+            {
+                vec2_t tx = (in.tx - vec2_t( 0.0, 0.5 ) ) * 2.0 ; 
+                out.color = texture( u_tex_0, tx ) ; 
             }
-        }
-
-        shader hlsl
-        {
-            void main()
+            else if( in.tx.x > 0.5 && in.tx.y > 0.5 )
             {
-                float4 color = float4(0.0f,0.0f,0.0f,1.0f) ;
-                float2 tx = float2( in.tx.x, in.tx.y ) ;
-                                    
-                if( tx.x < 0.5f && tx.y > 0.5f )
-                {
-                    tx = ( tx - float2( 0.0f, 0.5f ) ) * 2.0f ;
-                    tx = float2( tx.x, 1.0 - tx.y ) ;
-                    color = u_tex_0.Sample( smp_u_tex_0, tx ) ;
-                }
-                else if( tx.x > 0.5f && tx.y > 0.5f )
-                {
-                    tx = ( tx - float2( 0.5f, 0.5f ) ) * 2.0f ;
-                    tx = float2( tx.x, 1.0 - tx.y ) ;
-                    color = u_tex_1.Sample( smp_u_tex_1, tx ) ;
-                }
-                else if( tx.x > 0.5f && tx.y < 0.5f )
-                {
-                    tx = ( tx - float2( 0.5f, 0.0f ) ) * 2.0f ;
-                    tx = float2( tx.x, 1.0 - tx.y ) ;
-                    color = u_tex_2.Sample( smp_u_tex_2, tx ) ;
-                }
-                else if( tx.x < 0.5f && tx.y < 0.5f )
-                {
-                    tx = ( tx - float2( 0.0f, 0.0f ) ) * 2.0f ;
-                    tx = float2( tx.x, 1.0 - tx.y ) ;
-                    color = u_tex_3.Sample( smp_u_tex_3, tx ).rrra ;
-                }
-                out.color = color ;
+                vec2_t tx = (in.tx - vec2_t( 0.5, 0.5 ) ) * 2.0 ; 
+                out.color = texture( u_tex_1, tx ) ; 
+            }
+            else if( in.tx.x > 0.5 && in.tx.y < 0.5 )
+            {
+                vec2_t tx = (in.tx - vec2_t( 0.5, 0.0 ) ) * 2.0 ; 
+                out.color = vec4_t( texture( u_tex_2, tx ).xyz, 1.0 ); 
+            }
+            else if( in.tx.x < 0.5 && in.tx.y < 0.5 )
+            {
+                vec2_t tx = (in.tx - vec2_t( 0.0, 0.0 ) ) * 2.0 ; 
+                float_t p = pow( texture( u_tex_3, tx ).r, 2.0 ) ;
+                out.color = vec4_t( vec3_t( p, p, p ), 1.0 ); 
             }
         }
     }

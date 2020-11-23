@@ -12,10 +12,52 @@
 #include <natus/io/database.h>
 #include <natus/log/global.h>
 
+#include <regex>
+#include <iostream>
+
 using namespace natus::core::types ;
 
 int main( int argc, char ** argv )
 {
+
+    {
+        natus::ntd::string_t s = "a = mul ( mul ( mul ( a , b ) , bv ) , vec4_t ( in.pos , 1.0 ) )";
+
+        natus::ntd::string_t const what( "mul" ) ;
+        auto repl = [&] ( natus::ntd::vector< natus::ntd::string_t > const& args ) -> natus::ntd::string_t
+        {
+            if( args.size() != 2 ) return "mul ( INVALID_ARGS ) " ;
+
+            return args[ 0 ] + " * " + args[ 1 ] ;
+        } ;
+
+        size_t p0 = s.find( what ) ;
+        while( p0 != std::string::npos )
+        { 
+            natus::ntd::vector< natus::ntd::string_t > args ;
+
+            size_t level = 0 ;
+            size_t beg = p0 + what.size() + 3 ; 
+            for( size_t i=beg; i<s.size(); ++i )
+            {
+                if( level == 0 && s[i] == ',' ||
+                    level == 0 && s[i] == ')' )
+                {
+                    args.emplace_back( s.substr( beg, (i-1) - beg ) ) ;
+                    beg = i + 2 ;
+                }
+
+                if( s[ i ] == '(' ) ++level ;
+                else if( s[ i ] == ')' ) --level ;
+                if( level == size_t( -1 ) ) break ;
+            }
+            p0 = s.replace( p0, (--beg) - p0, repl( args ) ).find( what ) ;
+        }
+        int bp = 0  ;
+    }
+    
+
+
     natus::io::database_res_t db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
     natus::nsl::database_res_t ndb = natus::nsl::database_t() ;
 
