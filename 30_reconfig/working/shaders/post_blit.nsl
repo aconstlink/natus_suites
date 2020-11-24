@@ -34,22 +34,22 @@ config post_blit
             if( in.tx.x < 0.5 && in.tx.y > 0.5 )
             {
                 vec2_t tx = (in.tx - vec2_t( 0.0, 0.5 ) ) * 2.0 ; 
-                out.color = texture( u_tex_0, tx ) ; 
+                out.color = rt_texture( u_tex_0, tx ) ; 
             }
             else if( in.tx.x > 0.5 && in.tx.y > 0.5 )
             {
                 vec2_t tx = (in.tx - vec2_t( 0.5, 0.5 ) ) * 2.0 ; 
-                out.color = texture( u_tex_1, tx ) ; 
+                out.color = rt_texture( u_tex_1, tx ) ; 
             }
             else if( in.tx.x > 0.5 && in.tx.y < 0.5 )
             {
                 vec2_t tx = (in.tx - vec2_t( 0.5, 0.0 ) ) * 2.0 ; 
-                out.color = vec4_t( texture( u_tex_2, tx ).xyz, 1.0 ); 
+                out.color = vec4_t( rt_texture( u_tex_2, tx ).xyz, 1.0 ); 
             }
             else if( in.tx.x < 0.5 && in.tx.y < 0.5 )
             {
                 vec2_t tx = (in.tx - vec2_t( 0.0, 0.0 ) ) * 2.0 ; 
-                float_t p = pow( texture( u_tex_3, tx ).r, 2.0 ) ;
+                float_t p = pow( rt_texture( u_tex_3, tx ).r, 2.0 ) ;
                 out.color = vec4_t( vec3_t( p, p, p ), 1.0 ); 
             }
         }

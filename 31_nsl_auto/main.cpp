@@ -256,7 +256,7 @@ namespace this_file
                 natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "quad",
                     natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
-                //_wid_async.async().configure( geo ) ;
+                _wid_async.async().configure( geo ) ;
                 _wid_async2.async().configure( geo ) ;
                 _geometries.emplace_back( std::move( geo ) ) ;
             }
@@ -277,7 +277,7 @@ namespace this_file
                         .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
                 }
 
-                //_wid_async.async().configure( _imgconfig ) ;
+                _wid_async.async().configure( _imgconfig ) ;
                 _wid_async2.async().configure( _imgconfig ) ;
             }
 
@@ -322,7 +322,7 @@ namespace this_file
                     auto const sc = natus::graphics::nsl_bridge_t().create(
                         natus::nsl::generator_t( std::move( res ) ).generate() ).set_name( s.expand() ) ;
 
-                    //_wid_async.async().configure( sc ) ;
+                    _wid_async.async().configure( sc ) ;
                     _wid_async2.async().configure( sc ) ;
                 }
             }
@@ -384,7 +384,7 @@ namespace this_file
                     rc.add_variable_set( std::move( vars ) ) ;
                 }
                 
-                //_wid_async.async().configure( rc ) ;
+                _wid_async.async().configure( rc ) ;
                 _wid_async2.async().configure( rc ) ;
                 _render_objects.emplace_back( std::move( rc ) ) ;
             }
@@ -396,7 +396,7 @@ namespace this_file
                     .set_target( natus::graphics::depth_stencil_target_type::depth32 )
                     .resize( 1024, 1024 ) ;
 
-                //_wid_async.async().configure( _fb ) ;
+                _wid_async.async().configure( _fb ) ;
                 _wid_async2.async().configure( _fb ) ;
             }
             
@@ -439,7 +439,7 @@ namespace this_file
                 }
 
                 _rc_map = std::move( rc ) ;
-                //_wid_async.async().configure( _rc_map ) ;
+                _wid_async.async().configure( _rc_map ) ;
                 _wid_async2.async().configure( _rc_map ) ;
             }
             
@@ -483,7 +483,7 @@ namespace this_file
                         auto const sc = natus::graphics::nsl_bridge_t().create(
                             natus::nsl::generator_t( std::move( res ) ).generate() ).set_name( s.expand() ) ;
 
-                        //_wid_async.async().configure( sc ) ;
+                        _wid_async.async().configure( sc ) ;
                         _wid_async2.async().configure( sc ) ;
                     }
                 } ) ;
@@ -598,13 +598,13 @@ namespace this_file
             // render the root render state sets render object
             // this will set the root render states
             {
-                //_wid_async.async().use( _root_render_states ) ;
+                _wid_async.async().use( _root_render_states ) ;
                 _wid_async2.async().use( _root_render_states ) ;
             }
 
             // use the framebuffer
             {
-                //_wid_async.async().use( _fb, true, true, false ) ;
+                _wid_async.async().use( _fb, true, true, false ) ;
                 _wid_async2.async().use( _fb, true, true, false ) ;
             }
 
@@ -615,25 +615,25 @@ namespace this_file
                 //detail.num_elems = 3 ;
                 detail.varset = 0 ;
                 //detail.render_states = _render_states ;
-                //_wid_async.async().render( _render_objects[i], detail ) ;
+                _wid_async.async().render( _render_objects[i], detail ) ;
                 _wid_async2.async().render( _render_objects[i], detail ) ;
             }
 
             // un-use the framebuffer
             {
-                //_wid_async.async().use( natus::graphics::framebuffer_object_t() ) ;
+                _wid_async.async().use( natus::graphics::framebuffer_object_t() ) ;
                 _wid_async2.async().use( natus::graphics::framebuffer_object_t() ) ;
             }
 
             // render the root render state sets render object
             // this will set the root render states
             {
-                //_wid_async.async().use( natus::graphics::state_object_t(), 10 ) ;
+                _wid_async.async().use( natus::graphics::state_object_t(), 10 ) ;
                 _wid_async2.async().use( natus::graphics::state_object_t(), 10 ) ;
             }
 
             // perform mapping
-            //_wid_async.async().render( _rc_map ) ;
+            _wid_async.async().render( _rc_map ) ;
             _wid_async2.async().render( _rc_map ) ;
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
@@ -667,7 +667,7 @@ namespace this_file
                                 .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
 
 
-                            //_wid_async.async().configure( _img_ ) ;
+                            _wid_async.async().configure( _img_ ) ;
                             _wid_async2.async().configure( _img_ ) ;
                         }
                     }
@@ -690,7 +690,7 @@ namespace this_file
                                 .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
 
 
-                            //_wid_async.async().configure( _img_ ) ;
+                            _wid_async.async().configure( _img_ ) ;
                             _wid_async2.async().configure( _img_ ) ;
                         }
                     }
@@ -741,7 +741,7 @@ namespace this_file
                         natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "geometry",
                             natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
-                        //_wid_async.async().configure( geo ) ;
+                        _wid_async.async().configure( geo ) ;
                         _wid_async2.async().configure( geo ) ;
                     }
 
@@ -783,7 +783,7 @@ namespace this_file
                         natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "geometry",
                             natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
-                        //_wid_async.async().configure( geo ) ;
+                        _wid_async.async().configure( geo ) ;
                         _wid_async2.async().configure( geo ) ;
                     }
                 } ) ) ;
@@ -820,7 +820,7 @@ namespace this_file
                         auto const sc = natus::graphics::nsl_bridge_t().create(
                             natus::nsl::generator_t( std::move( res ) ).generate() ).set_name( c.expand() ) ;
 
-                        //_wid_async.async().configure( sc ) ;
+                        _wid_async.async().configure( sc ) ;
                         _wid_async2.async().configure( sc ) ;
                     }
                     

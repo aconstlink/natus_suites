@@ -278,8 +278,8 @@ namespace this_file
                                 vec3_t pos = in.pos ;
                                 pos.xyz = pos.xyz * 10.0 ;
                                 out.tx = in.tx ;
-                                out.pos = proj * view * world * vec4_t( pos, 1.0 ) ;
-                                out.nrm = normalize( world * vec4_t( in.nrm, 0.0 ) ).xyz ;
+                                out.pos = proj ' view ' world ' vec4_t( pos, 1.0 ) ;
+                                out.nrm = normalize( world ' vec4_t( in.nrm, 0.0 ) ).xyz ;
                             }
                         }
 
@@ -440,60 +440,25 @@ namespace this_file
                                 if( in.tx.x < 0.5 && in.tx.y > 0.5 )
                                 {
                                     vec2_t tx = (in.tx - vec2_t( 0.0, 0.5 ) ) * 2.0 ; 
-                                    out.color = texture( u_tex_0, tx ) ; 
+                                    out.color = rt_texture( u_tex_0, tx ) ; 
                                 }
                                 else if( in.tx.x > 0.5 && in.tx.y > 0.5 )
                                 {
                                     vec2_t tx = (in.tx - vec2_t( 0.5, 0.5 ) ) * 2.0 ; 
-                                    out.color = texture( u_tex_1, tx ) ; 
+                                    out.color = rt_texture( u_tex_1, tx ) ; 
                                 }
                                 else if( in.tx.x > 0.5 && in.tx.y < 0.5 )
                                 {
                                     vec2_t tx = (in.tx - vec2_t( 0.5, 0.0 ) ) * 2.0 ; 
-                                    out.color = vec4_t( texture( u_tex_2, tx ).xyz, 1.0 ); 
+                                    out.color = vec4_t( rt_texture( u_tex_2, tx ).xyz, 1.0 ); 
                                 }
                                 else if( in.tx.x < 0.5 && in.tx.y < 0.5 )
                                 {
                                     vec2_t tx = (in.tx - vec2_t( 0.0, 0.0 ) ) * 2.0 ; 
-                                    float_t p = pow( texture( u_tex_3, tx ).r, 2.0 ) ;
+                                    float_t p = pow( rt_texture( u_tex_3, tx ).r, 2.0 ) ;
                                     out.color = vec4_t( vec3_t(p,p,p), 1.0 ); 
                                 }
                             }
-                            /*
-                            shader hlsl
-                            {
-                                void main()
-                                {
-                                    float4 color = float4(0.0f,0.0f,0.0f,1.0f) ;
-                                    float2 tx = float2( in.tx.x, in.tx.y ) ;
-                                    
-                                    if( tx.x < 0.5f && tx.y > 0.5f )
-                                    {
-                                        tx = ( tx - float2( 0.0f, 0.5f ) ) * 2.0f ;
-                                        tx = float2( tx.x, 1.0 - tx.y ) ;
-                                        color = u_tex_0.Sample( smp_u_tex_0, tx ) ;
-                                    }
-                                    else if( tx.x > 0.5f && tx.y > 0.5f )
-                                    {
-                                        tx = ( tx - float2( 0.5f, 0.5f ) ) * 2.0f ;
-                                        tx = float2( tx.x, 1.0 - tx.y ) ;
-                                        color = u_tex_1.Sample( smp_u_tex_1, tx ) ;
-                                    }
-                                    else if( tx.x > 0.5f && tx.y < 0.5f )
-                                    {
-                                        tx = ( tx - float2( 0.5f, 0.0f ) ) * 2.0f ;
-                                        tx = float2( tx.x, 1.0 - tx.y ) ;
-                                        color = u_tex_2.Sample( smp_u_tex_2, tx ) ;
-                                    }
-                                    else if( tx.x < 0.5f && tx.y < 0.5f )
-                                    {
-                                        tx = ( tx - float2( 0.0f, 0.0f ) ) * 2.0f ;
-                                        tx = float2( tx.x, 1.0 - tx.y ) ;
-                                        color = u_tex_3.Sample( smp_u_tex_3, tx ).rrra ;
-                                    }
-                                    out.color = color ;
-                                }
-                            }*/
                         }
                     }
                 )" ;
