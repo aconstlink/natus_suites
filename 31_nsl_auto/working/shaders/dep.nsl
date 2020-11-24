@@ -1,6 +1,11 @@
 
 library dep
 {
+    vec4_t my_color2( vec4_t color ) 
+    {
+        return color * vec4_t( 1.0, 1.0, 0.0, 0.0) ;
+    }
+
     vec4_t my_color( vec4_t color )
     {
         return color + vec4_t( 1.0,0.0,0.0,0.0);
