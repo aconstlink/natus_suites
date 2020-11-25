@@ -3,10 +3,10 @@
 
 #include <natus/graphics/shader/nsl_bridge.hpp>
 
-#include <natus/nsl/parser.hpp>
+#include <natus/nsl/parser.h>
 #include <natus/nsl/database.hpp>
 #include <natus/nsl/dependency_resolver.hpp>
-#include <natus/nsl/api/glsl/generator.hpp>
+#include <natus/nsl/api/glsl/generator.h>
 
 #include <natus/format/global.h>
 #include <natus/io/database.h>

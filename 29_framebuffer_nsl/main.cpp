@@ -9,7 +9,7 @@
 #include <natus/graphics/variable/variable_set.hpp>
 #include <natus/profiling/macros.h>
 
-#include <natus/nsl/parser.hpp>
+#include <natus/nsl/parser.h>
 #include <natus/nsl/database.hpp>
 #include <natus/nsl/dependency_resolver.hpp>
 #include <natus/nsl/generator_structs.hpp>

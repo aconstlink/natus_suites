@@ -3,7 +3,7 @@
 
 #include <natus/nsl/symbol.hpp>
 #include <natus/nsl/database.hpp>
-#include <natus/nsl/generator.hpp>
+#include <natus/nsl/generator.h>
 #include <natus/nsl/dependency_resolver.hpp>
 
 #include <natus/format/global.h>
