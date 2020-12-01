@@ -15,6 +15,7 @@ natus_emacs_default_directory( "${CMAKE_CURRENT_LIST_DIR}/natus" )
 
 #set( CMAKE_CXX_STANDARD 17 )
 set( subdirs
+    "01_properties"
     "04_app"
     "05_imgui"
     "06_devices"
@@ -41,6 +42,8 @@ set( subdirs
     "29_framebuffer_nsl"
     "30_reconfig"
     "31_nsl_auto"
+    "32_glyph_atlas"
+    "33_text_render_2d"
     )
 
 foreach( _subdir ${subdirs} )
