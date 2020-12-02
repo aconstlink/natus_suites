@@ -79,6 +79,8 @@ namespace this_file
 
         natus::io::monitor_res_t _shader_mon = natus::io::monitor_t() ;
 
+        natus::gfx::text_render_2d_res_t _tr ;
+
     public:
 
         test_app( void_t ) 
@@ -229,31 +231,7 @@ namespace this_file
                 } ) ;
             }
 
-            // image configuration
-            #if 0
-            {
-                natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                auto fitem = mod_reg->import_from( natus::io::location_t( "images.checker.png" ), _db ) ;
-                natus::format::image_item_res_t ii = fitem.get() ;
-                if( ii.is_valid() )
-                {
-                    natus::graphics::image_t img = *ii->img ;
-
-                    _imgconfig = natus::graphics::image_object_t( "loaded_image", std::move( img ) )
-                        .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
-                        .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
-                        .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
-                        .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
-                }
-
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.configure( _imgconfig ) ;
-                } ) ;
-            }
-            #endif
-
-           // load
+            // load
             {
                 natus::ntd::vector< natus::io::location_t > shader_locations = {
                     natus::io::location_t( "shaders.map_glyph_atlas.nsl" ),
@@ -298,10 +276,39 @@ namespace this_file
                 }
             }
             
-            // text render
             {
-                natus::gfx::text_render_2d_t tr( _graphics, _db ) ;
-                //tr.init_fonts( {20, 30}, { natus::io::location_t("fonts.mitimasu.ttf") } ) ;
+                natus::property::property_sheet_res_t ps = natus::property::property_sheet_t() ;
+
+                {
+                    natus::font::code_points_t pts ;
+                    for( uint32_t i = 33; i <= 126; ++i ) pts.emplace_back( i ) ;
+                    for( uint32_t i : {uint32_t( 0x00003041 )} ) pts.emplace_back( i ) ;
+                    ps->set_value< natus::font::code_points_t >( "code_points", pts ) ;
+                }
+
+                {
+                    natus::ntd::vector< natus::io::location_t > locations = 
+                    {
+                        natus::io::location_t("fonts.mitimasu.ttf"),
+                        //natus::io::location_t("")
+                    } ;
+                    ps->set_value( "additional_locations", locations ) ;
+                }
+
+                {
+                    ps->set_value<size_t>( "atlas_width", 512 ) ;
+                    ps->set_value<size_t>( "atlas_height", 512 ) ;
+                }
+
+                natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
+                auto fitem = mod_reg->import_from( natus::io::location_t( "fonts.LCD_Solid.ttf" ), _db, ps ) ;
+                natus::format::glyph_atlas_item_res_t ii = fitem.get() ;
+                if( ii.is_valid() )
+                {
+                    _tr = natus::gfx::text_render_2d_res_t( natus::gfx::text_render_2d_t( "my_text_render", _graphics ) ) ;
+                    
+                    _tr->init( std::move( *ii->obj ) ) ;
+                }
             }
 
             // the rendering objects
@@ -406,6 +413,16 @@ namespace this_file
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
         { 
+            {
+                _tr->draw_text( 0, 0, 20, natus::math::vec2f_t(0.0f, 0.0f), 
+                    natus::math::vec4f_t(1.0f), "Hello World on Framebuffer!" ) ;
+
+                _tr->draw_text( 1, 1, 20, natus::math::vec2f_t(0.0f, 0.0f), 
+                    natus::math::vec4f_t(1.0f), "Hello World on Screen!" ) ;
+
+                _tr->prepare_for_rendering() ;
+            }
+
             // render the root render state sets render object
             // this will set the root render states
             {
@@ -436,6 +453,11 @@ namespace this_file
                 } ) ;
             }
 
+            // render text layer 0 in framebuffer
+            {
+                _tr->render( 0 ) ;
+            }
+
             // un-use the framebuffer
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
@@ -458,6 +480,11 @@ namespace this_file
             {
                 a.render( _rc_map ) ;
             } ) ;
+
+            // render text layer 0 to screen
+            {
+                _tr->render( 1 ) ;
+            }
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
