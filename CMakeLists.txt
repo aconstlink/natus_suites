@@ -40,10 +40,12 @@ set( subdirs
     "27_framebuffer_simple"
     "28_framebuffer_mrt"
     "29_framebuffer_nsl"
-    "30_reconfig"
-    "31_nsl_auto"
-    "32_glyph_atlas"
-    "33_text_render_2d"
+    "30_array_object"
+    #"31_array_object_nsl"
+    "32_reconfig"
+    "33_nsl_auto"
+    "34_glyph_atlas"
+    "35_text_render_2d"
     )
 
 foreach( _subdir ${subdirs} )
