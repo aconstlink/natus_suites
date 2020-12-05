@@ -92,7 +92,7 @@ namespace this_file
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )
         {
             _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ),
-                float_t(wei.w) / float_t(wei.h), 1.0f, 1000.0f ) ;
+                float_t(wei.w) / float_t(wei.h), 1.0f, 10000.0f ) ;
 
             return natus::application::result::ok ;
         }
@@ -102,7 +102,7 @@ namespace this_file
         virtual natus::application::result on_init( void_t )
         { 
             {
-                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 200.0f, -150.0f ),
+                _camera_0.look_at( natus::math::vec3f_t( 2500.0f, 1000.0f, 1000.0f ),
                         natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
             }
 
@@ -172,8 +172,8 @@ namespace this_file
                 _geometries.emplace_back( std::move( geo ) ) ;
             }
 
-            size_t const num_objects_x = 100 ;
-            size_t const num_objects_y = 100 ;
+            size_t const num_objects_x = 200 ;
+            size_t const num_objects_y = 200 ;
             size_t const num_objects = num_objects_x * num_objects_y ;
             _max_objects = num_objects ;
             _num_objects_rnd = num_objects ;
@@ -592,7 +592,7 @@ namespace this_file
                 _fb = natus::graphics::framebuffer_object_t( "the_scene" ) ;
                 _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 3 )
                     .set_target( natus::graphics::depth_stencil_target_type::depth32 )
-                    .resize( 1024, 1024 ) ;
+                    .resize( 1920, 1080 ) ;
 
                 _wid_async.async().configure( _fb ) ;
                 _wid_async2.async().configure( _fb ) ;
@@ -884,7 +884,14 @@ namespace this_file
 
             float_t const dt = float_t ( double_t( std::chrono::duration_cast< std::chrono::milliseconds >( __clock_t::now() - tp ).count() ) / 1000.0 ) ;
 
+            natus::log::global_t::status( std::to_string(dt) ) ;
             {
+                static float_t  angle_ = 0.0f ;
+                angle_ += ( ( ((dt))  ) * 2.0f * natus::math::constants<float_t>::pi() ) / 1.0f ;
+                if( angle_ > 4.0f * natus::math::constants<float_t>::pi() ) angle_ = 0.0f ;
+
+                float_t s = 5.0f * std::sin(angle_) ;
+
                 struct the_data
                 {
                     natus::math::vec4f_t pos ;
@@ -896,7 +903,12 @@ namespace this_file
                     for( size_t y=0; y<ne; ++y )
                     {
                         float_t c = float_t( rand() % 255 ) /255.0f ;
+                        float_t x = 2.0f * (float_t(y) / float_t(ne) );
+
+                        x = x * 2.0f * natus::math::constants<float_t>::pi() ;
                         
+
+                        array[y].pos.y( 10.0f * std::sin( x + angle_ ) ) ;
                         array[y].col = 
                                 natus::math::vec4f_t ( 0.1f, c, (c) , 1.0f ) ;
                     }
