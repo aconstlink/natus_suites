@@ -51,10 +51,15 @@ namespace this_file
 
         natus::gfx::pinhole_camera_t _camera_0 ;
 
+        int_t _max_objects ;
+        int_t _num_objects_rnd = 10 ;
+
     public:
 
         test_app( void_t ) 
         {
+            srand (time(NULL));
+
             natus::application::app::window_info_t wi ;
             #if 1
             _wid_async = this_t::create_window( "A Render Window", wi ) ;
@@ -168,8 +173,10 @@ namespace this_file
             }
 
             size_t const num_objects_x = 100 ;
-            size_t const num_objects_y = 1000 ;
+            size_t const num_objects_y = 100 ;
             size_t const num_objects = num_objects_x * num_objects_y ;
+            _max_objects = num_objects ;
+            _num_objects_rnd = num_objects ;
 
             // cube
             {
@@ -233,7 +240,7 @@ namespace this_file
                     natus::math::vec4f_t col ;
                 };
 
-                float_t scale = 10.0f ;
+                float_t scale = 20.0f ;
                 natus::graphics::data_buffer_t db = natus::graphics::data_buffer_t()
                     .add_layout_element( natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 )
                     .add_layout_element( natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 ).resize( num_objects ).
@@ -315,6 +322,7 @@ namespace this_file
                             in vec2 in_tx ;
                             out vec3 var_nrm ;
                             out vec2 var_tx0 ;
+                            out vec4 var_col ;
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
@@ -325,6 +333,7 @@ namespace this_file
                                 int idx = gl_VertexID / 24 ;
                                 vec4 pos_scl = texelFetch( u_data, (idx *2) + 0 ) ;
                                 vec4 col = texelFetch( u_data, (idx *2) + 1 ) ;
+                                var_col = col ;
                                 vec4 pos = vec4(in_pos * vec3( pos_scl.w ),1.0 )  ;
                                 pos = u_world * pos + vec4(pos_scl.xyz*(pos_scl.w*2),0.0) ;
                                 gl_Position = u_proj * u_view * pos ;
@@ -339,6 +348,7 @@ namespace this_file
                             #extension GL_ARB_explicit_attrib_location : enable
                             in vec2 var_tx0 ;
                             in vec3 var_nrm ;
+                            in vec4 var_col ;
                             layout(location = 0 ) out vec4 out_color0 ;
                             layout(location = 1 ) out vec4 out_color1 ;
                             layout(location = 2 ) out vec4 out_color2 ;
@@ -347,7 +357,7 @@ namespace this_file
                         
                             void main()
                             {    
-                                out_color0 = u_color * texture( u_tex, var_tx0 ) ;
+                                out_color0 = u_color * texture( u_tex, var_tx0 ) * var_col ;
                                 out_color1 = vec4( var_nrm, 1.0 ) ;
                                 out_color2 = vec4( 
                                     vec3( dot( normalize( var_nrm ), normalize( vec3( 1.0, 1.0, 0.5) ) ) ), 
@@ -418,6 +428,7 @@ namespace this_file
 
                             struct VS_INPUT
                             {
+                                uint in_id: SV_VertexID ;
                                 float4 in_pos : POSITION ; 
                                 float3 in_nrm : NORMAL ;
                                 float2 in_tx : TEXCOORD0 ;
@@ -427,13 +438,23 @@ namespace this_file
                                 float4 pos : SV_POSITION;
                                 float3 nrm : NORMAL;
                                 float2 tx : TEXCOORD0;
+                                float4 col : COLOR0;
                             };
+                            
+                            Buffer< float4 > u_data ;
 
                             VS_OUTPUT VS( VS_INPUT input )
                             {
                                 VS_OUTPUT output = (VS_OUTPUT)0;
-                                float4 pos = input.in_pos * float4( 10.0, 10.0, 10.0, 1.0 ) ;
+                                int idx = input.in_id / 24 ;
+                                float4 pos_scl = u_data.Load( (idx * 2) + 0 ) ;
+                                float4 col = u_data.Load( (idx * 2) + 1 ) ;
+                                output.col = col ;
+                                float4 pos = input.in_pos * float4( pos_scl.www, 1.0 ) ;
                                 output.pos = mul( pos, u_world );
+                                
+                                output.pos = output.pos + float4( pos_scl.xyz*pos_scl.www*2.0f, 0.0f ) ;
+                                //output.pos = output.pos * float4( pos_scl.www*2.0f, 1.0f ) ;
                                 output.pos = mul( output.pos, u_view );
                                 output.pos = mul( output.pos, u_proj );
                                 output.tx = input.in_tx ;
@@ -459,6 +480,7 @@ namespace this_file
                                 float4 Pos : SV_POSITION;
                                 float3 nrm : NORMAL;
                                 float2 tx : TEXCOORD0;
+                                float4 col : COLOR0;
                             };
 
                             struct MRT_OUT 
@@ -471,7 +493,7 @@ namespace this_file
                             MRT_OUT PS( VS_OUTPUT input )
                             {
                                 MRT_OUT o = (MRT_OUT)0;
-                                o.color1 = u_tex.Sample( smp_u_tex, input.tx ) * u_color ;
+                                o.color1 = u_tex.Sample( smp_u_tex, input.tx ) * u_color * input.col ;
                                 o.color2 = float4( input.nrm, 1.0f ) ;
                                 o.color3 = dot( normalize( input.nrm ), normalize( float3( 1.0f, 1.0f, 1.0f ) ) ) ;
                                 return o ;
@@ -862,6 +884,27 @@ namespace this_file
 
             float_t const dt = float_t ( double_t( std::chrono::duration_cast< std::chrono::milliseconds >( __clock_t::now() - tp ).count() ) / 1000.0 ) ;
 
+            {
+                struct the_data
+                {
+                    natus::math::vec4f_t pos ;
+                    natus::math::vec4f_t col ;
+                };
+                _gpu_data->data_buffer().
+                update< the_data >( [&]( the_data * array, size_t const ne )
+                {
+                    for( size_t y=0; y<ne; ++y )
+                    {
+                        float_t c = float_t( rand() % 255 ) /255.0f ;
+                        
+                        array[y].col = 
+                                natus::math::vec4f_t ( 0.1f, c, (c) , 1.0f ) ;
+                    }
+                } ) ;
+                _wid_async.async().update( _gpu_data ) ;
+                _wid_async2.async().update( _gpu_data ) ;
+            }
+
             // per frame update of variables
             for( auto & rc : _render_objects )
             {
@@ -919,7 +962,7 @@ namespace this_file
             {
                 natus::graphics::backend_t::render_detail_t detail ;
                 detail.start = 0 ;
-                //detail.num_elems = 3 ;
+                detail.num_elems = _num_objects_rnd * 36 ;
                 detail.varset = 0 ;
                 //detail.render_states = _render_states ;
                 _wid_async.async().render( _render_objects[i], detail ) ;
@@ -946,6 +989,20 @@ namespace this_file
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
             return natus::application::result::ok ; 
+        }
+
+        virtual natus::application::result on_tool( natus::gfx::imgui_view_t imgui )
+        {
+            //if( !_do_tool ) return natus::application::result::no_imgui ;
+
+            ImGui::Begin( "Config" ) ;
+
+            if( ImGui::SliderInt( "Objects", &_num_objects_rnd, 0, _max_objects  ) )
+            {
+            } 
+
+            ImGui::End() ;
+            return natus::application::result::ok ;
         }
 
         virtual natus::application::result on_shutdown( void_t ) 
