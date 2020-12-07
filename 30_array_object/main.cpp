@@ -51,8 +51,8 @@ namespace this_file
 
         natus::gfx::pinhole_camera_t _camera_0 ;
 
-        int_t _max_objects ;
-        int_t _num_objects_rnd = 10 ;
+        int_t _max_objects = 0 ;
+        int_t _num_objects_rnd = 0 ;
 
     public:
 
