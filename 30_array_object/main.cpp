@@ -378,16 +378,25 @@ namespace this_file
                             in vec2 in_tx ;
                             out vec3 var_nrm ;
                             out vec2 var_tx0 ;
+                            out vec4 var_col ;
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
+                            uniform sampler2D u_data ;
 
                             void main()
                             {
+                                int idx = gl_VertexID / 24 ;
+                                ivec2 wh = textureSize( u_data, 0 ) ;
+                                vec4 pos_scl = texelFetch( u_data, 
+                                     ivec2( ((idx*2) % wh.x), ((idx*2) / wh.x) ), 0 ) ;
+                                var_col = texelFetch( u_data, 
+                                     ivec2( (((idx*2)+1) % wh.x), (((idx*2)+1) / wh.x) ), 0 ) ;
                                 var_tx0 = in_tx ;
-                                vec3 pos = in_pos ;
-                                pos.xyz *= 10.0 ;
-                                gl_Position = u_proj * u_view * u_world * vec4( pos, 1.0 ) ;
+                                vec4 pos = vec4(in_pos * vec3( pos_scl.w ),1.0 )  ;
+                                pos = u_world * pos ;
+                                pos += vec4(pos_scl.xyz*vec3(pos_scl.w*2.0f),0.0) ;
+                                gl_Position = u_proj * u_view * pos ;
                                 var_nrm = normalize( u_world * vec4( in_nrm, 0.0 ) ).xyz ;
                             } )" ) ).
 
@@ -396,6 +405,7 @@ namespace this_file
                             precision mediump float ;
                             in vec2 var_tx0 ;
                             in vec3 var_nrm ;
+                            in vec4 var_col ;
                             layout(location = 0 ) out vec4 out_color0 ;
                             layout(location = 1 ) out vec4 out_color1 ;
                             layout(location = 2 ) out vec4 out_color2 ;
@@ -404,7 +414,7 @@ namespace this_file
                         
                             void main()
                             {    
-                                out_color0 = u_color * texture( u_tex, var_tx0 ) ;
+                                out_color0 = u_color * texture( u_tex, var_tx0 ) * var_col ;
                                 out_color1 = vec4( var_nrm, 1.0 ) ;
                                 out_color2 = vec4( 
                                     vec3( dot( normalize( var_nrm ), normalize( vec3( 1.0, 1.0, 0.5) ) ) ), 
@@ -884,7 +894,6 @@ namespace this_file
 
             float_t const dt = float_t ( double_t( std::chrono::duration_cast< std::chrono::milliseconds >( __clock_t::now() - tp ).count() ) / 1000.0 ) ;
 
-            natus::log::global_t::status( std::to_string(dt) ) ;
             {
                 static float_t  angle_ = 0.0f ;
                 angle_ += ( ( ((dt))  ) * 2.0f * natus::math::constants<float_t>::pi() ) / 1.0f ;
