@@ -1037,3 +1037,9 @@ int main( int argc, char ** argv )
     return natus::application::global_t::create_application( 
         this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
 }
+
+
+
+
+
+
