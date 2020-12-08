@@ -234,18 +234,25 @@ namespace this_file
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
         { 
             {
-                _tr->draw_text( 0, 0, 25, natus::math::vec2f_t(0.0f, -0.10f), 
+                _tr->draw_text( 0, 0, 10, natus::math::vec2f_t(0.0f, -0.60f), 
                     natus::math::vec4f_t(1.0f), "Hello World Group 0!" ) ;
 
-                _tr->draw_text( 1, 1, 25, natus::math::vec2f_t(0.0f, 0.0f), 
+                _tr->draw_text( 1, 1, 25, natus::math::vec2f_t(0.0f, -0.7f), 
                     natus::math::vec4f_t(1.0f), "Hello World Group 1!" ) ;
 
                 static uint_t number = 0 ;
                 ++number ;
-                _tr->draw_text( 0, 1, 25, natus::math::vec2f_t(0.0f, -0.2f), 
+                _tr->draw_text( 0, 1, 25, natus::math::vec2f_t(0.0f, -0.5f), 
                     natus::math::vec4f_t(1.0f), std::to_string(number) ) ;
 
                 _tr->prepare_for_rendering() ;
+            }
+
+            for( size_t i=0; i<10; ++i )
+            {
+                float_t const yoff = 0.08f * float_t(i) ;
+                _tr->draw_text( 0, 0, 25 - i * 2, natus::math::vec2f_t(-0.8f, 0.40f-yoff), 
+                    natus::math::vec4f_t(1.0f), "Hello World! This is changing point size." ) ;
             }
 
             // render the root render state sets render object
