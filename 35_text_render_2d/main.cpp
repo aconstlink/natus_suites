@@ -234,11 +234,11 @@ namespace this_file
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
         { 
             {
-                _tr->draw_text( 0, 0, 20, natus::math::vec2f_t(0.0f, 0.0f), 
-                    natus::math::vec4f_t(1.0f), "Hello World on Framebuffer!" ) ;
+                _tr->draw_text( 0, 0, 25, natus::math::vec2f_t(0.0f, -0.10f), 
+                    natus::math::vec4f_t(1.0f), "Hello World Group 0!" ) ;
 
-                _tr->draw_text( 1, 1, 20, natus::math::vec2f_t(0.0f, 0.0f), 
-                    natus::math::vec4f_t(1.0f), "Hello World on Screen!" ) ;
+                _tr->draw_text( 1, 1, 25, natus::math::vec2f_t(0.0f, 0.0f), 
+                    natus::math::vec4f_t(1.0f), "Hello World Group 1!" ) ;
 
                 _tr->prepare_for_rendering() ;
             }
@@ -263,6 +263,7 @@ namespace this_file
 
             // render text layer 0 to screen
             {
+                _tr->render( 0 ) ;
                 _tr->render( 1 ) ;
             }
 
