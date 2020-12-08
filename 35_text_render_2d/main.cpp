@@ -190,6 +190,7 @@ namespace this_file
                 {
                     ps->set_value<size_t>( "atlas_width", 512 ) ;
                     ps->set_value<size_t>( "atlas_height", 512 ) ;
+                    ps->set_value<size_t>( "point_size", 90 ) ;
                 }
 
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
@@ -242,7 +243,7 @@ namespace this_file
 
                 static uint_t number = 0 ;
                 ++number ;
-                _tr->draw_text( 0, 1, 25, natus::math::vec2f_t(0.0f, -0.5f), 
+                _tr->draw_text( 0, 1, 120, natus::math::vec2f_t(0.0f, -0.5f), 
                     natus::math::vec4f_t(1.0f), std::to_string(number) ) ;
 
                 _tr->prepare_for_rendering() ;

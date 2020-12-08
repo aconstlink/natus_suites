@@ -275,6 +275,7 @@ namespace this_file
                 {
                     ps->set_value<size_t>( "atlas_width", 512 ) ;
                     ps->set_value<size_t>( "atlas_height", 512 ) ;
+                    ps->set_value<size_t>( "point_size", 100 ) ;
                 }
 
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
