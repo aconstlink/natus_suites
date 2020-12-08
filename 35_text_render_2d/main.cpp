@@ -240,6 +240,11 @@ namespace this_file
                 _tr->draw_text( 1, 1, 25, natus::math::vec2f_t(0.0f, 0.0f), 
                     natus::math::vec4f_t(1.0f), "Hello World Group 1!" ) ;
 
+                static uint_t number = 0 ;
+                ++number ;
+                _tr->draw_text( 0, 1, 25, natus::math::vec2f_t(0.0f, -0.2f), 
+                    natus::math::vec4f_t(1.0f), std::to_string(number) ) ;
+
                 _tr->prepare_for_rendering() ;
             }
 
