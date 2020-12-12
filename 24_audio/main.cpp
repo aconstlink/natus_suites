@@ -4,7 +4,7 @@
 #include <natus/application/global.h>
 #include <natus/application/app.h>
 #include <natus/gfx/camera/pinhole_camera.h>
-#include <natus/gfx/imgui/imgui.h>
+#include <natus/tool/imgui/imgui.h>
 #include <natus/graphics/variable/variable_set.hpp>
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
@@ -182,7 +182,7 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_tool( natus::gfx::imgui_view_t imgui )
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui )
         {
             ImGui::SetNextWindowSize( ImVec2( 200, 200 ) ) ;
 

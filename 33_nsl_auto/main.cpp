@@ -677,7 +677,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_tool( natus::gfx::imgui_view_t imgui )
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui )
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
 

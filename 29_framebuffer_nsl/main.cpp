@@ -663,7 +663,7 @@ namespace this_file
         }
 
         #if 1
-        virtual natus::application::result on_tool( natus::gfx::imgui_view_t imgui )
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui )
         {
             bool_t open = true ;
             //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
