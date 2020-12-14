@@ -252,8 +252,10 @@ namespace this_file
             for( size_t i=0; i<10; ++i )
             {
                 float_t const yoff = 0.08f * float_t(i) ;
-                _tr->draw_text( 0, 0, 25 - i * 2, natus::math::vec2f_t(-0.8f, 0.40f-yoff), 
-                    natus::math::vec4f_t(1.0f), "Hello World! This is changing point size." ) ;
+                size_t const pt = 25 - i * 2 ;
+                _tr->draw_text( 0, 0, pt, natus::math::vec2f_t(-0.8f, 0.40f-yoff), 
+                    natus::math::vec4f_t(1.0f), "Hello World! This is changing point ("+
+                    std::to_string(pt) +") size." ) ;
             }
 
             // render the root render state sets render object
