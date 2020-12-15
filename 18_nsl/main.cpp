@@ -9,6 +9,7 @@
 
 #include <natus/format/global.h>
 #include <natus/format/nsl/nsl_module.h>
+#include <natus/format/future_items.hpp>
 
 #include <natus/io/database.h>
 #include <natus/nsl/database.hpp>

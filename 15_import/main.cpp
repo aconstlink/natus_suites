@@ -6,6 +6,7 @@
 #include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/graphics/variable/variable_set.hpp>
 #include <natus/format/global.h>
+#include <natus/format/future_items.hpp>
 #include <natus/io/database.h>
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>

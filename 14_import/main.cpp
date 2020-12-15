@@ -2,6 +2,7 @@
 #include "main.h"
 
 #include <natus/format/global.h>
+#include <natus/format/future_items.hpp>
 #include <natus/io/database.h>
 #include <natus/log/global.h>
 
