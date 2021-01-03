@@ -46,6 +46,7 @@ set( subdirs
     "33_nsl_auto"
     "34_glyph_atlas"
     "35_text_render_2d"
+    "36_tool_sprite"
     )
 
 foreach( _subdir ${subdirs} )
