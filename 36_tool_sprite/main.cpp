@@ -224,6 +224,11 @@ namespace this_file
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
 
+            {
+                bool_t show_demo = true ;
+                ImGui::ShowDemoWindow( &show_demo ) ;
+            }
+
             _se->render( imgui ) ;
 
             return natus::application::result::ok ;
