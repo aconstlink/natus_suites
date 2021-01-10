@@ -30,8 +30,7 @@ namespace this_file
 
     private:
 
-        app::window_async_t _wid_async ;
-        app::window_async_t _wid_async2 ;
+        natus::graphics::async_views_t _graphics ;
         
         natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
         natus::graphics::array_object_res_t _gpu_data = natus::graphics::array_object_t() ;
@@ -62,24 +61,26 @@ namespace this_file
 
             natus::application::app::window_info_t wi ;
             #if 1
-            _wid_async = this_t::create_window( "A Render Window", wi ) ;
-            _wid_async2 = this_t::create_window( "A Render Window", wi,
+            app::window_async_t wid_async = this_t::create_window( "A Render Window", wi ) ;
+            app::window_async_t wid_async2 = this_t::create_window( "A Render Window", wi,
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 }) ;
 
-            _wid_async.window().position( 50, 50 ) ;
-            _wid_async.window().resize( 800, 800 ) ;
-            _wid_async2.window().position( 50 + 800, 50 ) ;
-            _wid_async2.window().resize( 800, 800 ) ;
+            wid_async.window().position( 50, 50 ) ;
+            wid_async.window().resize( 800, 800 ) ;
+            wid_async2.window().position( 50 + 800, 50 ) ;
+            wid_async2.window().resize( 800, 800 ) ;
+
+            _graphics = natus::graphics::async_views_t( {wid_async.async(), wid_async2.async()} ) ;
             #else
-            _wid_async = this_t::create_window( "A Render Window", wi, 
+            app::window_async_t wid_async = this_t::create_window( "A Render Window", wi, 
                 { natus::graphics::backend_type::es3, natus::graphics::backend_type::d3d11 } ) ;
+            _graphics = natus::graphics::async_views_t( {wid_async.async()} ) ;
             #endif
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
-            _wid_async = std::move( rhv._wid_async ) ;
-            _wid_async2 = std::move( rhv._wid_async2 ) ;
+            _graphics = std::move( rhv._graphics ) ;
             _camera_0 = std::move( rhv._camera_0 ) ;
             _geometries = std::move( rhv._geometries ) ;
             _render_objects = std::move( rhv._render_objects ) ;
@@ -129,8 +130,10 @@ namespace this_file
                 }
 
                 _root_render_states = std::move( so ) ;
-                _wid_async.async().configure( _root_render_states ) ;
-                _wid_async2.async().configure( _root_render_states ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( _root_render_states ) ;
+                } ) ;
             }
 
             // geometry configuration
@@ -167,16 +170,18 @@ namespace this_file
                 natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "quad",
                     natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
-                _wid_async.async().configure( geo ) ;
-                _wid_async2.async().configure( geo ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( geo ) ;
+                } ) ;                
                 _geometries.emplace_back( std::move( geo ) ) ;
             }
 
-            size_t const num_objects_x = 200 ;
-            size_t const num_objects_y = 200 ;
+            size_t const num_objects_x = 500 ;
+            size_t const num_objects_y = 500 ;
             size_t const num_objects = num_objects_x * num_objects_y ;
             _max_objects = num_objects ;
-            _num_objects_rnd = num_objects ;
+            _num_objects_rnd = int_t(std::min( size_t(40000), size_t(num_objects / 2) )) ;
 
             // cube
             {
@@ -227,8 +232,10 @@ namespace this_file
                 natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "cubes",
                     natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
-                _wid_async.async().configure( geo ) ;
-                _wid_async2.async().configure( geo ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( geo ) ;
+                } ) ;
                 _geometries.emplace_back( std::move( geo ) ) ;
             }
 
@@ -265,8 +272,10 @@ namespace this_file
                 );
 
                 _gpu_data = natus::graphics::array_object_t( "object_data", std::move( db ) ) ;
-                _wid_async.async().configure( _gpu_data ) ;
-                _wid_async2.async().configure( _gpu_data ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( _gpu_data ) ;
+                } ) ;
             }
 
             
@@ -302,8 +311,10 @@ namespace this_file
                     .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
                     .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
 
-                _wid_async.async().configure( _imgconfig ) ;
-                _wid_async2.async().configure( _imgconfig ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( _imgconfig ) ;
+                } ) ;
             }
 
             
@@ -522,8 +533,10 @@ namespace this_file
                         .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
                 }
 
-                _wid_async.async().configure( sc ) ;
-                _wid_async2.async().configure( sc ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( sc ) ;
+                } ) ;
             }
 
             // the cubes render object
@@ -592,8 +605,10 @@ namespace this_file
                     rc.add_variable_set( std::move( vars ) ) ;
                 }
                 
-                _wid_async.async().configure( rc ) ;
-                _wid_async2.async().configure( rc ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( rc ) ;
+                } ) ;
                 _render_objects.emplace_back( std::move( rc ) ) ;
             }
 
@@ -604,8 +619,10 @@ namespace this_file
                     .set_target( natus::graphics::depth_stencil_target_type::depth32 )
                     .resize( 1920, 1080 ) ;
 
-                _wid_async.async().configure( _fb ) ;
-                _wid_async2.async().configure( _fb ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( _fb ) ;
+                } ) ;
             }
 
 
@@ -806,9 +823,10 @@ namespace this_file
                             .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
                             .add_vertex_input_binding( natus::graphics::vertex_attribute::texcoord0, "in_tx" ) ;
                     }
-
-                    _wid_async.async().configure( sc ) ;
-                    _wid_async2.async().configure( sc ) ;
+                    _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                    {
+                        a.configure( sc ) ;
+                    } ) ;
                 }
 
                 {
@@ -846,8 +864,11 @@ namespace this_file
                 }
 
                 _rc_map = std::move( rc ) ;
-                _wid_async.async().configure( _rc_map ) ;
-                _wid_async2.async().configure( _rc_map ) ;
+
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( _rc_map ) ;
+                } ) ;
             }
             
             return natus::application::result::ok ; 
@@ -909,7 +930,7 @@ namespace this_file
                 _gpu_data->data_buffer().
                 update< the_data >( [&]( the_data * array, size_t const ne )
                 {
-                    for( size_t y=0; y<ne; ++y )
+                    for( size_t y=0; y<std::min( size_t(_num_objects_rnd), ne ); ++y )
                     {
                         float_t c = float_t( rand() % 255 ) /255.0f ;
                         float_t x = 2.0f * (float_t(y) / float_t(ne) );
@@ -922,8 +943,10 @@ namespace this_file
                                 natus::math::vec4f_t ( 0.1f, c, (c) , 1.0f ) ;
                     }
                 } ) ;
-                _wid_async.async().update( _gpu_data ) ;
-                _wid_async2.async().update( _gpu_data ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( _gpu_data ) ;
+                } ) ;                
             }
 
             // per frame update of variables
@@ -969,43 +992,55 @@ namespace this_file
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( _root_render_states ) ;
-                _wid_async2.async().use( _root_render_states ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.use( _root_render_states ) ;
+                } ) ;
             }
 
             // use the framebuffer
             {
-                _wid_async.async().use( _fb, true, true, false ) ;
-                _wid_async2.async().use( _fb, true, true, false ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.use( _fb, true, true, false ) ;
+                } ) ;
             }
 
             for( size_t i=0; i<_render_objects.size(); ++i )
             {
-                natus::graphics::backend_t::render_detail_t detail ;
-                detail.start = 0 ;
-                detail.num_elems = _num_objects_rnd * 36 ;
-                detail.varset = 0 ;
-                //detail.render_states = _render_states ;
-                _wid_async.async().render( _render_objects[i], detail ) ;
-                _wid_async2.async().render( _render_objects[i], detail ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    natus::graphics::backend_t::render_detail_t detail ;
+                    detail.start = 0 ;
+                    detail.num_elems = _num_objects_rnd * 36 ;
+                    detail.varset = 0 ;
+                    //detail.render_states = _render_states ;
+                    a.render( _render_objects[i], detail ) ;
+                } ) ;
             }
 
             // un-use the framebuffer
             {
-                _wid_async.async().use( natus::graphics::framebuffer_object_t() ) ;
-                _wid_async2.async().use( natus::graphics::framebuffer_object_t() ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.use( natus::graphics::framebuffer_object_t() ) ;
+                } ) ;
             }
 
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( natus::graphics::state_object_t(), 10 ) ;
-                _wid_async2.async().use( natus::graphics::state_object_t(), 10 ) ;
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.use( natus::graphics::state_object_t(), 10 ) ;
+                } ) ;
             }
 
             // perform mapping
-            _wid_async.async().render( _rc_map ) ;
-            _wid_async2.async().render( _rc_map ) ;
+            _graphics.for_each( [&]( natus::graphics::async_view_t a )
+            {
+                a.render( _rc_map ) ;
+            } ) ;
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
