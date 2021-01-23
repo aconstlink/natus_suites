@@ -48,7 +48,8 @@ set( subdirs
     "35_text_render_2d"
     "36_primitive_render_2d"
     "37_primitive_render_2d"
-    "38_particle_system"
+    "38_sprite_render_2d"
+    "xx_particle_system"
     "xx_tool_sprite"
     )
 
