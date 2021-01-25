@@ -62,9 +62,12 @@ namespace this_file
             view2.window().resize( 800, 800 ) ;
 
             _graphics = natus::graphics::async_views_t( { view1.async(), view2.async() } ) ;
-            #else
+            #elif 0
             auto view1 = this_t::create_window( "A Render Window", wi, 
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
+            _graphics = natus::graphics::async_views_t( { view1.async() } ) ;
+            #else
+            auto view1 = this_t::create_window( "A Render Window", wi ) ;
             _graphics = natus::graphics::async_views_t( { view1.async() } ) ;
             #endif
         }
@@ -186,27 +189,28 @@ namespace this_file
             static float_t inc = 0.0f ;
 
             natus::math::vec2f_t pos( -1.0f, 0.5f ) ;
-            for( size_t i=0; i<1000; ++i )
+            for( size_t i=0; i<1159; ++i )
             {
                 _pr->draw( 0, 
                     pos + natus::math::vec2f_t( 0.0f, -0.4f ), 
-                    natus::math::mat2f_t().identity(),
-                    natus::math::vec2f_t(0.01f),
+                    natus::math::mat2f_t( std::sin(inc*2.0f), std::cos(inc), natus::math::rotation_matrix() ),
+                    natus::math::vec2f_t(0.05f*inc),
                     natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f), 
                     0 ) ;
 
-                pos += natus::math::vec2f_t( float_t(i) / 1000.0f, 0.0f ) ;
+                pos += natus::math::vec2f_t( float_t(4) / 1000.0f, 
+                    std::sin((float_t(i)/50.0f)*2.0f*natus::math::constants<float_t>::pi())*0.05f) ;
             }
 
             pos = natus::math::vec2f_t( 1.0f, -0.5f ) ;
 
-            for( size_t i=0; i<1000; ++i )
+            for( size_t i=0; i<1154; ++i )
             {
                 size_t const idx = 999 - i ;
                 _pr->draw( 1, 
                     pos + natus::math::vec2f_t( 0.0f, -0.4f ), 
                     natus::math::mat2f_t().identity(),
-                    natus::math::vec2f_t(0.01f),
+                    natus::math::vec2f_t(0.1f),
                     natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f), 
                     0 ) ;
 

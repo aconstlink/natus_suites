@@ -43,7 +43,7 @@ namespace this_file
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
-            #if 1
+            #if 0
             _wid_async = this_t::create_window( "A Render Window", wi ) ;
             #else
             _wid_async = this_t::create_window( "A Render Window", wi, 
@@ -430,7 +430,7 @@ namespace this_file
                 if( i == 0 )
                 {
                     auto* var = vs->data_variable< natus::math::vec4f_t >( "u_color" ) ;
-                    var->set( natus::math::vec4f_t( v, 0.0f, 1.0f, 0.5f ) ) ;
+                    //var->set( natus::math::vec4f_t( v, 0.0f, 1.0f, 0.5f ) ) ;
 
                     {
                         auto* var = vs->data_variable< natus::math::mat4f_t >( "u_view" ) ;
@@ -445,12 +445,12 @@ namespace this_file
                 else if( i == 1 )
                 {
                     auto* var = vs->data_variable< natus::math::vec4f_t >( "u_color" ) ;
-                    var->set( natus::math::vec4f_t( 0.0f, v, 1.0f, 1.0f ) ) ;
+                    //var->set( natus::math::vec4f_t( 0.0f, v, 1.0f, 1.0f ) ) ;
                 }
                 else if( i == 2 )
                 {
                     auto* var = vs->data_variable< natus::math::vec4f_t >( "u_color" ) ;
-                    var->set( natus::math::vec4f_t( v, v, 1.0f-v, 1.0f ) ) ;
+                    //var->set( natus::math::vec4f_t( v, v, 1.0f-v, 1.0f ) ) ;
                 }
             } ) ;
 
