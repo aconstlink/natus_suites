@@ -6,6 +6,10 @@
 #include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/graphics/variable/variable_set.hpp>
 
+#include <natus/format/global.h>
+#include <natus/format/future_items.hpp>
+#include <natus/io/database.h>
+
 #include <natus/geometry/mesh/tri_mesh.h>
 #include <natus/geometry/mesh/flat_tri_mesh.h>
 #include <natus/geometry/3d/cube.h>
@@ -32,7 +36,6 @@ namespace this_file
 
         natus::graphics::async_views_t _graphics ;
         
-        natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
         natus::graphics::array_object_res_t _gpu_data = natus::graphics::array_object_t() ;
 
         natus::graphics::state_object_res_t _root_render_states ;
@@ -50,8 +53,10 @@ namespace this_file
 
         natus::gfx::pinhole_camera_t _camera_0 ;
 
-        int_t _max_textures = 4 ;
+        int_t _max_textures = 3 ;
         int_t _used_texture = 0 ;
+
+        natus::io::database_res_t _db ;
 
     public:
 
@@ -76,12 +81,15 @@ namespace this_file
                 { natus::graphics::backend_type::es3, natus::graphics::backend_type::d3d11 } ) ;
             _graphics = natus::graphics::async_views_t( {wid_async.async()} ) ;
             #endif
+
+            _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
             _graphics = std::move( rhv._graphics ) ;
             _camera_0 = std::move( rhv._camera_0 ) ;
+            _db = std::move( rhv._db ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -169,30 +177,29 @@ namespace this_file
 
             // image configuration
             {
-                natus::graphics::image_t img = natus::graphics::image_t( natus::graphics::image_t::dims_t( 100, 100 ) )
-                    .update( [&]( natus::graphics::image_ptr_t, natus::graphics::image_t::dims_in_t dims, void_ptr_t data_in )
+                natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
+                natus::format::future_item_t items[4] = 
                 {
-                    typedef natus::math::vector4< uint8_t > rgba_t ;
-                    auto* data = reinterpret_cast< rgba_t * >( data_in ) ;
+                    mod_reg->import_from( natus::io::location_t( "images.1.png" ), _db ),
+                    mod_reg->import_from( natus::io::location_t( "images.2.png" ), _db ),
+                    mod_reg->import_from( natus::io::location_t( "images.3.png" ), _db ),
+                    mod_reg->import_from( natus::io::location_t( "images.4.png" ), _db )
+                } ;
 
-                    size_t const w = 5 ;
+                natus::graphics::image_t img ;
 
-                    size_t i = 0 ; 
-                    for( size_t y = 0; y < dims.y(); ++y )
+                for( size_t i=0; i<4; ++i )
+                {
+                    natus::format::image_item_res_t ii = items[i].get() ;
+                    if( ii.is_valid() )
                     {
-                        bool_t const odd = ( y / w ) & 1 ;
-
-                        for( size_t x = 0; x < dims.x(); ++x )
-                        {
-                            bool_t const even = ( x / w ) & 1 ;
-
-                            data[ i++ ] = even || odd ? rgba_t( 255 ) : rgba_t( 0, 0, 0, 255 );
-                            //data[ i++ ] = rgba_t(255) ;
-                        }
+                        img.append( *ii->img ) ;
                     }
-                } ) ;
+                }
 
-                _imgconfig = natus::graphics::image_object_t( "checker_board", ::std::move( img ) )
+                natus::graphics::image_object_res_t ires = natus::graphics::image_object_t( 
+                    "image_array", std::move( img ) )
+                    .set_type( natus::graphics::texture_type::texture_2d_array )
                     .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
                     .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
                     .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
@@ -200,10 +207,9 @@ namespace this_file
 
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.configure( _imgconfig ) ;
+                    a.configure( ires ) ;
                 } ) ;
             }
-
             
             // shader configuration
             {
@@ -218,29 +224,37 @@ namespace this_file
                             in vec3 in_pos ;
                             out vec2 var_tx ;
 
-                            uniform int u_quad ;
-
+                            uniform int u_quad ; // in [0,1] left or right quad
+                            
                             void main()
                             {
                                 vec2 offset[2] = vec2[2]( vec2(-0.5, 0.0), vec2(0.5,0.0) ) ;
                                 gl_Position = vec4( in_pos.xy * vec2(0.85) + offset[u_quad], 0.0, 1.0 ) ;
                                 var_tx = sign( in_pos.xy ) * vec2( 0.5 ) + vec2( 0.5 ) ;
+
                             } )" ) ).
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
                             #version 140
                             #extension GL_ARB_separate_shader_objects : enable
                             #extension GL_ARB_explicit_attrib_location : enable
-                            in vec2 var_tx ;
                             
+                            in vec2 var_tx ;
+
                             layout(location = 0 ) out vec4 out_color ;
-                            uniform sampler2D u_tex ;
-                        
+
+                            uniform sampler2DArray u_tex ;
+                            
+                            uniform int u_quad ; // in [0,1] left or right quad
+                            uniform int u_texture ; // in [0,3] choosing the sampler in u_tex
+
                             void main()
                             {    
                                 vec2 uv = fract( var_tx * 2.0 ) ;
-                                //out_color = vec4( uv, 0.0, 1.0 ) ;
-                                out_color = texture( u_tex, uv ) ;
+                                int quadrant = int( dot( floor(var_tx*2.0), vec2(1,2) ) ) ;
+                                int idx = u_quad * u_texture + quadrant * ( 1 - u_quad ) ;
+                                //out_color = vec4( floor(var_tx*2.0), 0.0, 1.0 ) ;
+                                out_color = texture( u_tex, vec3( uv, float(idx) ) ) ;
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::backend_type::gl3, std::move( ss ) ) ;
@@ -310,7 +324,7 @@ namespace this_file
                         set_vertex_shader( natus::graphics::shader_t( R"(
                             cbuffer ConstantBuffer : register( b0 ) 
                             {
-                                int u_quad ;
+                                int u_quad ; // in [0,1] left or right quad
                             }
 
                             struct VS_INPUT
@@ -338,11 +352,16 @@ namespace this_file
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
                             
-                            Texture2D u_tex : register( t0 );
-                            SamplerState smp_u_tex : register( s0 );
+                            Texture2D u_tex : register( t0 ) ;
+                            SamplerState smp_u_tex : register( s0 ) ;
 
                             cbuffer ConstantBuffer : register( b0 ) 
-                            {}
+                            {
+                                int u_quad ; // in [0,1] left or right quad
+                                int u_texture ; // in [0,3] choosing the sampler in u_tex
+                                float4 test[4] ;
+
+                            }
 
                             struct VS_OUTPUT
                             {
@@ -353,9 +372,18 @@ namespace this_file
                             float4 PS( VS_OUTPUT input ) : SV_Target0
                             {
                                 float2 uv = frac( input.tx * 2.0 ) ;
+                                int quadrant = int( dot( floor(input.tx*float2(2,2)), float2(1,2) ) ) ;
                                 //return float4( uv, 0.0, 1.0 ) ; 
-                                return u_tex.Sample( smp_u_tex, uv ) ;
-                                
+                                int idx = u_quad * u_texture + quadrant *(1-u_quad) ;
+                                /*switch( idx )
+                                {
+                                    case 0: return u_tex[0].Sample( smp_u_tex[0], uv ) + test[0];
+                                    case 1: return u_tex[1].Sample( smp_u_tex[1], uv ) + test[1];
+                                    default: return float4(1,1,1,1) ;
+                                }*/
+                                    
+                                //return test[idx] ;
+                                return float4(1,1,1,1);
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
@@ -390,11 +418,16 @@ namespace this_file
                     
                     {
                         auto* var = vars->texture_variable( "u_tex" ) ;
-                        var->set( "checker_board" ) ;
+                        var->set( "image_array" ) ;
                     }
 
                     {
                         auto * var = vars->data_variable<int32_t>("u_quad" ) ;
+                        var->set( 0 ) ;
+                    }
+
+                    {
+                        auto * var = vars->data_variable<int32_t>("u_texture" ) ;
                         var->set( 0 ) ;
                     }
 
@@ -407,7 +440,7 @@ namespace this_file
                     
                     {
                         auto* var = vars->texture_variable( "u_tex" ) ;
-                        var->set( "checker_board" ) ;
+                        var->set( "image_array" ) ;
                     }
 
                     {
@@ -415,10 +448,14 @@ namespace this_file
                         var->set( 1 ) ;
                     }
 
+                    {
+                        auto * var = vars->data_variable<int32_t>("u_texture" ) ;
+                        var->set( 0 ) ;
+                    }
+
                     _vs1 = vars ;
                     rc.add_variable_set( std::move( vars ) ) ;
                 }
-                
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( rc ) ;
@@ -437,6 +474,14 @@ namespace this_file
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
         { 
+            _ro->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
+            {
+                {
+                    auto* var = vs->data_variable< int32_t >( "u_texture" ) ;
+                    var->set( _used_texture ) ;
+                }
+            } ) ;
+
             // render the root render state sets render object
             // this will set the root render states
             _graphics.for_each( [&]( natus::graphics::async_view_t a )
