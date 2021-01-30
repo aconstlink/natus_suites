@@ -180,14 +180,16 @@ namespace this_file
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
                 natus::format::future_item_t items[4] = 
                 {
-                    mod_reg->import_from( natus::io::location_t( "images.1.png" ), _db ),
-                    mod_reg->import_from( natus::io::location_t( "images.2.png" ), _db ),
-                    mod_reg->import_from( natus::io::location_t( "images.3.png" ), _db ),
+                    mod_reg->import_from( natus::io::location_t( "images.1_.png" ), _db ),
+                    mod_reg->import_from( natus::io::location_t( "images.2_.png" ), _db ),
+                    mod_reg->import_from( natus::io::location_t( "images.3_.png" ), _db ),
                     mod_reg->import_from( natus::io::location_t( "images.4.png" ), _db )
                 } ;
 
+                // taking all slices
                 natus::graphics::image_t img ;
 
+                // load each slice into the image
                 for( size_t i=0; i<4; ++i )
                 {
                     natus::format::image_item_res_t ii = items[i].get() ;
@@ -352,15 +354,13 @@ namespace this_file
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
                             
-                            Texture2D u_tex : register( t0 ) ;
+                            Texture2DArray u_tex : register( t0 ) ;
                             SamplerState smp_u_tex : register( s0 ) ;
 
                             cbuffer ConstantBuffer : register( b0 ) 
                             {
                                 int u_quad ; // in [0,1] left or right quad
                                 int u_texture ; // in [0,3] choosing the sampler in u_tex
-                                float4 test[4] ;
-
                             }
 
                             struct VS_OUTPUT
@@ -375,15 +375,8 @@ namespace this_file
                                 int quadrant = int( dot( floor(input.tx*float2(2,2)), float2(1,2) ) ) ;
                                 //return float4( uv, 0.0, 1.0 ) ; 
                                 int idx = u_quad * u_texture + quadrant *(1-u_quad) ;
-                                /*switch( idx )
-                                {
-                                    case 0: return u_tex[0].Sample( smp_u_tex[0], uv ) + test[0];
-                                    case 1: return u_tex[1].Sample( smp_u_tex[1], uv ) + test[1];
-                                    default: return float4(1,1,1,1) ;
-                                }*/
-                                    
-                                //return test[idx] ;
-                                return float4(1,1,1,1);
+                                return u_tex.Sample( smp_u_tex, float3( uv, float(idx)) ) ;
+                                //return float4( uv, 0.0, 1.0) ;
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;

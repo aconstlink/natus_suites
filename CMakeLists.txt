@@ -42,7 +42,7 @@ set( subdirs
     "29_framebuffer_nsl"
     "30_array_object"
     #"30_array_object_nsl"
-    "31_variable_array"
+    "31_texture_array"
     "32_reconfig"
     "33_nsl_auto"
     "34_glyph_atlas"
