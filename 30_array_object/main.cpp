@@ -177,8 +177,8 @@ namespace this_file
                 _geometries.emplace_back( std::move( geo ) ) ;
             }
 
-            size_t const num_objects_x = 500 ;
-            size_t const num_objects_y = 500 ;
+            size_t const num_objects_x = 300 ;
+            size_t const num_objects_y = 300 ;
             size_t const num_objects = num_objects_x * num_objects_y ;
             _max_objects = num_objects ;
             _num_objects_rnd = int_t(std::min( size_t(40000), size_t(num_objects / 2) )) ;

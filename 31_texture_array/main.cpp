@@ -268,53 +268,43 @@ namespace this_file
 
                         set_vertex_shader( natus::graphics::shader_t( R"(
                             #version 300 es
+                            precision mediump int ;
                             in vec3 in_pos ;
-                            in vec3 in_nrm ;
-                            in vec2 in_tx ;
-                            out vec3 var_nrm ;
-                            out vec2 var_tx0 ;
-                            out vec4 var_col ;
-                            uniform mat4 u_proj ;
-                            uniform mat4 u_view ;
-                            uniform mat4 u_world ;
-                            uniform sampler2D u_data ;
+                            out vec2 var_tx ;
+
+                            uniform int u_quad ; // in [0,1] left or right quad
 
                             void main()
                             {
-                                int idx = gl_VertexID / 24 ;
-                                ivec2 wh = textureSize( u_data, 0 ) ;
-                                vec4 pos_scl = texelFetch( u_data, 
-                                     ivec2( ((idx*2) % wh.x), ((idx*2) / wh.x) ), 0 ) ;
-                                var_col = texelFetch( u_data, 
-                                     ivec2( (((idx*2)+1) % wh.x), (((idx*2)+1) / wh.x) ), 0 ) ;
-                                var_tx0 = in_tx ;
-                                vec4 pos = vec4(in_pos * vec3( pos_scl.w ),1.0 )  ;
-                                pos = u_world * pos ;
-                                pos += vec4(pos_scl.xyz*vec3(pos_scl.w*2.0f),0.0) ;
-                                gl_Position = u_proj * u_view * pos ;
-                                var_nrm = normalize( u_world * vec4( in_nrm, 0.0 ) ).xyz ;
+                                vec2 offset[2] = vec2[2]( vec2(-0.5, 0.0), vec2(0.5,0.0) ) ;
+                                gl_Position = vec4( in_pos.xy * vec2(0.85) + offset[u_quad], 0.0, 1.0 ) ;
+                                var_tx = sign( in_pos.xy ) * vec2( 0.5 ) + vec2( 0.5 ) ;
+
                             } )" ) ).
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
                             #version 300 es
+                            precision mediump int ;
                             precision mediump float ;
-                            in vec2 var_tx0 ;
-                            in vec3 var_nrm ;
-                            in vec4 var_col ;
-                            layout(location = 0 ) out vec4 out_color0 ;
-                            layout(location = 1 ) out vec4 out_color1 ;
-                            layout(location = 2 ) out vec4 out_color2 ;
-                            uniform sampler2D u_tex ;
-                            uniform vec4 u_color ;
-                        
+                            precision mediump sampler2DArray ;
+
+                            in vec2 var_tx ;
+
+                            out vec4 out_color ;
+
+                            uniform sampler2DArray u_tex ;
+
+                            uniform int u_quad ; // in [0,1] left or right quad
+                            uniform int u_texture ; // in [0,3] choosing the sampler in u_tex
+
                             void main()
-                            {    
-                                out_color0 = u_color * texture( u_tex, var_tx0 ) * var_col ;
-                                out_color1 = vec4( var_nrm, 1.0 ) ;
-                                out_color2 = vec4( 
-                                    vec3( dot( normalize( var_nrm ), normalize( vec3( 1.0, 1.0, 0.5) ) ) ), 
-                                    1.0 ) ;
-                            })" ) ) ;
+                            {
+                                vec2 uv = fract( var_tx * 2.0 ) ;
+                                int quadrant = int( dot( floor(var_tx*2.0), vec2(1,2) ) ) ;
+                                int idx = u_quad * u_texture + quadrant * ( 1 - u_quad ) ;
+                                //out_color = vec4( floor(var_tx*2.0), 0.0, 1.0 ) ;
+                                out_color = texture( u_tex, vec3( uv, float(idx) ) ) ;
+                            } )" ) ) ;
 
                     sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
                 }
