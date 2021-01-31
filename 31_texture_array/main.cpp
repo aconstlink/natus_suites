@@ -180,9 +180,9 @@ namespace this_file
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
                 natus::format::future_item_t items[4] = 
                 {
-                    mod_reg->import_from( natus::io::location_t( "images.1_.png" ), _db ),
-                    mod_reg->import_from( natus::io::location_t( "images.2_.png" ), _db ),
-                    mod_reg->import_from( natus::io::location_t( "images.3_.png" ), _db ),
+                    mod_reg->import_from( natus::io::location_t( "images.1.png" ), _db ),
+                    mod_reg->import_from( natus::io::location_t( "images.2.png" ), _db ),
+                    mod_reg->import_from( natus::io::location_t( "images.3.png" ), _db ),
                     mod_reg->import_from( natus::io::location_t( "images.4.png" ), _db )
                 } ;
 
