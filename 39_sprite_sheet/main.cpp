@@ -5,6 +5,8 @@
 
 #include <natus/format/global.h>
 #include <natus/format/future_items.hpp>
+#include <natus/format/natus/natus_module.h>
+
 #include <natus/io/database.h>
 
 #include <natus/device/global.h>
@@ -51,6 +53,33 @@ namespace this_file
         natus::gfx::sprite_render_2d_res_t _pr ;
 
         natus::io::database_res_t _db ;
+
+        struct sprite_sheet
+        {
+            struct animation
+            {
+                struct sprite
+                {
+                    size_t idx ;
+                    size_t begin ;
+                    size_t end ;
+                };
+                size_t duration ;
+                natus::ntd::vector< sprite > sprites ;
+
+            };
+            natus::ntd::vector< animation > animations ;
+
+            struct sprite
+            {
+                natus::math::vec4f_t rect ;
+                natus::math::vec2f_t pivot ;
+            };
+            natus::ntd::vector< sprite > rects ;
+        };
+        natus::ntd::vector< sprite_sheet > _sheets ;
+
+        
 
     public:
 
@@ -158,42 +187,113 @@ namespace this_file
                 } ) ;
             }
             
-            // image configuration
+            // import natus file
             {
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                natus::format::future_item_t items[4] = 
-                {
-                    mod_reg->import_from( natus::io::location_t( "images.industrial.industrial.v2.png" ), _db ),
-                    mod_reg->import_from( natus::io::location_t( "images.Paper-Pixels-8x8.Enemies.png" ), _db ),
-                    mod_reg->import_from( natus::io::location_t( "images.Paper-Pixels-8x8.Player.png" ), _db ),
-                    mod_reg->import_from( natus::io::location_t( "images.Paper-Pixels-8x8.Tiles.png" ), _db )
-                } ;
+                auto item = mod_reg->import_from( natus::io::location_t( "sprite_sheet.natus" ), _db ) ;
 
-                // taking all slices
-                natus::graphics::image_t img ;
-
-                // load each slice into the image
-                for( size_t i=0; i<4; ++i )
+                natus::format::natus_item_res_t ni = item.get() ;
+                if( ni.is_valid() )
                 {
-                    natus::format::image_item_res_t ii = items[i].get() ;
-                    if( ii.is_valid() )
+                    natus::format::natus_document_t doc = std::move( ni->doc ) ;
+
+                    // taking all slices
+                    natus::graphics::image_t imgs ;
+
+                    // load images
                     {
-                        img.append( *ii->img ) ;
+                        natus::ntd::vector< natus::format::future_item_t > futures ;
+                        for( auto const & ss : doc.sprite_sheets )
+                        {
+                            auto const l = natus::io::location_t::from_path( natus::io::path_t(ss.image.src) ) ;
+                            futures.emplace_back( mod_reg->import_from( l, _db ) ) ;
+                        }
+
+                    
+                        for( size_t i=0; i<doc.sprite_sheets.size(); ++i )
+                        {
+                            natus::format::image_item_res_t ii = futures[i].get() ;
+                            if( ii.is_valid() )
+                            {
+                                imgs.append( *ii->img ) ;
+                            }
+
+                            sprite_sheet ss ;
+                            _sheets.emplace_back( ss ) ;
+                        }
                     }
+
+                    // make sprite animation infos
+                    {
+                        // as an image array is used, the max dims need to be
+                        // used to compute the particular rect infos
+                        auto dims = imgs.get_dims() ;
+                    
+                        size_t i=0 ;
+                        for( auto const & ss : doc.sprite_sheets )
+                        {
+                            auto & sheet = _sheets[i++] ;
+
+                            for( auto const & s : ss.sprites )
+                            {
+                                natus::math::vec4f_t const rect = 
+                                    (natus::math::vec4f_t( s.animation.rect ) + 
+                                        natus::math::vec4f_t(0.5f,0.5f, 0.5f, 0.5f))/ 
+                                    natus::math::vec4f_t( dims.xy(), dims.xy() )  ;
+
+                                natus::math::vec2f_t const pivot =
+                                    natus::math::vec2f_t( s.animation.pivot ) / 
+                                    natus::math::vec2f_t( dims.xy() ) ;
+
+                                sprite_sheet::sprite s ;
+                                s.rect = rect ;
+                                s.pivot = pivot ;
+
+                                sheet.rects.emplace_back( s ) ;
+                            }
+
+
+                            for( auto const & a : ss.animations )
+                            {
+                                sprite_sheet::animation a_ ;
+
+                                size_t tp = 0 ;
+                                for( auto const & f : a.frames )
+                                {
+                                    auto iter = std::find_if( ss.sprites.begin(), ss.sprites.end(), 
+                                        [&]( natus::format::natus_document_t::sprite_sheet_t::sprite_cref_t s )
+                                    {
+                                        return s.name == f.sprite ;
+                                    } ) ;
+
+                                    size_t const d = std::distance( ss.sprites.begin(), iter ) ;
+                                    sprite_sheet::animation::sprite s_ ;
+                                    s_.begin = tp ;
+                                    s_.end = tp + f.duration ;
+                                    s_.idx = d ;
+                                    a_.sprites.emplace_back( s_ ) ;
+
+                                    tp = s_.end ;
+                                }
+                                a_.duration = tp ;
+                                sheet.animations.emplace_back( std::move( a_ ) ) ;
+                            }
+                        }
+                    }
+
+                    natus::graphics::image_object_res_t ires = natus::graphics::image_object_t( 
+                        "image_array", std::move( imgs ) )
+                        .set_type( natus::graphics::texture_type::texture_2d_array )
+                        .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
+                        .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
+                        .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
+                        .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
+
+                    _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                    {
+                        a.configure( ires ) ;
+                    } ) ;
                 }
-
-                natus::graphics::image_object_res_t ires = natus::graphics::image_object_t( 
-                    "image_array", std::move( img ) )
-                    .set_type( natus::graphics::texture_type::texture_2d_array )
-                    .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
-                    .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
-                    .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
-                    .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
-
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.configure( ires ) ;
-                } ) ;
             }
 
             // prepare sprite render
@@ -231,48 +331,30 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
+        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rdi ) 
         { 
-            static float_t inc = 0.0f ;
+            size_t const sheet = 0 ;
+            size_t const ani = 0 ;
+            static size_t ani_time = 0 ;
+            if( ani_time > _sheets[sheet].animations[ani].duration ) ani_time = 0 ;
 
-            natus::math::vec2f_t pos( -1.0f, 0.5f ) ;
-            for( size_t i=0; i<1159; ++i )
+            for( auto const & s : _sheets[sheet].animations[ani].sprites )
             {
-                _pr->draw( 0, 
-                    pos + natus::math::vec2f_t( 0.0f, -0.4f ), 
-                    natus::math::mat2f_t( std::sin(inc*2.0f), std::cos(inc), natus::math::rotation_matrix() ),
-                    natus::math::vec2f_t(0.05f*inc),
-                    natus::math::vec4f_t(0.3f,0.1f,0.35f,0.14f),  
-                    1 ) ;
-
-                pos += natus::math::vec2f_t( float_t(4) / 1000.0f, 
-                    std::sin((float_t(i)/50.0f)*2.0f*natus::math::constants<float_t>::pi())*0.05f) ;
+                if( ani_time >= s.begin && ani_time < s.end )
+                {
+                    auto const & rect = _sheets[sheet].rects[s.idx] ;
+                    natus::math::vec2f_t pos( -0.0f, 0.0f ) ;
+                    _pr->draw( 0, 
+                        pos + rect.pivot * 10.0f * 1.0f, 
+                        natus::math::mat2f_t().identity(),
+                        natus::math::vec2f_t( rect.rect.zw() - rect.rect.xy() )*20.0f,
+                        rect.rect,  
+                        sheet ) ;
+                    break ;
+                }
             }
 
-            pos = natus::math::vec2f_t( 1.0f, -0.5f ) ;
-
-            for( size_t i=0; i<1154; ++i )
-            {
-                size_t const idx = 999 - i ;
-                _pr->draw( 1, 
-                    pos + natus::math::vec2f_t( 0.0f, -0.4f ), 
-                    natus::math::mat2f_t().identity(),
-                    natus::math::vec2f_t(0.1f),
-                    natus::math::vec4f_t(0.1f,0.1f,0.2f,0.2f), 
-                    0 ) ;
-
-                pos -= natus::math::vec2f_t( (float_t(i) / 1000.0f), 0.0f ) ;
-            }
-
-            _pr->draw( 2, 
-                    natus::math::vec2f_t( 0.0f, -0.0f ), 
-                    natus::math::mat2f_t().identity(),
-                    natus::math::vec2f_t(0.5f),
-                    natus::math::vec4f_t(0.0f,0.0f,0.4f,0.4f), 
-                    3 ) ;
-
-            inc += 0.01f  ;
-            inc = natus::math::fn<float_t>::mod( inc, 1.0f ) ;
+            ani_time += rdi.milli_dt ;
             
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
