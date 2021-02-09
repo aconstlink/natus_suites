@@ -62,7 +62,7 @@ namespace this_file
             srand (time(NULL));
 
             natus::application::app::window_info_t wi ;
-            #if 0
+            #if 1
             app::window_async_t wid_async = this_t::create_window( "A Render Window", wi ) ;
             app::window_async_t wid_async2 = this_t::create_window( "A Render Window", wi,
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 }) ;
@@ -268,8 +268,10 @@ namespace this_file
                 float_t scale = 20.0f ;
                 natus::graphics::data_buffer_t db = natus::graphics::data_buffer_t()
                     .add_layout_element( natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 )
-                    .add_layout_element( natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 ).resize( num_objects ).
-                        update< the_data >( [&]( the_data * array, size_t const ne )
+                    .add_layout_element( natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 ) ;
+
+                #if 0
+                    .resize( num_objects ).update< the_data >( [&]( the_data * array, size_t const ne )
                         {
                             for( size_t y=0; y<num_objects_y; ++y )
                             {
@@ -288,6 +290,7 @@ namespace this_file
                             }
                         }
                 );
+                    #endif
 
                 _gpu_data = natus::graphics::array_object_t( "object_data", std::move( db ) ) ;
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
@@ -295,7 +298,6 @@ namespace this_file
                     a.configure( _gpu_data ) ;
                 } ) ;
             }
-
             
 
             // image configuration
@@ -945,9 +947,11 @@ namespace this_file
                     natus::math::vec4f_t pos ;
                     natus::math::vec4f_t col ;
                 };
-                _gpu_data->data_buffer().
+                
+                _gpu_data->data_buffer().resize( _num_objects_rnd ).
                 update< the_data >( [&]( the_data * array, size_t const ne )
                 {
+                    size_t const w = 300 ;
                     for( size_t y=0; y<std::min( size_t(_num_objects_rnd), ne ); ++y )
                     {
                         float_t c = float_t( rand() % 255 ) /255.0f ;
@@ -955,16 +959,21 @@ namespace this_file
 
                         x = x * 2.0f * natus::math::constants<float_t>::pi() ;
                         
+                        natus::math::vec4f_t pos(
+                            float_t(y % w) - w/2,
+                            10.0f * std::sin( x + angle_ ),
+                            float_t( y / w)- w/2,
+                            30.0f
+                        ) ;
 
-                        array[y].pos.y( 10.0f * std::sin( x + angle_ ) ) ;
-                        array[y].col = 
-                                natus::math::vec4f_t ( 0.1f, c, (c) , 1.0f ) ;
+                        array[y].pos = pos ;
+                        array[y].col = natus::math::vec4f_t ( 0.1f, c, (c) , 1.0f ) ;
                     }
                 } ) ;
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( _gpu_data ) ;
-                } ) ;                
+                } ) ; 
             }
 
             // per frame update of variables
@@ -989,7 +998,7 @@ namespace this_file
 
                     {
                         static float_t  angle = 0.0f ;
-                        angle = ( ( (dt/10.0f)  ) * 2.0f * natus::math::constants<float_t>::pi() ) ;
+                        angle = ( ( (dt/1.0f)  ) * 2.0f * natus::math::constants<float_t>::pi() ) ;
                         if( angle > 2.0f * natus::math::constants<float_t>::pi() ) angle = 0.0f ;
                         
                         auto* var = vs->data_variable< natus::math::mat4f_t >( "u_world" ) ;
