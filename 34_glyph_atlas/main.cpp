@@ -480,7 +480,7 @@ namespace this_file
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.use( _fb, true, true, false ) ;
+                    a.use( _fb ) ;
                 } ) ;
             }
 

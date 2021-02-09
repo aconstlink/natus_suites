@@ -581,8 +581,8 @@ namespace this_file
 
             // use the framebuffer
             {
-                _wid_async.async().use( _fb, true, true, false ) ;
-                _wid_async2.async().use( _fb, true, true, false ) ;
+                _wid_async.async().use( _fb ) ;
+                _wid_async2.async().use( _fb ) ;
             }
 
             // render the root render state sets render object
