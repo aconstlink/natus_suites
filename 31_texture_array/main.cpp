@@ -129,6 +129,10 @@ namespace this_file
                     rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
 
+                    rss.clear_s.do_change = true ;
+                    rss.clear_s.ss.do_activate = true ;
+                    rss.clear_s.ss.do_color_clear = true ;
+                    rss.clear_s.ss.do_depth_clear = true ;
                    
                     so.add_render_state_set( rss ) ;
                 }

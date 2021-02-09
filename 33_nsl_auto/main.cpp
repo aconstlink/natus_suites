@@ -78,6 +78,8 @@ namespace this_file
 
         natus::io::monitor_res_t _shader_mon = natus::io::monitor_t() ;
 
+        natus::math::vec4ui_t _fb_dims = natus::math::vec4ui_t( 0, 0, 1280, 768 ) ;
+
     public:
 
         test_app( void_t ) 
@@ -177,6 +179,14 @@ namespace this_file
                     rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
 
+                    rss.clear_s.do_change = true ;
+                    rss.clear_s.ss.do_activate = true ;
+                    rss.clear_s.ss.do_color_clear = true ;
+                    rss.clear_s.ss.do_depth_clear = true ;
+                   
+                    rss.view_s.do_change = true ;
+                    rss.view_s.ss.do_activate = true ;
+                    rss.view_s.ss.vp = _fb_dims ;
                    
                     so.add_render_state_set( rss ) ;
                 }
@@ -412,7 +422,7 @@ namespace this_file
                 _fb = natus::graphics::framebuffer_object_t( "the_scene" ) ;
                 _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 3 )
                     .set_target( natus::graphics::depth_stencil_target_type::depth32 )
-                    .resize( 1024, 1024 ) ;
+                    .resize( _fb_dims.z(), _fb_dims.w() ) ;
 
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
@@ -620,20 +630,22 @@ namespace this_file
 
             tp = __clock_t::now() ;
 
-            // render the root render state sets render object
-            // this will set the root render states
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.use( _root_render_states ) ;
-                } ) ;
-            }
+            
 
             // use the framebuffer
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.use( _fb, true, true, false ) ;
+                } ) ;
+            }
+
+            // render the root render state sets render object
+            // this will set the root render states
+            {
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.use( _root_render_states ) ;
                 } ) ;
             }
 

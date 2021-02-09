@@ -12,6 +12,7 @@
 #include <natus/device/global.h>
 #include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/gfx/sprite/sprite_render_2d.h>
+#include <natus/gfx/util/quad.h>
 
 #include <natus/graphics/variable/variable_set.hpp>
 #include <natus/profiling/macros.h>
@@ -42,15 +43,16 @@ namespace this_file
         natus::graphics::async_views_t _graphics ;
 
         natus::graphics::state_object_res_t _root_render_states ;
-                
-        natus::gfx::pinhole_camera_t _camera_0 ;
+        natus::graphics::framebuffer_object_res_t _fb = natus::graphics::framebuffer_object_t() ;
 
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
 
         bool_t _do_tool = false ;
 
+        natus::gfx::quad_res_t _quad ;
         natus::gfx::sprite_render_2d_res_t _pr ;
+        natus::gfx::pinhole_camera_t _camera_0 ;
 
         natus::io::database_res_t _db ;
 
@@ -115,6 +117,9 @@ namespace this_file
             _graphics = std::move( rhv._graphics ) ;
             _pr = std::move( rhv._pr ) ;
             _db = std::move( rhv._db ) ; 
+
+            _pr = std::move( rhv._pr ) ;
+            _quad = std::move( rhv._quad ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -158,6 +163,9 @@ namespace this_file
                         natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
             }
 
+            uint_t const fb_width = 512 ;
+            uint_t const fb_height = 512 ;
+
             // root render states
             {
                 natus::graphics::state_object_t so = natus::graphics::state_object_t(
@@ -176,7 +184,15 @@ namespace this_file
                     rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
 
+                    rss.clear_s.do_change = true ;
+                    rss.clear_s.ss.do_activate = true ;
+                    rss.clear_s.ss.clear_color = natus::math::vec4f_t(0.5f) ;
+                    rss.clear_s.ss.do_color_clear = true ;
                    
+                    rss.view_s.do_change = true ;
+                    rss.view_s.ss.do_activate = true ;
+                    rss.view_s.ss.vp = natus::math::vec4ui_t( 0, 0, fb_width, fb_height ) ;
+
                     so.add_render_state_set( rss ) ;
                 }
 
@@ -296,12 +312,31 @@ namespace this_file
                 }
             }
 
+            // framebuffer
+            {
+                _fb = natus::graphics::framebuffer_object_t( "the_scene" ) ;
+                _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 1 ).
+                    resize( fb_width, fb_height ) ;
+
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( _fb ) ;
+                } ) ;
+            }
+
             // prepare sprite render
             {
                 _pr = natus::gfx::sprite_render_2d_res_t( natus::gfx::sprite_render_2d_t() ) ;
                 _pr->init( "debug_sprite_render", "image_array", _graphics ) ;
             }
             
+            // prepare quad
+            {
+                _quad = natus::gfx::quad_res_t( natus::gfx::quad_t("post_map") ) ;
+                _quad->set_texture("the_scene.0") ;
+                _quad->init( _graphics ) ;
+                
+            }
             return natus::application::result::ok ; 
         }
 
@@ -357,6 +392,7 @@ namespace this_file
 
             ani_time += rdi.milli_dt ;
             
+            #if 0
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
@@ -371,16 +407,32 @@ namespace this_file
                     a.use( natus::graphics::state_object_t(), 10 ) ;
                 } ) ;
             }
+            #endif
+
             {
+
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.use( _fb ) ;
+                    a.use( _root_render_states ) ;
+                } ) ;
+
                 _pr->prepare_for_rendering() ;
                 _pr->render( 0 ) ;
                 _pr->render( 1 ) ;
                 _pr->render( 2 ) ;
                 _pr->render( 3 ) ;
                 _pr->render( 4 ) ;
+
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.use( natus::graphics::state_object_res_t() ) ;
+                    a.use( natus::graphics::framebuffer_object_res_t() ) ;
+                } ) ;
                 
             }
             
+            _quad->render( _graphics ) ;
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 

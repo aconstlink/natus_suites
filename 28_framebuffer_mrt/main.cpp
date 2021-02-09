@@ -34,6 +34,7 @@ namespace this_file
         natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
 
         natus::graphics::state_object_res_t _root_render_states ;
+        natus::graphics::state_object_res_t _fb_render_states ;
         natus::ntd::vector< natus::graphics::render_object_res_t > _render_objects ;
         natus::ntd::vector< natus::graphics::geometry_object_res_t > _geometries ;
 
@@ -47,6 +48,8 @@ namespace this_file
         __clock_t::time_point _tp = __clock_t::now() ;
 
         natus::gfx::pinhole_camera_t _camera_0 ;
+
+        natus::math::vec4ui_t _fb_dims = natus::math::vec4ui_t( 0, 0, 1024, 768 ) ;
 
     public:
 
@@ -115,14 +118,51 @@ namespace this_file
                     rss.polygon_s.ss.ff = natus::graphics::front_face::counter_clock_wise ;
                     rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
-
                    
+                    rss.clear_s.do_change = true ;
+                    rss.clear_s.ss.do_activate = true ;
+                    rss.clear_s.ss.clear_color = natus::math::vec4f_t(1.0f,1.0f,0.0f,1.0f) ;
                     so.add_render_state_set( rss ) ;
                 }
 
                 _root_render_states = std::move( so ) ;
                 _wid_async.async().configure( _root_render_states ) ;
                 _wid_async2.async().configure( _root_render_states ) ;
+            }
+
+            // root render states
+            {
+                natus::graphics::state_object_t so = natus::graphics::state_object_t(
+                    "framebuffer" ) ;
+
+                {
+                    natus::graphics::render_state_sets_t rss ;
+
+                    rss.depth_s.do_change = true ;
+                    rss.depth_s.ss.do_activate = true ;
+                    rss.depth_s.ss.do_depth_write = true ;
+
+                    rss.polygon_s.do_change = true ;
+                    rss.polygon_s.ss.do_activate = true ;
+                    rss.polygon_s.ss.ff = natus::graphics::front_face::counter_clock_wise ;
+                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
+                    rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
+
+                    rss.view_s.do_change = true ;
+                    rss.view_s.ss.do_activate = true ;
+                    rss.view_s.ss.vp = _fb_dims ;
+                   
+                    rss.clear_s.do_change = true ;
+                    rss.clear_s.ss.do_activate = true ;
+                    rss.clear_s.ss.do_color_clear = true ;
+                    rss.clear_s.ss.do_depth_clear = true ;
+                    //rss.clear_s.ss.clear_color = natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f) ;
+                    so.add_render_state_set( rss ) ;
+                }
+
+                _fb_render_states = std::move( so ) ;
+                _wid_async.async().configure( _fb_render_states ) ;
+                _wid_async2.async().configure( _fb_render_states ) ;
             }
 
             // cube
@@ -497,7 +537,7 @@ namespace this_file
                 _fb = natus::graphics::framebuffer_object_t( "the_scene" ) ;
                 _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 3 )
                     .set_target( natus::graphics::depth_stencil_target_type::depth32 )
-                    .resize( 1024, 1024 ) ;
+                    .resize( _fb_dims.z(), _fb_dims.w() ) ;
 
                 _wid_async.async().configure( _fb ) ;
                 _wid_async2.async().configure( _fb ) ;
@@ -616,6 +656,7 @@ namespace this_file
                                     vec2 tx = (var_tx - vec2( 0.0, 0.0 ) ) * 2.0 ; 
                                     out_color = vec4( texture( u_tex_3, tx ).rgb, 1.0 ); 
                                 }
+                                //out_color = vec4(1.0);
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
@@ -832,8 +873,8 @@ namespace this_file
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( _root_render_states ) ;
-                _wid_async2.async().use( _root_render_states ) ;
+                //_wid_async.async().use( _root_render_states ) ;
+                //_wid_async2.async().use( _root_render_states ) ;
             }
 
             // use the framebuffer
@@ -841,6 +882,15 @@ namespace this_file
                 _wid_async.async().use( _fb, true, true, false ) ;
                 _wid_async2.async().use( _fb, true, true, false ) ;
             }
+
+            // render the root render state sets render object
+            // this will set the root render states
+            {
+                _wid_async.async().use( _fb_render_states ) ;
+                _wid_async2.async().use( _fb_render_states ) ;
+            }
+
+            
 
             for( size_t i=0; i<_render_objects.size(); ++i )
             {
@@ -855,6 +905,8 @@ namespace this_file
 
             // un-use the framebuffer
             {
+                _wid_async.async().use( natus::graphics::state_object_res_t() ) ;
+                _wid_async2.async().use( natus::graphics::state_object_res_t() ) ;
                 _wid_async.async().use( natus::graphics::framebuffer_object_t() ) ;
                 _wid_async2.async().use( natus::graphics::framebuffer_object_t() ) ;
             }
@@ -862,8 +914,8 @@ namespace this_file
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( natus::graphics::state_object_t(), 10 ) ;
-                _wid_async2.async().use( natus::graphics::state_object_t(), 10 ) ;
+                //_wid_async.async().use( natus::graphics::state_object_t(), 10 ) ;
+                //_wid_async2.async().use( natus::graphics::state_object_t(), 10 ) ;
             }
 
             // perform mapping

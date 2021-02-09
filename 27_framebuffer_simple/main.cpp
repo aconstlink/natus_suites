@@ -42,6 +42,8 @@ namespace this_file
 
         natus::gfx::pinhole_camera_t _camera_0 ;
 
+        natus::math::vec4ui_t _fb_dims = natus::math::vec4ui_t(0, 0, 800, 800) ;
+
     public:
 
         test_app( void_t ) 
@@ -85,6 +87,10 @@ namespace this_file
                     rss.depth_s.do_change = true ;
                     rss.depth_s.ss.do_activate = false ;
                     rss.depth_s.ss.do_depth_write = false ;
+
+                    rss.view_s.do_change = true ;
+                    rss.view_s.ss.do_activate = true ;
+                    rss.view_s.ss.vp = _fb_dims ;
                     so.add_render_state_set( rss ) ;
                 }
 
@@ -295,7 +301,7 @@ namespace this_file
                             {
                                 MRT_OUT o = (MRT_OUT)0;
                                 o.color1 = u_tex.Sample( smp_u_tex, input.tx ) * u_color ;
-                                o.color2 = float4(1.0f,0.0f,0.0f,1.0f) ; //u_tex.Sample( smp_u_tex, input.tx ).rrra ;
+                                o.color2 = float4(1.0f,0.0f,0.0f,1.0f) * u_tex.Sample( smp_u_tex, input.tx ) ;
                                 return o ;
                             } )" ) ) ;
 
@@ -348,7 +354,8 @@ namespace this_file
             // framebuffer
             {
                 _fb = natus::graphics::framebuffer_object_t( "the_scene" ) ;
-                _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 2 ).resize( 512, 512 ) ;
+                _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 2 )
+                    .resize( _fb_dims.z(), _fb_dims.w() ) ;
 
                 _wid_async.async().configure( _fb ) ;
             }
@@ -390,7 +397,7 @@ namespace this_file
                                 vec4 c0 = texture( u_tex_0, var_tx ) ;
                                 vec4 c1 = texture( u_tex_1, var_tx ) ;
                                 
-                                out_color = vec4(1) + 0.00001f * mix( c0, c1, step( 0.5, var_tx.x ) ) ;
+                                out_color = mix( c0, c1, step( 0.5, var_tx.x ) ) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::gl3, std::move( ss ) ) ;
@@ -468,8 +475,8 @@ namespace this_file
 
                             float4 PS( VS_OUTPUT input ) : SV_Target
                             {
-                                return u_tex_0.Sample( smp_u_tex_0, input.tx ) *
-                                   u_tex_1.Sample( smp_u_tex_1, input.tx ) ;
+                                return lerp( u_tex_0.Sample( smp_u_tex_0, input.tx ),
+                                   u_tex_1.Sample( smp_u_tex_1, input.tx ), 0.5f ) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
@@ -569,20 +576,11 @@ namespace this_file
                 }
             } ) ;
 
-            // render the root render state sets render object
-            // this will set the root render states
-            {
-                _wid_async.async().use( _root_render_states ) ;
-                //_wid_async2.async().use( 0, _root_render_states ) ;
-            }
-
-            
             // use the framebuffer
             {
                 _wid_async.async().use( _fb ) ;
+                _wid_async.async().use( _root_render_states ) ;
             }
-
-            
 
             {
                 natus::graphics::backend_t::render_detail_t detail ;
@@ -595,6 +593,7 @@ namespace this_file
 
             // un-use the framebuffer
             {
+                _wid_async.async().use( natus::graphics::state_object_res_t() ) ;
                 _wid_async.async().use( natus::graphics::framebuffer_object_res_t() ) ;
             }
             // perform mapping

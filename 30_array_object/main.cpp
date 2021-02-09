@@ -53,6 +53,8 @@ namespace this_file
         int_t _max_objects = 0 ;
         int_t _num_objects_rnd = 0 ;
 
+        natus::math::vec4ui_t _fb_dims = natus::math::vec4ui_t( 0, 0, 1280, 768 ) ;
+
     public:
 
         test_app( void_t ) 
@@ -60,7 +62,7 @@ namespace this_file
             srand (time(NULL));
 
             natus::application::app::window_info_t wi ;
-            #if 1
+            #if 0
             app::window_async_t wid_async = this_t::create_window( "A Render Window", wi ) ;
             app::window_async_t wid_async2 = this_t::create_window( "A Render Window", wi,
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 }) ;
@@ -71,6 +73,14 @@ namespace this_file
             wid_async2.window().resize( 800, 800 ) ;
 
             _graphics = natus::graphics::async_views_t( {wid_async.async(), wid_async2.async()} ) ;
+            #elif 0
+            app::window_async_t wid_async = this_t::create_window( "A Render Window", wi, 
+                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
+            _graphics = natus::graphics::async_views_t( {wid_async.async()} ) ;
+            #elif 1
+            app::window_async_t wid_async = this_t::create_window( "A Render Window", wi, 
+                { natus::graphics::backend_type::d3d11, natus::graphics::backend_type::gl3 } ) ;
+            _graphics = natus::graphics::async_views_t( {wid_async.async()} ) ;
             #else
             app::window_async_t wid_async = this_t::create_window( "A Render Window", wi, 
                 { natus::graphics::backend_type::es3, natus::graphics::backend_type::d3d11 } ) ;
@@ -125,6 +135,14 @@ namespace this_file
                     rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
 
+                    rss.clear_s.do_change = true ;
+                    rss.clear_s.ss.do_activate = true ;
+                    rss.clear_s.ss.do_color_clear = true ;
+                    rss.clear_s.ss.do_depth_clear = true ;
+                   
+                    rss.view_s.do_change = true ;
+                    rss.view_s.ss.do_activate = true ;
+                    rss.view_s.ss.vp = _fb_dims ;
                    
                     so.add_render_state_set( rss ) ;
                 }
@@ -617,7 +635,7 @@ namespace this_file
                 _fb = natus::graphics::framebuffer_object_t( "the_scene" ) ;
                 _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 3 )
                     .set_target( natus::graphics::depth_stencil_target_type::depth32 )
-                    .resize( 1920, 1080 ) ;
+                    .resize( _fb_dims.z(), _fb_dims.w() ) ;
 
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
@@ -989,6 +1007,14 @@ namespace this_file
 
             tp = __clock_t::now() ;
 
+             // use the framebuffer
+            {
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.use( _fb, true, true, false ) ;
+                } ) ;
+            }
+
             // render the root render state sets render object
             // this will set the root render states
             {
@@ -998,13 +1024,7 @@ namespace this_file
                 } ) ;
             }
 
-            // use the framebuffer
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.use( _fb, true, true, false ) ;
-                } ) ;
-            }
+           
 
             for( size_t i=0; i<_render_objects.size(); ++i )
             {
