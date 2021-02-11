@@ -163,7 +163,7 @@ namespace this_file
                         natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
             }
 
-            uint_t const fb_width = 512 ;
+            uint_t const fb_width = 1024 ;
             uint_t const fb_height = 512 ;
 
             // root render states
@@ -184,10 +184,11 @@ namespace this_file
                     rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
 
-                    rss.clear_s.do_change = true ;
+                    rss.clear_s.do_change = false ;
                     rss.clear_s.ss.do_activate = true ;
-                    rss.clear_s.ss.clear_color = natus::math::vec4f_t(0.5f) ;
+                    rss.clear_s.ss.clear_color = natus::math::vec4f_t(0.4f) ;
                     rss.clear_s.ss.do_color_clear = true ;
+                    rss.clear_s.ss.do_depth_clear  = true ;
                    
                     rss.view_s.do_change = true ;
                     rss.view_s.ss.do_activate = true ;
@@ -261,11 +262,11 @@ namespace this_file
                                     natus::math::vec2f_t( s.animation.pivot ) / 
                                     natus::math::vec2f_t( dims.xy() ) ;
 
-                                sprite_sheet::sprite s ;
-                                s.rect = rect ;
-                                s.pivot = pivot ;
+                                sprite_sheet::sprite s_ ;
+                                s_.rect = rect ;
+                                s_.pivot = pivot ;
 
-                                sheet.rects.emplace_back( s ) ;
+                                sheet.rects.emplace_back( s_ ) ;
                             }
 
 
@@ -414,19 +415,19 @@ namespace this_file
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.use( _fb ) ;
-                    a.use( _root_render_states ) ;
+                    //a.use( _root_render_states ) ;
                 } ) ;
 
                 _pr->prepare_for_rendering() ;
                 _pr->render( 0 ) ;
-                _pr->render( 1 ) ;
-                _pr->render( 2 ) ;
-                _pr->render( 3 ) ;
-                _pr->render( 4 ) ;
+                //_pr->render( 1 ) ;
+                //_pr->render( 2 ) ;
+                //_pr->render( 3 ) ;
+                //_pr->render( 4 ) ;
 
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.use( natus::graphics::state_object_res_t() ) ;
+                    //a.use( natus::graphics::state_object_res_t() ) ;
                     a.use( natus::graphics::framebuffer_object_res_t() ) ;
                 } ) ;
                 

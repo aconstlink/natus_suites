@@ -245,11 +245,11 @@ namespace this_file
                                     natus::math::vec2f_t( s.animation.pivot ) / 
                                     natus::math::vec2f_t( dims.xy() ) ;
 
-                                sprite_sheet::sprite s ;
-                                s.rect = rect ;
-                                s.pivot = pivot ;
+                                sprite_sheet::sprite s_ ;
+                                s_.rect = rect ;
+                                s_.pivot = pivot ;
 
-                                sheet.rects.emplace_back( s ) ;
+                                sheet.rects.emplace_back( s_ ) ;
                             }
 
 
