@@ -184,7 +184,7 @@ namespace this_file
                     rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
 
-                    rss.clear_s.do_change = false ;
+                    rss.clear_s.do_change = true ;
                     rss.clear_s.ss.do_activate = true ;
                     rss.clear_s.ss.clear_color = natus::math::vec4f_t(0.4f) ;
                     rss.clear_s.ss.do_color_clear = true ;
@@ -415,7 +415,7 @@ namespace this_file
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.use( _fb ) ;
-                    //a.use( _root_render_states ) ;
+                    a.use( _root_render_states ) ;
                 } ) ;
 
                 _pr->prepare_for_rendering() ;
@@ -427,7 +427,7 @@ namespace this_file
 
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    //a.use( natus::graphics::state_object_res_t() ) ;
+                    a.use( natus::graphics::state_object_res_t() ) ;
                     a.use( natus::graphics::framebuffer_object_res_t() ) ;
                 } ) ;
                 

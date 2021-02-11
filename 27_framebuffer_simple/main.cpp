@@ -3,6 +3,7 @@
 
 #include <natus/application/global.h>
 #include <natus/application/app.h>
+#include <natus/gfx/util/quad.h>
 #include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/graphics/variable/variable_set.hpp>
 #include <natus/math/vector/vector3.hpp>
@@ -44,6 +45,7 @@ namespace this_file
 
         natus::math::vec4ui_t _fb_dims = natus::math::vec4ui_t(0, 0, 800, 800) ;
 
+        natus::gfx::quad_res_t _quad ;
     public:
 
         test_app( void_t ) 
@@ -360,6 +362,16 @@ namespace this_file
                 _wid_async.async().configure( _fb ) ;
             }
 
+            // prepare quad
+            {
+                _quad = natus::gfx::quad_res_t( natus::gfx::quad_t("post_map") ) ;
+                _quad->set_texture("the_scene.0") ;
+                natus::graphics::async_views_t graphics = natus::graphics::async_views_t({
+            _wid_async.async()}) ;
+                _quad->init( graphics ) ;
+                
+            }
+
 
             // blit framebuffer render object
             {
@@ -597,7 +609,11 @@ namespace this_file
                 _wid_async.async().use( natus::graphics::framebuffer_object_res_t() ) ;
             }
             // perform mapping
-            _wid_async.async().render( _rc_map ) ;
+            //_wid_async.async().render( _rc_map ) ;
+
+            natus::graphics::async_views_t graphics = natus::graphics::async_views_t( {
+            _wid_async.async()}) ;
+            _quad->render( graphics ) ;
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
