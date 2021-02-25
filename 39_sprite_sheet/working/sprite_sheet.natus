@@ -78,6 +78,7 @@
             </sprites>
 
             <animations>
+                <!-- default animation type is "step" others "cross, envelop" -->
                 <animation name="idle">
                     <frame sprite="idle_0" duration="50" />
                     <frame sprite="idle_1" duration="50" />

@@ -191,6 +191,7 @@ namespace this_file
         { 
             static float_t inc = 0.0f ;
 
+            #if 0
             natus::math::vec2f_t pos( -1.0f, 0.5f ) ;
             for( size_t i=0; i<1000; ++i )
             {
@@ -279,7 +280,7 @@ namespace this_file
                 for( size_t i=0; i<max_tris; ++i )
                 {
                     size_t const idx = i ;
-                    _tr->draw_rect( 0, 
+                    _tr->draw_rect( i%5, 
                         pos + natus::math::vec2f_t( -.02f, -0.04f ), 
                         pos + natus::math::vec2f_t( -.02f, +0.04f ),
                         pos + natus::math::vec2f_t( +.02f, +0.04f ),
@@ -302,7 +303,7 @@ namespace this_file
                 for( size_t i=0; i<max_tris; ++i )
                 {
                     size_t const idx = max_tris - 1 - i ;
-                    _tr->draw_circle( 0, 10, pos, float_t(0.04f),
+                    _tr->draw_circle( i%5, 10, pos, float_t(0.04f),
                         natus::math::vec4f_t( 
                             0.5f,0.5f,0.5f,
                             0.5f + (float_t(idx)/float_t(max_tris))* 0.5f )  +
@@ -313,10 +314,35 @@ namespace this_file
                 }
             }
 
+            #else // test simple here
+
+            // rects
+            {
+                natus::math::vec2f_t pos = natus::math::vec2f_t( -0.7f, 0.1f ) ;
+
+                size_t const max_tris = 2 ;
+                for( size_t i=0; i<max_tris; ++i )
+                {
+                    size_t const idx = i ;
+                    _tr->draw_rect( i%2, 
+                        pos + natus::math::vec2f_t( -.02f, -0.04f ), 
+                        pos + natus::math::vec2f_t( -.02f, +0.04f ),
+                        pos + natus::math::vec2f_t( +.02f, +0.04f ),
+                        pos + natus::math::vec2f_t( +.02f, -0.04f ),
+                        natus::math::vec4f_t( 
+                            0.5f,0.5f,0.5f,
+                            0.5f + float_t(idx)/float_t(max_tris) * 0.5f )  +
+                        natus::math::vec4f_t( size_t( inc * float_t(max_tris) ) == idx, 0.0f,0.0f,0.0f )
+                    ) ;
+
+                    pos += natus::math::vec2f_t( (1.0f/float_t(max_tris))*2.0f, 0.0f ) ;
+                }
+            }
+            #endif
+
             inc += 0.01f  ;
             inc = natus::math::fn<float_t>::mod( inc, 1.0f ) ;
 
-            
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
@@ -337,10 +363,11 @@ namespace this_file
             {
                 _lr->prepare_for_rendering() ;
                 _tr->prepare_for_rendering() ;
-                _lr->render( 0 ) ;
-                _tr->render( 0 ) ;
-                _lr->render( 1 ) ;
-                _tr->render( 1 ) ;
+                for( size_t i=0; i<100; ++i )
+                {
+                    _lr->render( i ) ;
+                    _tr->render( i ) ;
+                }
             }
             
 

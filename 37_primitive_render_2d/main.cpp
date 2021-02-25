@@ -296,7 +296,7 @@ namespace this_file
                 for( size_t i=0; i<max_tris; ++i )
                 {
                     size_t const idx = max_tris - 1 - i ;
-                    _pr->draw_circle( 0, 20, pos, float_t(0.04f),
+                    _pr->draw_circle( 1, 20, pos, float_t(0.04f),
                         natus::math::vec4f_t( 
                             0.5f,0.5f,0.5f,
                             0.5f + (float_t(idx)/float_t(max_tris))* 0.5f )  +
