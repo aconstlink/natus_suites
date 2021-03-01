@@ -22,6 +22,7 @@
 #include <natus/math/utility/angle.hpp>
 #include <natus/math/utility/3d/transformation.hpp>
 
+#include <random>
 #include <thread>
 
 namespace nps
@@ -54,10 +55,10 @@ namespace nps
         random
     };
 
-    enum class age_variation_type
+    enum class variation_type
     {
-        random,
-        fixed
+        fixed,
+        random
     };
 
     class emitter
@@ -81,12 +82,73 @@ namespace nps
 
         spawn_location_type _slt = spawn_location_type::border ;
         spawn_distribution_type _sdt = spawn_distribution_type::uniform ;
-        age_variation_type _avt = age_variation_type::fixed ;
+        
+    protected:
+
+        typedef std::function< float_t ( void_t ) > variation_funk_t ;
+
+    private:
+
+        variation_type _mass_vt = variation_type::fixed ;
+        variation_type _avt = variation_type::fixed ;
+        variation_type _acl_vt = variation_type::fixed ;
+        variation_type _vel_vt = variation_type::fixed ;
+        
+
+        variation_funk_t _mass_funk ;
+        variation_funk_t _age_funk ;
+        variation_funk_t _acl_funk ;
+        variation_funk_t _vel_funk ;
 
         // in seconds
         float_t _age = 0.0f ;
 
+        
+
+        std::mt19937 _generator ;
+
     public:
+
+        emitter( void_t ) noexcept
+        {
+            this_t::set_age_variation_type( _avt ) ;
+            this_t::set_acceleration_variation_type( _acl_vt ) ;
+            this_t::set_velocity_variation_type( _vel_vt ) ;
+        }
+
+        emitter( this_cref_t ) = delete ;
+        emitter( this_rref_t rhv ) noexcept
+        {
+            this_t::operator=( std::move( rhv ) ) ;
+        }
+        virtual ~emitter( void_t ) noexcept {}
+
+        this_ref_t operator = ( this_cref_t ) = delete ;
+        this_ref_t operator = ( this_rref_t rhv ) noexcept
+        {
+            _amount = rhv._amount ;
+            _rate = rhv._rate ;
+            _mass = rhv._mass ;
+            _pos = rhv._pos ;
+            _dir = rhv._dir ;
+            _acl = rhv._acl ;
+            _vel = rhv._vel ;
+            _slt = rhv._slt ;
+            _sdt = rhv._sdt ;
+            
+            
+            _age = rhv._age ;
+            _generator = std::move( rhv._generator ) ;
+            
+            this_t::set_mass_variation_type( rhv._mass_vt ) ;
+            this_t::set_age_variation_type( rhv._avt ) ;
+            this_t::set_acceleration_variation_type( rhv._acl_vt ) ;
+            this_t::set_velocity_variation_type( rhv._vel_vt ) ;
+            return *this ;
+        }
+
+    public:
+
 
         float_t get_age( void_t ) const noexcept { return _age ; }
         void_t set_age( float_t const s ) noexcept { _age = s ; }
@@ -101,12 +163,11 @@ namespace nps
         float_t get_mass( void_t ) const noexcept { return _mass ; }
 
         void_t set_position( natus::math::vec2f_cref_t v ) noexcept { _pos = v ; }
-        void_t set_direction( natus::math::vec2f_cref_t v ) noexcept { _dir = v ; }
+        void_t set_direction( natus::math::vec2f_cref_t v ) noexcept { _dir = v.normalized() ; }
         void_t set_velocity( float_t const v ) noexcept { _vel = v ; }
         void_t set_acceleration( float_t const v ) noexcept { _acl = v ; }
         void_t set_spawn_location_type( spawn_location_type const spt ) noexcept { _slt = spt ; }
         void_t set_spawn_distribution_type( spawn_distribution_type const sdt ) noexcept { _sdt = sdt ; }
-        void_t set_age_variation_type( age_variation_type const avt ) noexcept { _avt = avt ; }
 
         natus::math::vec2f_cref_t get_position( void_t ) const noexcept{ return _pos ; }
         float_t get_velocity( void_t ) const noexcept{ return _vel ; }
@@ -114,11 +175,111 @@ namespace nps
         natus::math::vec2f_cref_t get_direction( void_t ) const noexcept{ return _dir ; }
         spawn_location_type get_spawn_location_type( void_t ) const noexcept { return _slt ; }
         spawn_distribution_type get_spawn_distribution_type( void_t ) const noexcept { return _sdt ; }
-        age_variation_type get_age_variation_type( void_t ) const noexcept { return _avt ; }
+
+        variation_type get_mass_variation_type( void_t ) const noexcept { return _mass_vt ; }
+        variation_type get_age_variation_type( void_t ) const noexcept { return _avt ; }
+        variation_type get_acceleration_variation_type( void_t ) const noexcept { return _acl_vt ; }
+        variation_type get_velocity_variation_type( void_t ) const noexcept { return _vel_vt ; }
+
+        variation_funk_t get_mass_funk( void_t ) const noexcept { return _mass_funk ; }
+        variation_funk_t get_age_funk( void_t ) const noexcept { return _age_funk ; }
+        variation_funk_t get_acceleration_funk( void_t ) const noexcept { return _acl_funk ; }
+        variation_funk_t get_velocity_funk( void_t ) const noexcept { return _vel_funk ; }
+
+        float_t random_real_number( float_t const a, float_t const b ) noexcept
+        {
+            std::uniform_real_distribution<float_t> distribution(a, b) ;
+            return distribution( _generator ) ;
+        }
+
+        void_t set_mass_variation_type( variation_type const avt ) noexcept 
+        { 
+            variation_funk_t funk = [=]( void_t )
+            {
+                return this_t::get_mass() ;
+            } ;
+
+            if( avt == nps::variation_type::random )
+            {
+                funk = [=]( void_t )
+                {
+                    return this_t::random_real_number( this_t::get_mass() * 0.2f, this_t::get_mass() ) ;
+                } ;
+            }
+            _mass_vt = avt ; 
+            _mass_funk = funk ;
+        }
+
+        void_t set_age_variation_type( variation_type const avt ) noexcept 
+        {             
+            variation_funk_t funk = [=]( void_t )
+            {
+                return this_t::get_age() ;
+            };
+
+            if( avt == nps::variation_type::random )
+            {
+                funk = [=]( void_t )
+                {
+                    return this_t::random_real_number( this_t::get_age() * 0.2f, this_t::get_age() ) ;
+                } ;
+            }
+
+            _avt = avt ; 
+            _age_funk = funk ;
+        }
+
+        void_t set_acceleration_variation_type( variation_type const avt ) noexcept 
+        { 
+            variation_funk_t funk = [=]( void_t )
+            {
+                return this_t::get_acceleration() ;
+            } ;
+
+            if( avt == nps::variation_type::random )
+            {
+                funk = [=]( void_t )
+                {
+                    return this_t::random_real_number( this_t::get_acceleration() * 0.2f, this_t::get_acceleration() ) ;
+                } ;
+            }
+
+            _acl_vt = avt ; 
+            _acl_funk = funk ;
+        }
+
+        void_t set_velocity_variation_type( variation_type const avt ) noexcept 
+        {
+            variation_funk_t funk = [=]( void_t )
+            {
+                return this_t::get_velocity() ;
+            } ;
+
+            if( avt == nps::variation_type::random )
+            {
+                funk = [=]( void_t )
+                {
+                    return this_t::random_real_number( this_t::get_velocity() * 0.2f, this_t::get_velocity() ) ;
+                } ;
+            }
+
+            _vel_vt = avt ; 
+            _vel_funk = funk ;
+        }
+        
 
     public:
 
-        virtual size_t calc_emits( size_t const emitted, float_t const secs ) const noexcept = 0 ;
+        // the default function returns amount particles per rate * second
+        virtual size_t calc_emits( size_t const emitted, float_t const secs ) const noexcept 
+        {
+            float_t const s = secs * this_t::get_rate() ;
+            size_t const tq = size_t( s - natus::math::fn<float_t>::fract( s ) ) ;
+            size_t const eq = emitted / this_t::get_amount() ;
+
+            return tq >= eq ? this_t::get_amount() : 0 ;
+        }
+
         virtual void_t emit( size_t const, size_t const, natus::ntd::vector< particle_t > & ) noexcept = 0 ;
     };
     natus_res_typedef( emitter ) ;
@@ -136,6 +297,81 @@ namespace nps
         // around direction in [-angle, angle]
         float_t _angle = 0.0f ;
 
+
+        variation_type _radius_vt = variation_type::fixed ;
+        variation_type _angle_vt = variation_type::fixed ;
+
+        emitter::variation_funk_t _radius_funk ;
+        emitter::variation_funk_t _angle_funk ;
+
+    public:
+
+        radial_emitter( void_t ) noexcept 
+        {
+            this_t::set_angle_variation_type( _angle_vt ) ;
+            this_t::set_radius_variation_type( _radius_vt ) ;
+        }
+
+        radial_emitter( this_cref_t ) = delete ;
+        radial_emitter( this_rref_t rhv ) noexcept : emitter( std::move( rhv ) )
+        {
+            this_t::operator=( std::move( rhv ) ) ;
+        }
+        virtual ~radial_emitter( void_t ) noexcept{}
+        
+        this_ref_t operator = ( this_cref_t ) = delete ;
+        this_ref_t operator = ( this_rref_t rhv ) noexcept
+        {
+            _radius = rhv._radius ;
+            _angle = rhv._angle ;
+
+            this_t::set_radius_variation_type( rhv._radius_vt ) ;
+            this_t::set_angle_variation_type( rhv._angle_vt ) ;
+
+            return *this ;
+        }
+
+        void_t set_radius_variation_type( variation_type const avt ) noexcept 
+        { 
+            variation_funk_t funk = [=]( void_t )
+            {
+                return this_t::get_radius() ;
+            } ;
+
+            if( avt == nps::variation_type::random )
+            {
+                funk = [=]( void_t )
+                {
+                    return this_t::random_real_number( this_t::get_radius() * 0.2f, this_t::get_radius() ) ;
+                } ;
+            }
+            _radius_vt = avt ; 
+            _radius_funk = funk ;
+        }
+
+        void_t set_angle_variation_type( variation_type const avt ) noexcept 
+        { 
+            variation_funk_t funk = [=]( void_t )
+            {
+                return this_t::get_angle() ;
+            } ;
+
+            if( avt == nps::variation_type::random )
+            {
+                funk = [=]( void_t )
+                {
+                    return this_t::random_real_number( this_t::get_angle() * 0.2f, this_t::get_angle() ) ;
+                } ;
+            }
+            _angle_vt = avt ; 
+            _angle_funk = funk ;
+        }
+
+        variation_type get_radius_variation_type( void_t ) const noexcept { return _radius_vt ; }
+        variation_funk_t get_radius_funk( void_t ) const noexcept { return _radius_funk ; }
+        variation_type get_angle_variation_type( void_t ) const noexcept { return _angle_vt ; }
+        variation_funk_t get_angle_funk( void_t ) const noexcept { return _angle_funk ; }
+
     public:
 
         float_t get_radius( void_t ) const noexcept { return _radius ; }
@@ -146,34 +382,25 @@ namespace nps
 
     public:
 
-        virtual size_t calc_emits( size_t const emitted, float_t const secs ) const noexcept 
-        {
-            float_t const s = secs * this_t::get_rate() ;
-            size_t const tq = size_t( s - natus::math::fn<float_t>::fract( s ) ) ;
-            size_t const eq = emitted / this_t::get_amount() ;
-
-            return tq >= eq ? this_t::get_amount() : 0 ;
-        }
-
         virtual void_t emit( size_t const beg, size_t const n, natus::ntd::vector< particle_t > & particles ) noexcept 
-        {            
-            if( n == 0 ) return ;
+        {
+            float_t const angle = this_t::get_angle_funk()() ;
 
-            float_t const angle_step = ( 2.0f * this_t::get_angle()) / float_t(n-1) ;
+            float_t const angle_step = ( 2.0f * angle ) / float_t(n-1) ;
             natus::math::mat2f_t uniform = natus::math::mat2f_t::rotation( angle_step ) ;
 
-            natus::math::vec2f_t dir = natus::math::mat2f_t::rotation( n == 1 ? 0.0f : -this_t::get_angle() ) * 
+            natus::math::vec2f_t dir = natus::math::mat2f_t::rotation( n == 1 ? 0.0f : -angle ) * 
                 this_t::get_direction() ;
 
             for( size_t i=beg; i<beg+n; ++i )
             {
                 particle_t p ;
                 
-                p.age = this_t::get_age() ;
-                p.mass = this_t::get_mass() ;
-                p.pos = this_t::get_position() + dir * this_t::get_radius() ;
-                p.vel = dir * this_t::get_velocity() ;
-                p.acl = dir * this_t::get_acceleration() ;
+                p.age = this_t::get_age_funk()() ;
+                p.mass = this_t::get_mass_funk()() ;
+                p.pos = this_t::get_position() + dir * this_t::get_radius_funk()() ;
+                p.vel = dir * this_t::get_velocity_funk()() ;
+                p.acl = dir * this_t::get_acceleration_funk()() ;
 
                 particles[ i ] = p ;
 
@@ -182,6 +409,128 @@ namespace nps
         }
     };
     natus_res_typedef( radial_emitter ) ;
+
+    class line_emitter : public emitter
+    {
+        natus_this_typedefs( line_emitter ) ;
+
+    private:
+
+        /// distance from origin on the line
+        float_t _parallel_dist = 0.0f ;
+        
+        /// distance away from line in ortho direction
+        float_t _ortho_dist = 0.0f ;
+        
+        variation_type _parallel_vt = variation_type::fixed ;
+        variation_type _ortho_vt = variation_type::fixed ;
+
+        emitter::variation_funk_t _parallel_funk ;
+        emitter::variation_funk_t _ortho_funk ;
+
+    public:
+
+        line_emitter( void_t ) noexcept 
+        {
+            this_t::set_parallel_variation_type( _parallel_vt ) ;
+            this_t::set_ortho_variation_type( _ortho_vt ) ;
+        }
+        line_emitter( this_cref_t ) = delete ;
+        line_emitter( this_rref_t rhv ) noexcept : emitter( std::move( rhv ) )
+        {
+            this_t::operator=( std::move( rhv ) ) ;
+        }
+        virtual ~line_emitter( void_t ) noexcept{}
+
+        this_ref_t operator = ( this_cref_t ) = delete ;
+        this_ref_t operator = ( this_rref_t rhv ) noexcept
+        {
+            _parallel_dist = rhv._parallel_dist ;
+            _ortho_dist = rhv._ortho_dist ;
+
+            this_t::set_parallel_variation_type( rhv._parallel_vt ) ;
+            this_t::set_ortho_variation_type( rhv._ortho_vt ) ;
+            return *this ;
+        }
+
+        void_t set_parallel_variation_type( variation_type const avt ) noexcept 
+        { 
+            variation_funk_t funk = [=]( void_t )
+            {
+                return this_t::get_parallel_distance() ;
+            } ;
+
+            if( avt == nps::variation_type::random )
+            {
+                funk = [=]( void_t )
+                {
+                    return this_t::random_real_number( this_t::get_parallel_distance() * 0.2f, this_t::get_parallel_distance() ) ;
+                } ;
+            }
+            _parallel_vt = avt ; 
+            _parallel_funk = funk ;
+        }
+
+        void_t set_ortho_variation_type( variation_type const avt ) noexcept 
+        { 
+            variation_funk_t funk = [=]( void_t )
+            {
+                return this_t::get_ortho_distance() ;
+            } ;
+
+            if( avt == nps::variation_type::random )
+            {
+                funk = [=]( void_t )
+                {
+                    return this_t::random_real_number( this_t::get_ortho_distance() * 0.2f, this_t::get_ortho_distance() ) ;
+                } ;
+            }
+            _ortho_vt = avt ; 
+            _ortho_funk = funk ;
+        }
+
+        variation_type get_parallel_variation_type( void_t ) const noexcept { return _parallel_vt ; }
+        variation_funk_t get_parallel_funk( void_t ) const noexcept { return _parallel_funk ; }
+        variation_type get_ortho_variation_type( void_t ) const noexcept { return _ortho_vt ; }
+        variation_funk_t get_ortho_funk( void_t ) const noexcept { return _ortho_funk ; }
+
+    public:
+
+        float_t get_parallel_distance( void_t ) const noexcept { return _parallel_dist ; }
+        void_t set_parallel_distance( float_t const r ) noexcept { _parallel_dist = std::abs( r ) ; }
+
+        float_t get_ortho_distance( void_t ) const noexcept { return _ortho_dist ; }
+        void_t set_ortho_distance( float_t const v ) noexcept { _ortho_dist = v ; }
+
+    public:
+
+        virtual void_t emit( size_t const beg, size_t const n, natus::ntd::vector< particle_t > & particles ) noexcept 
+        {
+            float_t const parallel = this_t::get_parallel_funk()() ;
+            float_t const step = (2.0f * parallel) / float_t(n-1) ;
+
+            natus::math::vec2f_t ortho_dir = this_t::get_direction() ; 
+            natus::math::vec2f_t parallel_dir( ortho_dir.y(), -ortho_dir.x() ) ; 
+
+            natus::math::vec2f_t pos = this_t::get_position() + parallel_dir * parallel ;
+
+            for( size_t i=beg; i<beg+n; ++i )
+            {
+                particle_t p ;
+                
+                p.age = this_t::get_age_funk()() ;
+                p.mass = this_t::get_mass_funk()() ;
+                p.pos = pos + ortho_dir * this_t::get_ortho_funk()() ;
+                p.vel = ortho_dir * this_t::get_velocity_funk()() ;
+                p.acl = ortho_dir * this_t::get_acceleration_funk()() ;
+
+                particles[ i ] = p ;
+
+                pos += parallel_dir.negated() * step ;
+            }
+        }
+    };
+    natus_res_typedef( line_emitter ) ;
 
     class force_field
     {
@@ -207,61 +556,6 @@ namespace nps
     } ;
     natus_res_typedef( force_field ) ;
 
-    class constant_velocity_field : public force_field
-    {
-        natus_this_typedefs( constant_velocity_field ) ;
-
-    private:
-
-        natus::math::vec2f_t _vel ;
-
-    public:
-
-        void_t set_velocity( natus::math::vec2f_cref_t v ) noexcept
-        {
-            _vel = v ;
-        }
-
-        virtual void_t apply( size_t const beg, size_t const n, natus::ntd::vector< particle_t > & particles ) const noexcept 
-        {
-            for( size_t i=beg; i<beg+n; ++i )
-            {
-                nps::particle_ref_t p = particles[i] ;
-                if( !this_t::is_inside( p ) ) continue ;
-                //p.vel = _vel ;
-            }
-            
-        }
-    } ;
-    natus_res_typedef( constant_velocity_field ) ;
-
-    class constant_acceleration_field : public force_field
-    {
-        natus_this_typedefs( constant_acceleration_field ) ;
-
-    private:
-
-        natus::math::vec2f_t _acl ;
-
-    public:
-
-        void_t set_acceleration( natus::math::vec2f_cref_t v ) noexcept
-        {
-            _acl = v ;
-        }
-
-        virtual void_t apply( size_t const beg, size_t const n, natus::ntd::vector< particle_t > & particles ) const noexcept 
-        {
-            for( size_t i=beg; i<beg+n; ++i )
-            {
-                nps::particle_ref_t p = particles[i] ;
-                if( !this_t::is_inside( p ) ) continue ;
-                p.acl = _acl ;
-            }
-        }
-    } ;
-    natus_res_typedef( constant_acceleration_field ) ;
-
     class constant_force_field : public force_field
     {
         natus_this_typedefs( constant_force_field ) ;
@@ -269,6 +563,8 @@ namespace nps
     private:
 
         natus::math::vec2f_t _force ;
+
+    public:
 
         void_t set_force( natus::math::vec2f_cref_t v ) noexcept
         {
@@ -283,11 +579,43 @@ namespace nps
             {
                 nps::particle_ref_t p = particles[i] ;
                 if( !this_t::is_inside( p ) ) continue ;
-                p.force = _force ;
+                p.force += _force ;
             }
         }
     } ;
     natus_res_typedef( constant_force_field ) ;
+
+    class acceleration_field : public force_field
+    {
+        natus_this_typedefs( acceleration_field ) ;
+
+    private:
+
+        natus::math::vec2f_t _accl ;
+
+    public:
+
+        acceleration_field( void_t ) noexcept {}
+        acceleration_field( natus::math::vec2f_cref_t accl ) noexcept : _accl( accl ) {}
+
+        void_t set_acceleration( natus::math::vec2f_cref_t v ) noexcept
+        {
+            _accl = v ;
+        }
+
+    public:
+
+        virtual void_t apply( size_t const beg, size_t const n, natus::ntd::vector< particle_t > & particles ) const noexcept 
+        {
+            for( size_t i=beg; i<beg+n; ++i )
+            {
+                nps::particle_ref_t p = particles[i] ;
+                if( !this_t::is_inside( p ) ) continue ;
+                p.force += _accl * p.mass ;
+            }
+        }
+    } ;
+    natus_res_typedef( acceleration_field ) ;
 
     class friction_force_field : public force_field
     {
@@ -310,6 +638,33 @@ namespace nps
         }
     } ;
     natus_res_typedef( friction_force_field ) ;
+
+    class viscosity_force_field : public force_field
+    {
+        natus_this_typedefs( viscosity_force_field ) ;
+
+    private:
+
+        float_t _friction = 0.1f ;
+        
+    public:
+
+        viscosity_force_field( void_t ) noexcept {}
+        viscosity_force_field( float_t const friction ) noexcept { _friction = friction ; }
+
+    public:
+
+        virtual void_t apply( size_t const beg, size_t const n, natus::ntd::vector< particle_t > & particles ) const noexcept 
+        {
+            for( size_t i=beg; i<beg+n; ++i )
+            {
+                nps::particle_ref_t p = particles[i] ;
+                if( !this_t::is_inside( p ) ) continue ;
+                p.force -= natus::math::vec2f_t( _friction ) * p.vel  ;
+            }
+        }
+    } ;
+    natus_res_typedef( viscosity_force_field ) ;
 
     class particle_system
     {
@@ -464,11 +819,24 @@ namespace nps
 
                 for( auto & e : _emitter )
                 {
+                    if( e.emit == 0 ) continue ;
                     e.emt->emit( begin, e.emit, _particles ) ; begin += e.emit ;
                     e.emit = 0 ;
                 }
             }
             
+            // reset particle physics here so 
+            // value can be read elsewhere during a 
+            // cycle of physics
+            {
+                for( auto & p : _particles )
+                {
+                    //p.force.negate();//natus::math::vec2f_t() ;
+                    //p.acl = natus::math::vec2f_t() ;
+                    //p.vel = natus::math::vec2f_t() ;
+                }
+            }
+
             // do force fields
             {
                 for( auto & f : _forces )
@@ -481,7 +849,7 @@ namespace nps
             {
                 for( auto & p : _particles )
                 {
-                    p.acl += p.force / p.mass ;
+                    p.acl = p.force / p.mass ;
                     p.vel += natus::math::vec2f_t( dt ) * p.acl ;
                     p.pos += natus::math::vec2f_t( dt ) * p.vel ;
                 }
@@ -520,29 +888,50 @@ namespace nps
         natus_this_typedefs( snow_particle_effect ) ;
 
         particle_system_t flakes ;
+        emitter_res_t current_emitter ;
         radial_emitter_res_t emitter ;
-        constant_velocity_field_res_t wind ;
-        constant_acceleration_field_res_t g ;
+        line_emitter_res_t lemitter ;
+        constant_force_field_res_t wind ;
+        acceleration_field_res_t g ;
+        friction_force_field_res_t friction ;
+        viscosity_force_field_res_t viscosity ;
 
         snow_particle_effect( void_t ) 
         {
-            emitter = nps::radial_emitter_t() ;
-            wind = nps::constant_velocity_field_t() ;
-            g = nps::constant_acceleration_field_t() ;
+            wind = nps::constant_force_field_t() ;
+            g = nps::acceleration_field_t( natus::math::vec2f_t( 0.0f, -9.81f ) ) ;
+            friction = nps::friction_force_field_t() ;
+            viscosity = nps::viscosity_force_field_t( 0.01f ) ;
 
-            flakes.attach_emitter( emitter ) ;
-            flakes.attach_force_field( wind ) ;
+            //flakes.attach_force_field( wind ) ;
             flakes.attach_force_field( g ) ;
+            //flakes.attach_force_field( viscosity ) ;
 
-            g->set_acceleration( natus::math::vec2f_t( 0.0f, -9.81f ) ) ;
+            wind->set_force( natus::math::vec2f_t( -10.0f, 0.0f ) ) ;
 
-            emitter->set_mass( 0.0049f )  ;
-            emitter->set_age( 8.0f ) ;
-            emitter->set_amount( 10 ) ;
-            emitter->set_rate( 2.0f ) ;
-            emitter->set_angle( 0.3f ) ;
-            emitter->set_velocity( 20.0f ) ;
-            emitter->set_direction( natus::math::vec2f_t(0.0f,1.0f) ) ;
+            {
+                emitter = nps::radial_emitter_t() ;
+                emitter->set_mass( 1.0049f )  ;
+                emitter->set_age( 2.5f ) ;
+                emitter->set_amount( 10 ) ;
+                emitter->set_rate( 2.0f ) ;
+                emitter->set_angle( 0.3f ) ;
+                emitter->set_velocity( 200.0f ) ;
+                emitter->set_direction( natus::math::vec2f_t( 0.0f,1.0f ) ) ;
+            }
+
+            {
+                lemitter = nps::line_emitter_t() ;
+                lemitter->set_mass( 1.0049f ) ;
+                lemitter->set_age( 2.0f ) ;
+                lemitter->set_amount( 10 ) ;
+                lemitter->set_rate( 2.0f ) ;
+                lemitter->set_velocity( 200.0f ) ;
+                lemitter->set_direction( natus::math::vec2f_t( 0.0f,1.0f ) ) ;
+            }
+
+            current_emitter = emitter ;
+            flakes.attach_emitter( current_emitter ) ;
         }
 
         snow_particle_effect( this_cref_t ) = delete ;
@@ -550,22 +939,26 @@ namespace nps
         {
             flakes = std::move( rhv.flakes ) ;
             emitter = std::move( rhv.emitter ) ;
+            lemitter = std::move( rhv.lemitter ) ;
             wind = std::move( rhv.wind ) ;
             g = std::move( rhv.g ) ;
+            current_emitter = std::move( rhv.current_emitter ) ;
         }
 
         this_ref_t operator = ( this_rref_t rhv ) noexcept 
         {
             flakes = std::move( rhv.flakes ) ;
             emitter = std::move( rhv.emitter ) ;
+            lemitter = std::move( rhv.lemitter ) ;
             wind = std::move( rhv.wind ) ;
             g = std::move( rhv.g ) ;
+            current_emitter = std::move( rhv.current_emitter ) ;
             return *this ;
         }
 
         void_t set_wind_velocity( natus::math::vec2f_cref_t v ) noexcept
         {
-            wind->set_velocity( v ) ;
+            wind->set_force( v ) ;
         }
 
         void_t update( float_t const dt ) noexcept
@@ -581,12 +974,12 @@ namespace nps
                 for( auto & p : particles )
                 {
                     #if 0
-                    pr->draw_circle( 4, 10, p.pos/25.0f, p.mass*5.0f, 
+                    pr->draw_circle( 4, 10, p.pos, p.mass, 
                         natus::math::vec4f_t(1.0f), 
                         natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f) ) ;
                     #elif 1
-                    natus::math::vec2f_t const pos = p.pos/25.0f ;
-                    float_t const s = p.mass*3.0f*0.5f ;
+                    natus::math::vec2f_t const pos = p.pos ;
+                    float_t const s = p.mass ;
 
                     natus::math::vec2f_t points[] = 
                     {
@@ -636,6 +1029,10 @@ namespace this_file
 
         nps::snow_particle_effect_t _spe ;
 
+    private:
+
+        natus::math::vec2f_t _extend = natus::math::vec2f_t( 100, 100 ) ;
+
     public:
 
         test_app( void_t ) 
@@ -673,6 +1070,15 @@ namespace this_file
             _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ),
                 float_t(wei.w) / float_t(wei.h), 1.0f, 1000.0f ) ;
 
+            natus::math::vec2f_t const target = natus::math::vec2f_t(800, 600) ; 
+            natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
+
+            natus::math::vec2f_t const ratio = window / target ;
+
+            _camera_0.orthographic( wei.w, wei.h, 0.1f, 1000.0f ) ;
+
+            _extend = target * (ratio.x() < ratio.y() ? ratio.xx() : ratio.yy()) ;
+
             return natus::application::result::ok ;
         }
 
@@ -703,7 +1109,7 @@ namespace this_file
             }
 
             {
-                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 60.0f, -50.0f ),
+                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 0.0f, -10.0f ),
                         natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
             }
 
@@ -774,23 +1180,49 @@ namespace this_file
 
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ud ) 
         { 
+            
+
+            NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
+
+            //std::this_thread::sleep_for( std::chrono::milliseconds(5) ) ;
+
+            return natus::application::result::ok ; 
+        }
+
+        virtual natus::application::result on_physics( natus::application::app_t::physics_data_in_t ud ) noexcept
+        {
             // do update all particle effects
             {
                 _spe.update( ud.sec_dt ) ;
             }
 
-            NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
+            NATUS_PROFILING_COUNTER_HERE( "Physics Clock" ) ;
 
             return natus::application::result::ok ; 
         }
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) 
         {
+            _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
+
             // draw particle effects
             {
                 _spe.render( _pr ) ;
-                _pr->draw_circle( 0, 20, _spe.emitter->get_position(), _spe.emitter->get_radius()/25.0f, 
-                    natus::math::vec4f_t(1.0f, 0.0f,0.0f,0.2f),  natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f)) ;
+                _pr->draw_circle( 0, 20, _spe.emitter->get_position(), _spe.emitter->get_radius(), 
+                    natus::math::vec4f_t(0.0f, 0.5f,0.0f,0.1f),  natus::math::vec4f_t(0.0f,0.5f,0.0f,0.1f)) ;
+            }
+
+            // draw extend
+            {
+                natus::math::vec2f_t p0 = natus::math::vec2f_t() + _extend * natus::math::vec2f_t(-0.5f,-0.5f) ;
+                natus::math::vec2f_t p1 = natus::math::vec2f_t() + _extend * natus::math::vec2f_t(-0.5f,+0.5f) ;
+                natus::math::vec2f_t p2 = natus::math::vec2f_t() + _extend * natus::math::vec2f_t(+0.5f,+0.5f) ;
+                natus::math::vec2f_t p3 = natus::math::vec2f_t() + _extend * natus::math::vec2f_t(+0.5f,-0.5f) ;
+
+                natus::math::vec4f_t color0( 1.0f, 1.0f, 1.0f, 0.0f ) ;
+                natus::math::vec4f_t color1( 1.0f, 1.0f, 1.0f, 1.0f ) ;
+
+                _pr->draw_rect( 50, p0, p1, p2, p3, color0, color1 ) ;
             }
 
             {
@@ -829,49 +1261,270 @@ namespace this_file
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
 
+            ImGui::Begin( "View Control" ) ;
+            {
+                float_t data[2] = {_extend.x(), _extend.y() } ;
+                ImGui::SliderFloat2( "Extend", data, 0.0f, 1000.0f, "%f", 1.0f ) ;
+                _extend.x( data[0] ) ; _extend.y( data[1] ) ;
+            }
+            ImGui::End() ;
+
             ImGui::Begin( "Control Particle System" ) ;
 
+            static int item_current = 0 ;
+            bool_t item_changed = false ;
             {
-                auto dir = _spe.emitter->get_direction() ;
-                if( natus::tool::custom_imgui_widgets::direction( "dir", dir ) )
+                const char* items[] = { "Radial", "Line" };
+                if( item_changed = ImGui::Combo("Emitter", &item_current, items, IM_ARRAYSIZE(items) ) )
                 {
-                    _spe.emitter->set_direction( dir ) ;
+                    _spe.flakes.detach_emitter( _spe.current_emitter ) ;
                 }
             }
-            ImGui::SameLine() ;
+
+            if( item_current == 0 )
             {
-                float_t v = _spe.emitter->get_rate() ;
-                if( ImGui::VSliderFloat("Rate", ImVec2(50,100), &v, 1.0f, 10.0f ) )
+                if( item_changed ) 
                 {
-                    _spe.emitter->set_rate( v ) ;
-                    _spe.flakes.clear() ;
+                    _spe.current_emitter = _spe.emitter ;
+                    _spe.flakes.attach_emitter( _spe.current_emitter ) ;
+                }
+
+                {
+                    auto dir = _spe.emitter->get_direction() ;
+                    if( natus::tool::custom_imgui_widgets::direction( "dir", dir ) )
+                    {
+                        _spe.emitter->set_direction( dir ) ;
+                    }
+                }
+                ImGui::SameLine() ;
+                {
+                    float_t v = _spe.emitter->get_rate() ;
+                    if( ImGui::VSliderFloat("Rate", ImVec2(50,100), &v, 1.0f, 10.0f ) )
+                    {
+                        _spe.emitter->set_rate( v ) ;
+                        _spe.flakes.clear() ;
+                    }
+                }
+                ImGui::SameLine() ;
+                {
+                    int_t v = _spe.emitter->get_amount() ;
+                    if( ImGui::VSliderInt("Amount", ImVec2(50,100), &v, 1, 100 ) )
+                    {
+                        _spe.emitter->set_amount( v ) ;
+                        _spe.flakes.clear() ;
+                    }
+                }
+                ImGui::SameLine() ;
+                {
+                    float_t v = _spe.emitter->get_age() ;
+                    if( ImGui::VSliderFloat("Age", ImVec2(50,100), &v, 1.0f, 10.0f ) )
+                    {
+                        _spe.emitter->set_age( v ) ;
+                    }
+                }
+                ImGui::SameLine() ;
+                {
+                    float_t v = _spe.emitter->get_radius() ;
+                    if( ImGui::VSliderFloat("Radius", ImVec2(50,100), &v, 0.0f, 100.0f ) )
+                    {
+                        _spe.emitter->set_radius( v ) ;
+                    }
+                }
+                
+
+                {
+                    float_t v = _spe.emitter->get_angle() ;
+                    if( ImGui::VSliderFloat("Angle", ImVec2(50,100), &v, 0.0f, 3.14f ) )
+                    {
+                        _spe.emitter->set_angle( v ) ;
+                    }
+                }
+
+                ImGui::SameLine() ;
+                {
+                    float_t v = _spe.emitter->get_velocity() ;
+                    if( ImGui::VSliderFloat("Velocity", ImVec2(50,100), &v, 0.0f, 1000.0f ) )
+                    {
+                        _spe.emitter->set_velocity( v ) ;
+                    }
+                }
+
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.emitter->get_mass_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Mass Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.emitter->set_mass_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.emitter->set_mass_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.emitter->get_age_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Age Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.emitter->set_age_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.emitter->set_age_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.emitter->get_acceleration_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Acceleration Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.emitter->set_acceleration_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.emitter->set_acceleration_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.emitter->get_velocity_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Velocity Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.emitter->set_velocity_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.emitter->set_velocity_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.emitter->get_radius_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Radius Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.emitter->set_radius_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.emitter->set_radius_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.emitter->get_angle_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Angle Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.emitter->set_angle_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.emitter->set_angle_variation_type( nps::variation_type::random ) ;
+                    }
                 }
             }
-            ImGui::SameLine() ;
+            else if( item_current == 1 )
             {
-                int_t v = _spe.emitter->get_amount() ;
-                if( ImGui::VSliderInt("Amount", ImVec2(50,100), &v, 1, 100 ) )
+                if( item_changed ) 
                 {
-                    _spe.emitter->set_amount( v ) ;
-                    _spe.flakes.clear() ;
+                    _spe.current_emitter = _spe.lemitter ;
+                    _spe.flakes.attach_emitter( _spe.current_emitter ) ;
+                }
+
+                {
+                    auto dir = _spe.lemitter->get_direction() ;
+                    if( natus::tool::custom_imgui_widgets::direction( "dir", dir ) )
+                    {
+                        _spe.lemitter->set_direction( dir ) ;
+                    }
+                }
+                ImGui::SameLine() ;
+                {
+                    float_t v = _spe.lemitter->get_rate() ;
+                    if( ImGui::VSliderFloat("Rate", ImVec2(50,100), &v, 1.0f, 30.0f ) )
+                    {
+                        _spe.lemitter->set_rate( v ) ;
+                        _spe.flakes.clear() ;
+                    }
+                }
+                ImGui::SameLine() ;
+                {
+                    int_t v = _spe.lemitter->get_amount() ;
+                    if( ImGui::VSliderInt("Amount", ImVec2(50,100), &v, 1, 200 ) )
+                    {
+                        _spe.lemitter->set_amount( v ) ;
+                        _spe.flakes.clear() ;
+                    }
+                }
+                ImGui::SameLine() ;
+                {
+                    float_t v = _spe.lemitter->get_age() ;
+                    if( ImGui::VSliderFloat("Age", ImVec2(50,100), &v, 1.0f, 10.0f ) )
+                    {
+                        _spe.lemitter->set_age( v ) ;
+                    }
+                }
+                
+                {
+                    float_t v = _spe.lemitter->get_ortho_distance() ;
+                    if( ImGui::VSliderFloat("Ortho Dist", ImVec2(50,100), &v, -400.0f, 400.0f ) )
+                    {
+                        _spe.lemitter->set_ortho_distance( v ) ;
+                    }
+                }
+                ImGui::SameLine() ;
+                {
+                    float_t v = _spe.lemitter->get_parallel_distance() ;
+                    if( ImGui::VSliderFloat("Parallel Dist", ImVec2(50,100), &v, 1.0f, 400.0f ) )
+                    {
+                        _spe.lemitter->set_parallel_distance( v ) ;
+                    }
+                }
+                ImGui::SameLine() ;
+                {
+                    float_t v = _spe.lemitter->get_velocity() ;
+                    if( ImGui::VSliderFloat("Velocity", ImVec2(50,100), &v, 0.0f, 1000.0f ) )
+                    {
+                        _spe.lemitter->set_velocity( v ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.lemitter->get_mass_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Mass Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.lemitter->set_mass_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.lemitter->set_mass_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.lemitter->get_age_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Age Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.lemitter->set_age_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.lemitter->set_age_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.lemitter->get_acceleration_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Acceleration Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.lemitter->set_acceleration_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.lemitter->set_acceleration_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.lemitter->get_velocity_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Velocity Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.lemitter->set_velocity_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.lemitter->set_velocity_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.lemitter->get_ortho_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Ortho Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.lemitter->set_ortho_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.lemitter->set_ortho_variation_type( nps::variation_type::random ) ;
+                    }
+                }
+                {
+                    const char* items[] = { "Fixed", "Random" } ;
+                    static int rand_item = _spe.lemitter->get_parallel_variation_type() == nps::variation_type::fixed ? 0 : 1 ;
+                    if( item_changed = ImGui::Combo( "Parallel Variation", &rand_item, items, IM_ARRAYSIZE(items) ) )
+                    {
+                        if( rand_item == 0 ) _spe.lemitter->set_parallel_variation_type( nps::variation_type::fixed ) ;
+                        else if( rand_item == 1 ) _spe.lemitter->set_parallel_variation_type( nps::variation_type::random ) ;
+                    }
                 }
             }
-            ImGui::SameLine() ;
-            {
-                float_t v = _spe.emitter->get_age() ;
-                if( ImGui::VSliderFloat("Age", ImVec2(50,100), &v, 1.0f, 10.0f ) )
-                {
-                    _spe.emitter->set_age( v ) ;
-                }
-            }
-            ImGui::SameLine() ;
-            {
-                float_t v = _spe.emitter->get_radius() ;
-                if( ImGui::VSliderFloat("Radius", ImVec2(50,100), &v, 0.0f, 100.0f ) )
-                {
-                    _spe.emitter->set_radius( v ) ;
-                }
-            }
+            
 
             ImGui::End() ;
             return natus::application::result::ok ;
