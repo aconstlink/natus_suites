@@ -53,6 +53,7 @@ set( subdirs
     "39_sprite_sheet"
     "40_sprite_sheet"
     "41_particle_system"
+    "42_particle_system"
     "xx_tool_sprite"
     )
 

@@ -883,9 +883,9 @@ namespace nps
         
     } ;
 
-    struct snow_particle_effect
+    struct test_particle_effect
     {
-        natus_this_typedefs( snow_particle_effect ) ;
+        natus_this_typedefs( test_particle_effect ) ;
 
         particle_system_t flakes ;
         emitter_res_t current_emitter ;
@@ -896,7 +896,7 @@ namespace nps
         friction_force_field_res_t friction ;
         viscosity_force_field_res_t viscosity ;
 
-        snow_particle_effect( void_t ) 
+        test_particle_effect( void_t ) 
         {
             wind = nps::constant_force_field_t() ;
             g = nps::acceleration_field_t( natus::math::vec2f_t( 0.0f, -9.81f ) ) ;
@@ -934,8 +934,8 @@ namespace nps
             flakes.attach_emitter( current_emitter ) ;
         }
 
-        snow_particle_effect( this_cref_t ) = delete ;
-        snow_particle_effect( this_rref_t rhv ) noexcept
+        test_particle_effect( this_cref_t ) = delete ;
+        test_particle_effect( this_rref_t rhv ) noexcept
         {
             flakes = std::move( rhv.flakes ) ;
             emitter = std::move( rhv.emitter ) ;
@@ -998,7 +998,7 @@ namespace nps
             } ) ;
         }
     } ;
-    natus_typedef( snow_particle_effect ) ;
+    natus_typedef( test_particle_effect ) ;
 }
 
 namespace this_file
@@ -1027,7 +1027,7 @@ namespace this_file
         
         natus::gfx::primitive_render_2d_res_t _pr ;
 
-        nps::snow_particle_effect_t _spe ;
+        nps::test_particle_effect_t _spe ;
 
     private:
 
