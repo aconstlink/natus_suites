@@ -189,7 +189,7 @@ namespace this_file
                 }
 
                 {
-                    ps->set_value<size_t>( "atlas_width", 512 ) ;
+                    ps->set_value<size_t>( "atlas_width", 128 ) ;
                     ps->set_value<size_t>( "atlas_height", 512 ) ;
                     ps->set_value<size_t>( "point_size", 90 ) ;
                 }
