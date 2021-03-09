@@ -51,7 +51,7 @@ namespace this_file
         bool_t _do_tool = false ;
 
         natus::gfx::quad_res_t _quad ;
-        natus::gfx::sprite_render_2d_res_t _pr ;
+        natus::gfx::sprite_render_2d_res_t _sr ;
         natus::gfx::pinhole_camera_t _camera_0 ;
 
         natus::io::database_res_t _db ;
@@ -115,10 +115,10 @@ namespace this_file
         {
             _camera_0 = std::move( rhv._camera_0 ) ;
             _graphics = std::move( rhv._graphics ) ;
-            _pr = std::move( rhv._pr ) ;
+            _sr = std::move( rhv._sr ) ;
             _db = std::move( rhv._db ) ; 
 
-            _pr = std::move( rhv._pr ) ;
+            _sr = std::move( rhv._sr ) ;
             _quad = std::move( rhv._quad ) ;
         }
         virtual ~test_app( void_t ) 
@@ -128,6 +128,8 @@ namespace this_file
         {
             _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ),
                 float_t(wei.w) / float_t(wei.h), 1.0f, 1000.0f ) ;
+
+            _camera_0.orthographic( float_t(wei.w), float_t(wei.h), 0.1f, 1000.0f ) ;
 
             return natus::application::result::ok ;
         }
@@ -159,7 +161,7 @@ namespace this_file
             }
 
             {
-                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 60.0f, -50.0f ),
+                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 0.0f, -50.0f ),
                         natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
             }
 
@@ -327,8 +329,8 @@ namespace this_file
 
             // prepare sprite render
             {
-                _pr = natus::gfx::sprite_render_2d_res_t( natus::gfx::sprite_render_2d_t() ) ;
-                _pr->init( "debug_sprite_render", "image_array", _graphics ) ;
+                _sr = natus::gfx::sprite_render_2d_res_t( natus::gfx::sprite_render_2d_t() ) ;
+                _sr->init( "debug_sprite_render", "image_array", _graphics ) ;
             }
             
             // prepare quad
@@ -343,8 +345,8 @@ namespace this_file
 
         float value = 0.0f ;
 
-        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
-        { 
+        virtual natus::application::result on_device( natus::application::app_t::device_data_in_t ) 
+        {
             {
                 natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
                 if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f8 ) ==
@@ -361,9 +363,12 @@ namespace this_file
                     _do_tool = !_do_tool ;
                 }
             }
+            return natus::application::result::ok ; 
+        }
 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
+        { 
             NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
-
             return natus::application::result::ok ; 
         }
 
@@ -380,10 +385,10 @@ namespace this_file
                 {
                     auto const & rect = _sheets[sheet].rects[s.idx] ;
                     natus::math::vec2f_t pos( -0.0f, 0.0f ) ;
-                    _pr->draw( 0, 
+                    _sr->draw( 0, 
                         pos, 
                         natus::math::mat2f_t().identity(),
-                        10.0f,
+                        natus::math::vec2f_t(10000.0f),
                         rect.rect,  
                         sheet, rect.pivot, 
                         natus::math::vec4f_t(1.0f) ) ;
@@ -411,6 +416,7 @@ namespace this_file
             #endif
 
             {
+                _sr->set_view_proj( natus::math::mat4f_t().identity(), _camera_0.mat_proj() ) ;
 
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
@@ -418,8 +424,8 @@ namespace this_file
                     a.use( _root_render_states ) ;
                 } ) ;
 
-                _pr->prepare_for_rendering() ;
-                _pr->render( 0 ) ;
+                _sr->prepare_for_rendering() ;
+                _sr->render( 0 ) ;
                 //_pr->render( 1 ) ;
                 //_pr->render( 2 ) ;
                 //_pr->render( 3 ) ;
