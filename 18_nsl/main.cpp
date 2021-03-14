@@ -236,7 +236,7 @@ namespace this_file
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
         { 
-            _wid_async.async().use( _root_render_states ) ;
+            _wid_async.async().push( _root_render_states ) ;
 
             // per frame update of variables
             _rc->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
@@ -257,6 +257,8 @@ namespace this_file
                 detail.start = 0 ;
                 _wid_async.async().render( _rc, detail ) ;
             }
+
+            _wid_async.async().pop( natus::graphics::backend::pop_type::render_state ) ;
             return natus::application::result::ok ; 
         }
 

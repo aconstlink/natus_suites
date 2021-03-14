@@ -388,7 +388,7 @@ namespace this_file
                     _sr->draw( 0, 
                         pos, 
                         natus::math::mat2f_t().identity(),
-                        natus::math::vec2f_t(10000.0f),
+                        natus::math::vec2f_t(1000.0f),
                         rect.rect,  
                         sheet, rect.pivot, 
                         natus::math::vec4f_t(1.0f) ) ;
@@ -402,7 +402,7 @@ namespace this_file
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.use( _root_render_states ) ;
+                    a.push( _root_render_states ) ;
                 } ) ;
             }
 
@@ -410,7 +410,7 @@ namespace this_file
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.use( natus::graphics::state_object_t(), 10 ) ;
+                    a.pop( natus::graphics::backend::pop_type::render_state ) ;
                 } ) ;
             }
             #endif
@@ -421,7 +421,7 @@ namespace this_file
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.use( _fb ) ;
-                    a.use( _root_render_states ) ;
+                    a.push( _root_render_states ) ;
                 } ) ;
 
                 _sr->prepare_for_rendering() ;
@@ -433,8 +433,8 @@ namespace this_file
 
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.use( natus::graphics::state_object_res_t() ) ;
-                    a.use( natus::graphics::framebuffer_object_res_t() ) ;
+                    a.pop( natus::graphics::backend::pop_type::render_state ) ;
+                    a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                 } ) ;
                 
             }

@@ -591,7 +591,7 @@ namespace this_file
             // use the framebuffer
             {
                 _wid_async.async().use( _fb ) ;
-                _wid_async.async().use( _root_render_states ) ;
+                _wid_async.async().push( _root_render_states ) ;
             }
 
             {
@@ -605,7 +605,7 @@ namespace this_file
 
             // un-use the framebuffer
             {
-                _wid_async.async().use( natus::graphics::state_object_res_t() ) ;
+                _wid_async.async().pop( natus::graphics::backend::pop_type::render_state ) ;
                 _wid_async.async().use( natus::graphics::framebuffer_object_res_t() ) ;
             }
             // perform mapping

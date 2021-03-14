@@ -473,7 +473,7 @@ namespace this_file
             // this will set the root render states
             _graphics.for_each( [&]( natus::graphics::async_view_t a )
             {
-                a.use( _root_render_states ) ;
+                a.push( _root_render_states ) ;
             } ) ;
 
             _graphics.for_each( [&]( natus::graphics::async_view_t a )
@@ -497,7 +497,7 @@ namespace this_file
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.use( natus::graphics::state_object_t(), 10 ) ;
+                    a.pop( natus::graphics::backend::pop_type::render_state ) ;
                 } ) ;
             }
 

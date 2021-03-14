@@ -242,9 +242,9 @@ namespace this_file
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t )
         {
-            _wid_async.async().use( _root_render_states ) ;
+            _wid_async.async().push( _root_render_states ) ;
 
-            _wid_async.async().use( natus::graphics::state_object_t() ) ;
+            _wid_async.async().pop( natus::graphics::backend::pop_type::render_state ) ;
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 

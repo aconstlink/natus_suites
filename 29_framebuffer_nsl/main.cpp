@@ -635,8 +635,8 @@ namespace this_file
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( _root_render_states ) ;
-                _wid_async2.async().use( _root_render_states ) ;
+                _wid_async.async().push( _root_render_states ) ;
+                _wid_async2.async().push( _root_render_states ) ;
             }
 
             
@@ -661,8 +661,8 @@ namespace this_file
             // render the root render state sets render object
             // this will set the root render states
             {
-                _wid_async.async().use( natus::graphics::state_object_t(), 10 ) ;
-                _wid_async2.async().use( natus::graphics::state_object_t(), 10 ) ;
+                _wid_async.async().pop( natus::graphics::backend::pop_type::render_state ) ;
+                _wid_async2.async().pop( natus::graphics::backend::pop_type::render_state ) ;
             }
 
             // perform mapping

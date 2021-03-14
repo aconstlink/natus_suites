@@ -264,7 +264,7 @@ namespace this_file
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.use( _root_render_states ) ;
+                    a.pop( natus::graphics::backend::pop_type::render_state ) ;
                 } ) ;
             }
 
@@ -273,7 +273,7 @@ namespace this_file
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.use( natus::graphics::state_object_t(), 10 ) ;
+                    a.push( natus::graphics::state_object_t(), 10 ) ;
                 } ) ;
             }
 
