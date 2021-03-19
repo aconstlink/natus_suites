@@ -7,9 +7,10 @@
 #include <natus/device/global.h>
 #include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/gfx/primitive/primitive_render_2d.h> 
-
-#include <natus/graphics/variable/variable_set.hpp>
 #include <natus/profiling/macros.h>
+#include <natus/graphics/variable/variable_set.hpp>
+
+#include <natus/concurrent/parallel_for.hpp>
 
 #include <natus/geometry/mesh/polygon_mesh.h>
 #include <natus/geometry/mesh/tri_mesh.h>
@@ -781,10 +782,17 @@ namespace nps
         {
             // update particle
             {
-                for( auto & p : _particles )
+                typedef natus::concurrent::range_1d<size_t> range_t ;
+                auto const & range = range_t( 0, _particles.size() ) ;
+
+                natus::concurrent::parallel_for<size_t>( range, [&]( range_t const & r )
                 {
-                    p.age -= dt ;
-                }
+                    for( size_t e=r.begin(); e<r.end(); ++e )
+                    {
+                        particle_t & p = _particles[e] ;
+                        p.age -= dt ;
+                    }
+                } ) ;
             }
 
             // reorder particles
@@ -847,14 +855,20 @@ namespace nps
             
             // do physics
             {
-                for( auto & p : _particles )
+                typedef natus::concurrent::range_1d<size_t> range_t ;
+                auto const & range = range_t( 0, _particles.size() ) ;
+
+                natus::concurrent::parallel_for<size_t>( range, [&]( range_t const & r )
                 {
-                    p.acl = p.force / p.mass ;
-                    p.vel += natus::math::vec2f_t( dt ) * p.acl ;
-                    p.pos += natus::math::vec2f_t( dt ) * p.vel ;
-                }
+                    for( size_t e=r.begin(); e<r.end(); ++e )
+                    {
+                        particle_t & p = _particles[e] ;
+                        p.acl = p.force / p.mass ;
+                        p.vel += natus::math::vec2f_t( dt ) * p.acl ;
+                        p.pos += natus::math::vec2f_t( dt ) * p.vel ;
+                    }
+                } ) ;
             }
-            
         }
 
         typedef std::function< void_t ( natus::ntd::vector< particle_t > const &  ) > on_particles_funk_t ;
