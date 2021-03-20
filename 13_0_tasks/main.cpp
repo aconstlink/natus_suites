@@ -6,9 +6,6 @@
 
 using namespace natus::core::types ;
 
-//
-// Removed task in favor of std::async. This should do the job mostly(99%).
-//
 int main( int argc, char ** argv )
 {
     auto f0 = std::async( std::launch::async, [] () 
