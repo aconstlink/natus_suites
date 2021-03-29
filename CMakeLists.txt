@@ -25,6 +25,7 @@ set( subdirs
     "12_database"
     "13_0_tasks"
     "13_1_tasks"
+    "13_2_thread_pool"
     "14_import"
     "15_import"
     "16_nsl"
