@@ -27,6 +27,7 @@ set( subdirs
     "13_1_tasks"
     "13_2_thread_pool"
     "13_3_parallel_for"
+    "13_4_loose_scheduler"
     "14_import"
     "15_import"
     "16_nsl"
