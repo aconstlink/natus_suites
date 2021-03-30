@@ -119,31 +119,40 @@ namespace this_file
             flakes.on_particles( [&]( natus::ntd::vector< natus::physics::particle_t > const & particles )
             {
                 size_t i=0 ;
-                for( auto & p : particles )
-                {
-                    #if 0
-                    pr->draw_circle( 4, 10, p.pos, p.mass, 
-                        natus::math::vec4f_t(1.0f), 
-                        natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f) ) ;
-                    #elif 1
-                    natus::math::vec2f_t const pos = p.pos ;
-                    float_t const s = p.mass * 1.0f;
 
-                    natus::math::vec2f_t points[] = 
+                natus::concurrent::parallel_for<size_t>( natus::concurrent::range_1d<size_t>( 0, particles.size() ),
+                    [&]( natus::concurrent::range_1d<size_t> const & r )
+                {
+                    for( size_t i=r.begin(); i<r.end(); ++i )
                     {
-                        pos + natus::math::vec2f_t(-s, -s), 
-                        pos + natus::math::vec2f_t(-s, +s),  
-                        pos + natus::math::vec2f_t(+s, +s),
-                        pos + natus::math::vec2f_t(+s, -s)
-                    } ;
-                    float_t const life = p.age / emitter->get_age() ;
-                    float_t const alpha = natus::math::fn<float_t>::smooth_pulse( life, 0.1f, 0.7f ) ;
-                    pr->draw_rect( ++i % 50, 
-                        points[0], points[1], points[2], points[3],
-                        natus::math::vec4f_t(0.0f, 0.0f, 0.5f, alpha), 
-                        natus::math::vec4f_t(1.0f,0.0f,0.0f,alpha) ) ;
-                    #endif
-                }
+                        auto & p = particles[i] ;
+
+                        #if 0
+                        pr->draw_circle( 4, 10, p.pos, p.mass, 
+                            natus::math::vec4f_t(1.0f), 
+                            natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f) ) ;
+                        #elif 1
+                        natus::math::vec2f_t const pos = p.pos ;
+                        float_t const s = p.mass * 1.0f;
+
+                        natus::math::vec2f_t points[] = 
+                        {
+                            pos + natus::math::vec2f_t(-s, -s), 
+                            pos + natus::math::vec2f_t(-s, +s),  
+                            pos + natus::math::vec2f_t(+s, +s),
+                            pos + natus::math::vec2f_t(+s, -s)
+                        } ;
+                        float_t const life = p.age / emitter->get_age() ;
+                        float_t const alpha = natus::math::fn<float_t>::smooth_pulse( life, 0.1f, 0.7f ) ;
+                        pr->draw_rect( i % 50, 
+                            points[0], points[1], points[2], points[3],
+                            natus::math::vec4f_t(0.0f, 0.0f, 0.5f, alpha), 
+                            natus::math::vec4f_t(1.0f,0.0f,0.0f,alpha) ) ;
+                        #endif
+                    }
+                } ) ;
+
+                
             } ) ;
         }
     } ;

@@ -174,10 +174,10 @@ namespace this_file
                 } ) ;
             }
 
-            size_t const num_objects_x = 300 ;
-            size_t const num_objects_y = 300 ;
+            size_t const num_objects_x = 500 ;
+            size_t const num_objects_y = 500 ;
             size_t const num_objects = num_objects_x * num_objects_y ;
-            _max_objects = num_objects * 3 ;
+            _max_objects = num_objects  ;
             _num_objects_rnd = int_t(std::min( size_t(40000), size_t(num_objects / 2) )) ;
 
             // cube
@@ -198,16 +198,21 @@ namespace this_file
                     .add_layout_element( natus::graphics::vertex_attribute::texcoord0, natus::graphics::type::tfloat, natus::graphics::type_struct::vec2 )
                     .resize( ftm.get_num_vertices() * _max_objects ).update<vertex>( [&] ( vertex* array, size_t const ne )
                 {
-                    for( size_t o=0; o<_max_objects; ++o )
+                    natus::concurrent::parallel_for<size_t>( natus::concurrent::range_1d<size_t>(0, _max_objects),
+                        [&]( natus::concurrent::range_1d<size_t> const & r )
                     {
-                        size_t const base = o * ftm.get_num_vertices() ;
-                        for( size_t i=0; i<ftm.get_num_vertices(); ++i )
+                        for( size_t o=r.begin(); o<r.end(); ++o )
                         {
-                            array[ base + i ].pos = ftm.get_vertex_position_3d( i ) ;
-                            array[ base + i ].nrm = ftm.get_vertex_normal_3d( i ) ;
-                            array[ base + i ].tx = ftm.get_vertex_texcoord( 0, i ) ;
+                            size_t const base = o * ftm.get_num_vertices() ;
+                            for( size_t i=0; i<ftm.get_num_vertices(); ++i )
+                            {
+                                array[ base + i ].pos = ftm.get_vertex_position_3d( i ) ;
+                                array[ base + i ].nrm = ftm.get_vertex_normal_3d( i ) ;
+                                array[ base + i ].tx = ftm.get_vertex_texcoord( 0, i ) ;
+                            }
                         }
-                    }
+                    } ) ;
+                    
                 } );
 
                 auto ib = natus::graphics::index_buffer_t().
@@ -215,15 +220,19 @@ namespace this_file
                     resize( ftm.indices.size() * _max_objects ).
                     update<uint_t>( [&] ( uint_t* array, size_t const ne )
                 {
-                    for( size_t o=0; o<_max_objects; ++o )
+                    natus::concurrent::parallel_for<size_t>( natus::concurrent::range_1d<size_t>(0, _max_objects),
+                        [&]( natus::concurrent::range_1d<size_t> const & r )
                     {
-                        size_t const vbase = o * ftm.get_num_vertices() ;
-                        size_t const ibase = o * ftm.indices.size() ;
-                        for( size_t i = 0; i < ftm.indices.size(); ++i ) 
+                        for( size_t o=r.begin(); o<r.end(); ++o )
                         {
-                            array[ ibase + i ] = ftm.indices[ i ] + vbase ;
+                            size_t const vbase = o * ftm.get_num_vertices() ;
+                            size_t const ibase = o * ftm.indices.size() ;
+                            for( size_t i = 0; i < ftm.indices.size(); ++i ) 
+                            {
+                                array[ ibase + i ] = ftm.indices[ i ] + vbase ;
+                            }
                         }
-                    }
+                    } ) ;
                 } ) ;
 
                 natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "cubes",

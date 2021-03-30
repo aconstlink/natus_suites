@@ -12,6 +12,8 @@ natus::concurrent::thread_pool_t tp ;
 
 int main( int argc, char ** argv )
 {
+    tp.init() ;
+
     natus::concurrent::mutex_t mtx ;
     typedef std::pair< std::thread::id, size_t > count_t ;
     natus::ntd::vector< count_t > counts ;
