@@ -78,7 +78,7 @@
             </sprites>
 
             <animations>
-                <animation name="idle">
+                <animation object="object" name="idle">
                     <frame sprite="idle_0" duration="50" />
                     <frame sprite="idle_1" duration="50" />
                     <frame sprite="idle_2" duration="50" />
@@ -88,7 +88,7 @@
                     <frame sprite="idle_6" duration="50" />
                     <frame sprite="idle_7" duration="50" />
                 </animation>
-                <animation name="run">
+                <animation object="object" name="run">
                     <frame sprite="run_0" duration="10" />
                     <frame sprite="run_1" duration="12" />
                     <frame sprite="run_2" duration="9" />
@@ -203,20 +203,20 @@
             </sprites>
 
             <animations>
-                <animation name="move">
+                <animation object="animal" name="move">
                     <frame sprite="move_0" duration="60" />
                     <frame sprite="move_1" duration="60" />
                     <frame sprite="move_2" duration="60" />
                     <frame sprite="move_3" duration="60" />
                     <frame sprite="move_4" duration="60" />
                 </animation>
-                <animation name="move_animal_1">
+                <animation object="animal_1" name="move">
                     <frame sprite="move_animal_1_0" duration="50" />
                     <frame sprite="move_animal_1_1" duration="50" />
                     <frame sprite="move_animal_1_2" duration="50" />
                     <frame sprite="move_animal_1_3" duration="50" />
                 </animation>
-                <animation name="move_animal_2">
+                <animation object="animal_2" name="move">
                     <frame sprite="move_animal_2_0" duration="50" />
                     <frame sprite="move_animal_2_1" duration="50" />
                     <frame sprite="move_animal_2_2" duration="50" />

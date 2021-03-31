@@ -55,31 +55,8 @@ namespace this_file
         natus::gfx::pinhole_camera_t _camera_0 ;
 
         natus::io::database_res_t _db ;
-
-        struct sprite_sheet
-        {
-            struct animation
-            {
-                struct sprite
-                {
-                    size_t idx ;
-                    size_t begin ;
-                    size_t end ;
-                };
-                size_t duration ;
-                natus::ntd::vector< sprite > sprites ;
-
-            };
-            natus::ntd::vector< animation > animations ;
-
-            struct sprite
-            {
-                natus::math::vec4f_t rect ;
-                natus::math::vec2f_t pivot ;
-            };
-            natus::ntd::vector< sprite > rects ;
-        };
-        natus::ntd::vector< sprite_sheet > _sheets ;
+        
+        natus::ntd::vector< natus::gfx::sprite_sheet_t > _sheets ;
 
         
 
@@ -237,7 +214,7 @@ namespace this_file
                                 imgs.append( *ii->img ) ;
                             }
 
-                            sprite_sheet ss ;
+                            natus::gfx::sprite_sheet ss ;
                             _sheets.emplace_back( ss ) ;
                         }
                     }
@@ -264,17 +241,28 @@ namespace this_file
                                     natus::math::vec2f_t( s.animation.pivot ) / 
                                     natus::math::vec2f_t( dims.xy() ) ;
 
-                                sprite_sheet::sprite s_ ;
+                                natus::gfx::sprite_sheet::sprite s_ ;
                                 s_.rect = rect ;
                                 s_.pivot = pivot ;
 
                                 sheet.rects.emplace_back( s_ ) ;
                             }
 
-
+                            natus::ntd::map< natus::ntd::string_t, size_t > object_map ;
                             for( auto const & a : ss.animations )
                             {
-                                sprite_sheet::animation a_ ;
+                                size_t obj_id = 0 ;
+                                {
+                                    auto iter = object_map.find( a.object ) ;
+                                    if( iter != object_map.end() ) obj_id = iter->second ;
+                                    else 
+                                    {
+                                        obj_id = sheet.objects.size() ;
+                                        sheet.objects.emplace_back( natus::gfx::sprite_sheet::object { a.object, {} } ) ;
+                                    }
+                                }
+
+                                natus::gfx::sprite_sheet::animation a_ ;
 
                                 size_t tp = 0 ;
                                 for( auto const & f : a.frames )
@@ -286,7 +274,7 @@ namespace this_file
                                     } ) ;
 
                                     size_t const d = std::distance( ss.sprites.begin(), iter ) ;
-                                    sprite_sheet::animation::sprite s_ ;
+                                    natus::gfx::sprite_sheet::animation::sprite s_ ;
                                     s_.begin = tp ;
                                     s_.end = tp + f.duration ;
                                     s_.idx = d ;
@@ -295,7 +283,8 @@ namespace this_file
                                     tp = s_.end ;
                                 }
                                 a_.duration = tp ;
-                                sheet.animations.emplace_back( std::move( a_ ) ) ;
+                                a_.name = a.name ;
+                                sheet.objects[obj_id].animations.emplace_back( std::move( a_ ) ) ;
                             }
                         }
                     }
@@ -377,9 +366,9 @@ namespace this_file
             size_t const sheet = 0 ;
             size_t const ani = 0 ;
             static size_t ani_time = 0 ;
-            if( ani_time > _sheets[sheet].animations[ani].duration ) ani_time = 0 ;
+            if( ani_time > _sheets[sheet].objects[0].animations[ani].duration ) ani_time = 0 ;
 
-            for( auto const & s : _sheets[sheet].animations[ani].sprites )
+            for( auto const & s : _sheets[sheet].objects[0].animations[ani].sprites )
             {
                 if( ani_time >= s.begin && ani_time < s.end )
                 {
