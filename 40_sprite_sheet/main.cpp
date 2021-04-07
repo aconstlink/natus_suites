@@ -22,6 +22,8 @@
 #include <natus/geometry/mesh/flat_tri_mesh.h>
 #include <natus/geometry/3d/cube.h>
 #include <natus/geometry/3d/tetra.h>
+
+#include <natus/math/interpolation/interpolate.hpp>
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
@@ -65,7 +67,7 @@ namespace this_file
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
-            #if 1
+            #if 0
             auto view1 = this_t::create_window( "A Render Window", wi ) ;
             auto view2 = this_t::create_window( "A Render Window", wi,
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11}) ;
@@ -357,12 +359,39 @@ namespace this_file
 
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
         { 
-            NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
+            //NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
+            return natus::application::result::ok ; 
+        }
+
+        natus::math::vec2f_t _pos = natus::math::vec2f_t( -400.0f, -100.0f ) ;
+
+        virtual natus::application::result on_physics( natus::application::app_t::physics_data_in_t pd ) noexcept
+        { 
+            natus::log::global_t::status( "physics: " + std::to_string( pd.micro_dt ) ) ;
+
+            static float_t inter = 0.0f ;
+            float_t v = natus::math::interpolation<float_t>::linear( 0.0f, 1.0f, inter ) *2.0f-1.0f ;
+            v *= 400 ;
+
+            _pos = natus::math::vec2f_t( v, 0.0f ) ;
+            //_pos += natus::math::vec2f_t( 200.0f, 0.0f ) * pd.sec_dt ;
+            //_pos += natus::math::vec2f_t( 200.0f, 0.0f ) * 0.008f ;
+            if( _pos.x() > 400.0f ) _pos.x( -400.0f ) ;
+
+            inter += pd.sec_dt * 0.4f ;
+            if( inter > 1.0f ) inter = 0.0f ;
+
+            //NATUS_PROFILING_COUNTER_HERE( "Physics Clock" ) ;
+
+            
             return natus::application::result::ok ; 
         }
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rdi ) 
         { 
+            natus::log::global_t::status( "graphics: " + std::to_string( rdi.micro_dt ) ) ;
+            _sr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
+
             size_t const sheet = 0 ;
             size_t const ani = 0 ;
             static size_t ani_time = 0 ;
@@ -385,8 +414,48 @@ namespace this_file
                 }
             }
 
-            ani_time += rdi.milli_dt ;
+            ani_time += rdi.micro_dt / 1000 ;
             
+            #if 1
+            // physics driven
+            {
+                auto & s = _sheets[0].objects[0].animations[0].sprites[0] ;
+
+                auto const & rect = _sheets[sheet].rects[s.idx] ;
+                natus::math::vec2f_t pos( -0.0f, 0.0f ) ;
+                _sr->draw( 0, 
+                    _pos,
+                    natus::math::mat2f_t().identity(),
+                    natus::math::vec2f_t(2000.0f),
+                    rect.rect,  
+                    sheet, rect.pivot, 
+                    natus::math::vec4f_t(1.0f) ) ;
+            }
+
+            // animation driven
+            {
+                static float_t inter = 0.0f ;
+                float_t v = natus::math::interpolation<float_t>::linear( 0.0f, 1.0f, inter ) *2.0f-1.0f ;
+                v *= 400 ;
+
+                auto & s = _sheets[0].objects[0].animations[0].sprites[0] ;
+
+                auto const & rect = _sheets[sheet].rects[s.idx] ;
+                natus::math::vec2f_t pos( -0.0f, 0.0f ) ;
+                _sr->draw( 0, 
+                    natus::math::vec2f_t( v, -200.0f ),
+                    natus::math::mat2f_t().identity(),
+                    natus::math::vec2f_t(2000.0f),
+                    rect.rect,  
+                    sheet, rect.pivot, 
+                    natus::math::vec4f_t(1.0f) ) ;
+
+                inter += rdi.sec_dt * 0.4f ;
+                //inter += 0.016f * 0.4f ;
+                if( inter > 1.0f ) inter = 0.0f ;
+            }
+            #endif
+
             #if 0
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
@@ -425,12 +494,11 @@ namespace this_file
                     a.pop( natus::graphics::backend::pop_type::render_state ) ;
                     a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                 } ) ;
-                
             }
             
             _quad->render( _graphics ) ;
 
-            NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
+            //NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
             return natus::application::result::ok ; 
         }

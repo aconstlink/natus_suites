@@ -355,7 +355,7 @@ namespace this_file
                 }
             }
 
-            ani_time += rdi.milli_dt ;
+            ani_time += rdi.micro_dt / 1000 ;
             
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
