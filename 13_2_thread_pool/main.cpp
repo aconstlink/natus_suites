@@ -4,7 +4,7 @@
 #include <natus/concurrent/semaphore.hpp>
 #include <natus/concurrent/thread_pool.hpp>
 #include <natus/log/global.h>
-
+#include <algorithm>
 
 using namespace natus::core::types ;
 
