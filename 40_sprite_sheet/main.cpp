@@ -67,7 +67,7 @@ namespace this_file
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
-            #if 0
+            #if 1
             auto view1 = this_t::create_window( "A Render Window", wi ) ;
             auto view2 = this_t::create_window( "A Render Window", wi,
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11}) ;
