@@ -4,7 +4,7 @@
 
 #include <natus/concurrent/parallel_for.hpp>
 #include <natus/log/global.h>
-
+#include <algorithm>
 
 using namespace natus::core::types ;
 
