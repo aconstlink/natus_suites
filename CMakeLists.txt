@@ -34,13 +34,14 @@ set( subdirs
     "16_nsl"
     "17_nsl"
     "18_nsl"
-    "19_audio"
-    "20_audio"
-    "21_audio"
-    "22_audio"
-    "23_audio"
-    "24_audio"
-    "25_audio"
+    "19_0_audio_oal_capture"
+    
+    "19_1_audio_oal_gen"
+    "19_2_audio_oal_capture_2"
+    "19_3_audio_capture"
+    "19_4_audio_async_capture"
+    "19_5_audio_gen_2"
+    "19_6_audio_gen_3"
     "26_render_states"
     "27_framebuffer_simple"
     "28_framebuffer_mrt"
@@ -61,6 +62,12 @@ set( subdirs
     "42_particle_system"
     "xx_tool_sprite"
     )
+
+if( WIN32 )
+  list( APPEND subdirs 
+    "19_0_audio_wasapi_capture"
+    )
+endif()
 
 foreach( _subdir ${subdirs} )
 

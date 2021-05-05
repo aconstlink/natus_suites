@@ -47,9 +47,15 @@ int main( int argc, char ** argv )
         }
     }
 
+    if( whatuhear.empty() )
+    {
+        natus::log::global_t::status("Can not find 'what you hear' capture device" ) ;
+        return 1 ;
+    }
+
     // print what you hear device
     {
-        natus::log::global_t::status( "What you hear" ) ;
+        natus::log::global_t::status( "What you hear device:" ) ;
         ALCdevice* dev = alcCaptureOpenDevice( whatuhear.c_str(), 96000, AL_FORMAT_STEREO16, 32768 ) ;
         auto const* s = alcGetString( dev, ALC_CAPTURE_DEVICE_SPECIFIER ) ;
         natus::log::global_t::status( s ) ;
@@ -58,15 +64,18 @@ int main( int argc, char ** argv )
         alcGetIntegerv( dev, ALC_ALL_ATTRIBUTES, 9, size ) ;
 
         alcCaptureCloseDevice( dev ) ;
+
+        natus::log::global_t::status( "***************************" ) ;
     }
 
     // print default device
     {
-        natus::log::global_t::status( "Default Capture Device" ) ;
+        natus::log::global_t::status( "Default Capture Device: " ) ;
         ALCdevice* dev = alcCaptureOpenDevice( NULL, 96000, AL_FORMAT_STEREO16, 32768 ) ;
         auto const* s = alcGetString( dev, ALC_CAPTURE_DEVICE_SPECIFIER ) ;
         natus::log::global_t::status( s ) ;
         alcCaptureCloseDevice( dev ) ;
+        natus::log::global_t::status( "***************************" ) ;
     }
 
 
