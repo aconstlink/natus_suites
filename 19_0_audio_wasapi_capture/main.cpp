@@ -17,6 +17,7 @@
 #include <windows.h>
 
 // Testing audio capture of system output/mix using wasapi
+// https://docs.microsoft.com/en-us/windows/win32/coreaudio/loopback-recording
 // https://docs.microsoft.com/en-us/windows/win32/coreaudio/capturing-a-stream
 
 const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
