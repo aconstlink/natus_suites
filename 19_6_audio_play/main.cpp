@@ -24,7 +24,7 @@
 #include <array>
 
 //
-// Generate Sound and Play
+// Play some loaded audio
 //
 
 namespace this_file
@@ -215,7 +215,7 @@ int main( int argc, char** argv )
     natus::application::global_t::create_application(
         this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
 
-    natus::memory::global_t::dump_to_std() ;
+    //natus::memory::global_t::dump_to_std() ;
 
     return 0 ;
 }

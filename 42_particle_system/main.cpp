@@ -175,7 +175,7 @@ namespace this_file
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
 
-        bool_t _do_tool = false ;
+        bool_t _do_tool = true ;
         
     private: // particle system
 

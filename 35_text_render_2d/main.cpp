@@ -208,31 +208,33 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        float value = 0.0f ;
-
-        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
+        virtual natus::application::result on_device( device_data_in_t ) 
         { 
+            natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
+            if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f8 ) ==
+                natus::device::components::key_state::released )
             {
-                natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
-                if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f8 ) ==
-                    natus::device::components::key_state::released )
-                {
-                }
-                else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f9 ) ==
-                    natus::device::components::key_state::released )
-                {
-                }
-                else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f2 ) ==
-                    natus::device::components::key_state::released )
-                {
-                    _do_tool = !_do_tool ;
-                }
             }
-            NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
+            else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f9 ) ==
+                natus::device::components::key_state::released )
+            {
+            }
+            else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f2 ) ==
+                natus::device::components::key_state::released )
+            {
+                _do_tool = !_do_tool ;
+            }
 
             return natus::application::result::ok ; 
         }
 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
+        { 
+            NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
+            return natus::application::result::ok ; 
+        }
+
+        float value = 0.0f ;
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
         { 
             {
@@ -257,24 +259,6 @@ namespace this_file
                 _tr->draw_text( 0, 0, pt, natus::math::vec2f_t(-0.8f, 0.40f-yoff), 
                     natus::math::vec4f_t(1.0f), "Hello World! This is changing point ("+
                     std::to_string(pt) +") size." ) ;
-            }
-
-            // render the root render state sets render object
-            // this will set the root render states
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.pop( natus::graphics::backend::pop_type::render_state ) ;
-                } ) ;
-            }
-
-            // render the root render state sets render object
-            // this will set the root render states
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.push( natus::graphics::state_object_t(), 10 ) ;
-                } ) ;
             }
 
             // render text layer 0 to screen

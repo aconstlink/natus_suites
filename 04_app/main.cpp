@@ -26,24 +26,21 @@ namespace this_file
         //app::window_async_t _wid_async_b ;
         
         natus::graphics::render_state_sets_res_t _render_states = natus::graphics::render_state_sets_t() ;
-        natus::graphics::render_object_res_t _rc = natus::graphics::render_object_t() ;
+        natus::graphics::render_object_res_t _rc = natus::graphics::render_object_t( "render_quad" ) ;
         natus::graphics::geometry_object_res_t _gconfig = natus::graphics::geometry_object_t() ;
         natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
 
         struct vertex { natus::math::vec3f_t pos ; natus::math::vec2f_t tx ; } ;
         
-        typedef ::std::chrono::high_resolution_clock __clock_t ;
-        __clock_t::time_point _tp = __clock_t::now() ;
-
         natus::gfx::pinhole_camera_t _camera_0 ;
         natus::gfx::pinhole_camera_t _camera_1 ;
 
     public:
 
-        test_app( void_t ) 
+        test_app( void_t ) noexcept
         {
             natus::application::app::window_info_t wi ;
-            #if 0
+            #if 1
             _wid_async = this_t::create_window( "A Render Window", wi ) ;
             #else
             _wid_async = this_t::create_window( "A Render Window", wi, 
@@ -51,7 +48,7 @@ namespace this_file
             #endif
         }
         test_app( this_cref_t ) = delete ;
-        test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
+        test_app( this_rref_t rhv ) noexcept : app( std::move( rhv ) ) 
         {
             _wid_async = std::move( rhv._wid_async ) ;
             _camera_0 = std::move( rhv._camera_0 ) ;
@@ -59,7 +56,7 @@ namespace this_file
             _gconfig = std::move( rhv._gconfig ) ;
             _rc = std::move( rhv._rc) ;
         }
-        virtual ~test_app( void_t ) 
+        virtual ~test_app( void_t ) noexcept
         {}
 
     private:
@@ -351,14 +348,9 @@ namespace this_file
         float value = 0.0f ;
         size_t ucount = 0 ;
 
-        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t dat ) 
         { 
-            
-            auto const dif = ::std::chrono::duration_cast< ::std::chrono::microseconds >( __clock_t::now() - _tp ) ;
-            _tp = __clock_t::now() ;
-
-
-            float_t const dt = float_t( double_t( dif.count() ) / ::std::chrono::microseconds::period().den ) ;
+            float_t const dt = dat.sec_dt ;
             
             if( value > 1.0f ) value = 0.0f ;
             value += natus::math::fn<float_t>::fract( dt ) ;
@@ -388,8 +380,6 @@ namespace this_file
             }
 
             ucount++ ;
-
-            ::std::this_thread::sleep_for( ::std::chrono::milliseconds( 1 ) ) ;
 
             return natus::application::result::ok ; 
         }
@@ -489,34 +479,32 @@ namespace this_file
                 _wid_async.async().render( _rc, detail ) ;
             }
 
-            // print calls from run-time per second
-            {
-                static __clock_t::time_point tp = __clock_t::now() ;
-
-                auto const dif = ::std::chrono::duration_cast< ::std::chrono::microseconds >( __clock_t::now() - tp ) ;
-                tp = __clock_t::now() ;
-
-                float_t const sec = float_t( double_t( dif.count() ) / ::std::chrono::microseconds::period().den ) ;
-
-                static size_t count = 0 ;
-                count++ ;
-                static float this_sec = 0.0f ;
-                this_sec += sec ;
-                if( this_sec > 1.0 )
-                {
-                    natus::log::global_t::status( "Update Count: " + ::std::to_string( ucount ) ) ;
-                    natus::log::global_t::status( "Render Count: " + ::std::to_string( count ) ) ;
-                    this_sec = 0.0f ;
-                    count = 0 ;
-                    ucount = 0 ;
-                }
-            }
-
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_shutdown( void_t ) 
-        { return natus::application::result::ok ; }
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui )
+        {
+            ImGui::Begin( "Release" ) ;
+            if( ImGui::Button( "Release" ) )
+            {
+                natus::log::global_t::status( "Releasing all" ) ;
+                _wid_async.async().release( std::move( _rc ) ) ;
+                _wid_async.async().release( std::move( _gconfig ) ) ;
+                _wid_async.async().release( std::move( _imgconfig ) ) ;
+
+                
+                natus::log::global_t::status( "Initializing all" ) ;
+                _rc = natus::graphics::render_object_t( "render_quad" ) ;
+                _gconfig = natus::graphics::geometry_object_t() ;
+                _imgconfig = natus::graphics::image_object_t() ;
+                this->on_init() ;
+            }
+            ImGui::End() ;
+
+            return natus::application::result::ok ;
+        }
+
+        virtual natus::application::result on_shutdown( void_t ) { return natus::application::result::ok ; }
     };
     natus_res_typedef( test_app ) ;
 }

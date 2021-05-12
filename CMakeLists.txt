@@ -41,7 +41,7 @@ set( subdirs
     "19_3_audio_capture"
     "19_4_audio_async_capture"
     "19_5_audio_gen_2"
-    "19_6_audio_gen_3"
+    "19_6_audio_play"
     "26_render_states"
     "27_framebuffer_simple"
     "28_framebuffer_mrt"
