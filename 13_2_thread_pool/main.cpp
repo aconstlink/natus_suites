@@ -10,6 +10,11 @@ using namespace natus::core::types ;
 
 natus::concurrent::thread_pool_t tp ;
 
+//
+// the thread pool is not particularly suited for 
+// the engines' user. This is used within the engine
+// in order to drive the task system. 
+//
 int main( int argc, char ** argv )
 {
     tp.init() ;

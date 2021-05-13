@@ -8,6 +8,9 @@
 
 using namespace natus::core::types ;
 
+//
+// testing the parallel_for
+//
 int main( int argc, char ** argv )
 {
     natus::concurrent::mutex_t mtx ;

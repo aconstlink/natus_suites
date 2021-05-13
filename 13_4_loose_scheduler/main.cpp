@@ -8,6 +8,11 @@
 
 using namespace natus::core::types ;
 
+// 
+// testing the loose tasks. This is a task that 
+// run on a rouge(outside thread pool) thread of
+// execution.
+//
 int main( int argc, char ** argv )
 {
     bool_t run_loop = true ;
