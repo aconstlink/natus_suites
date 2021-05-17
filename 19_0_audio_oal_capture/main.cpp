@@ -17,7 +17,7 @@
 
 //
 // - just tests some OpenAL functions
-// - test audio capture
+// - test audio capture but system audio is not a standard capture
 //
 int main( int argc, char ** argv )
 {
