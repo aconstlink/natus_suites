@@ -66,6 +66,7 @@ set( subdirs
 if( WIN32 )
   list( APPEND subdirs 
     "19_0_audio_wasapi_capture"
+    "19_0_audio_wasapi_capture_2"
     )
 endif()
 
