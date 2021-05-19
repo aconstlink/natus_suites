@@ -35,14 +35,16 @@ int main( int argc, char ** argv )
 
         while( std::chrono::duration_cast<std::chrono::seconds>( clock_t::now() - tp ) < std::chrono::seconds( 3 ) )
         {
-            hlp.capture( samples ) ;
-
-            // print data
+            if( hlp.capture( samples ) )
             {
-                float_t accum = 0.0f ;
-                for( auto const s : samples ) accum += s ;
+                // print data
+                {
+                    float_t accum = 0.0f ;
+                    for( auto const s : samples ) accum += s ;
 
-                natus::log::global_t::status( std::to_string(accum / float_t(samples.size()))  ) ;
+                    natus::log::global_t::status( std::to_string(accum / float_t(samples.size()))  ) ;
+                }
+                samples.clear() ;
             }
         }
 
@@ -57,14 +59,16 @@ int main( int argc, char ** argv )
 
         while( std::chrono::duration_cast<std::chrono::seconds>( clock_t::now() - tp ) < std::chrono::seconds( 10 ) )
         {
-            hlp.capture( samples ) ;
-
-            // print data
+            if( hlp.capture( samples ) )
             {
-                float_t accum = 0.0f ;
-                for( auto const s : samples ) accum += s ;
+                // print data
+                {
+                    float_t accum = 0.0f ;
+                    for( auto const s : samples ) accum += s ;
 
-                natus::log::global_t::status( std::to_string(accum / float_t(samples.size()))  ) ;
+                    natus::log::global_t::status( std::to_string(accum / float_t(samples.size()))  ) ;
+                }
+                samples.clear() ;
             }
         }
 
