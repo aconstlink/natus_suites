@@ -35,7 +35,7 @@ set( subdirs
     "17_nsl"
     "18_nsl"
     "19_0_audio_oal_capture"
-    
+    "19_0_system_audio_capture"
     "19_1_audio_oal_gen"
     "19_2_audio_oal_capture_2"
     "19_3_audio_capture"

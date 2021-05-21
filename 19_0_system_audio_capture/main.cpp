@@ -17,65 +17,70 @@
 using namespace natus::core::types ;
 
 //
-// - test audio capture with wasapi loopback device
-// using the internal helper
+// test system audio capture. If there is no audio capture device
+// for the particular system, there will be no capture.
+// this helper is automaically integrated in the backends with a capture
+// device specifier of "what_you_hear"
 //
 int main( int argc, char ** argv )
 {
     natus::ntd::vector< float_t > samples ;
 
-    natus::audio::wasapi_capture_helper_t hlp ;
+    // create os/plattform specific system audio capture helper
+    natus::audio::audio_capture_helper_res_t hlp = natus::audio::audio_capture_helper_t::create() ;
 
-    hlp.init() ;
+    hlp->init() ;
 
     {
-        hlp.start() ;
+        hlp->start() ;
 
         typedef std::chrono::high_resolution_clock clock_t ;
         clock_t::time_point tp = clock_t::now() ;
 
         while( std::chrono::duration_cast<std::chrono::seconds>( clock_t::now() - tp ) < std::chrono::seconds( 3 ) )
         {
-            if( hlp.capture( samples ) )
+            if( hlp->capture( samples ) )
             {
                 // print data
                 {
                     float_t accum = 0.0f ;
                     for( auto const s : samples ) accum += s ;
 
-                    natus::log::global_t::status( std::to_string(accum / float_t(samples.size()))  ) ;
+                    natus::log::global_t::status( "[" + std::to_string( samples.size() ) + "] : " + 
+                        std::to_string(accum / float_t(samples.size()))  ) ;
                 }
                 samples.clear() ;
             }
         }
 
-        hlp.stop() ;
+        hlp->stop() ;
     }
     
     {
-        hlp.start() ;
+        hlp->start() ;
 
         typedef std::chrono::high_resolution_clock clock_t ;
         clock_t::time_point tp = clock_t::now() ;
 
         while( std::chrono::duration_cast<std::chrono::seconds>( clock_t::now() - tp ) < std::chrono::seconds( 10 ) )
         {
-            if( hlp.capture( samples ) )
+            if( hlp->capture( samples ) )
             {
                 // print data
                 {
                     float_t accum = 0.0f ;
                     for( auto const s : samples ) accum += s ;
 
-                    natus::log::global_t::status( std::to_string(accum / float_t(samples.size()))  ) ;
+                    natus::log::global_t::status( "[" + std::to_string( samples.size() ) + "] : " +  
+                        std::to_string(accum / float_t(samples.size()))  ) ;
                 }
                 samples.clear() ;
             }
         }
-        hlp.stop() ;
+        hlp->stop() ;
     }
 
-    hlp.release() ;
+    hlp->release() ;
 
     return 0 ;
 }
