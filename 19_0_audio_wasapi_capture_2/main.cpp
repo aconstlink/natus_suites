@@ -26,7 +26,7 @@ int main( int argc, char ** argv )
 
     natus::audio::wasapi_capture_helper_t hlp ;
 
-    hlp.init() ;
+    hlp.init( natus::audio::channels::mono, natus::audio::frequency::freq_48k ) ;
 
     {
         hlp.start() ;

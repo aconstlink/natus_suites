@@ -29,7 +29,7 @@ int main( int argc, char ** argv )
     // create os/plattform specific system audio capture helper
     natus::audio::audio_capture_helper_res_t hlp = natus::audio::audio_capture_helper_t::create() ;
 
-    hlp->init() ;
+    hlp->init(natus::audio::channels::mono, natus::audio::frequency::freq_48k) ;
 
     {
         hlp->start() ;
