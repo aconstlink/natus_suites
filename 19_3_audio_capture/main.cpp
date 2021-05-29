@@ -190,8 +190,8 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_tool( natus::tool::imgui_res_t imgui )
-        {
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t ) 
+        { 
             bool_t open = true ;
             //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
             ImGui::ShowDemoWindow( &open ) ;
@@ -240,7 +240,7 @@ namespace this_file
 
             ImGui::End() ;
 
-            return natus::application::result::ok ;
+            return natus::application::result::ok ;  
         }
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t )
