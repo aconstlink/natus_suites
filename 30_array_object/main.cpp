@@ -61,7 +61,7 @@ namespace this_file
 
         natus::math::vec4ui_t _fb_dims = natus::math::vec4ui_t( 0, 0, 1280, 768 ) ;
 
-        bool_t _do_tool = false ;
+        bool_t _do_tool = true ;
 
         natus::device::ascii_device_res_t _dev_ascii ;
 
