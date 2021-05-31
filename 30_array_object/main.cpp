@@ -119,7 +119,7 @@ namespace this_file
 
     private:
 
-        virtual natus::application::result on_init( void_t )
+        virtual natus::application::result on_init( void_t ) noexcept
         { 
             {
                 _camera_0.look_at( natus::math::vec3f_t( 2500.0f, 1000.0f, 1000.0f ),
@@ -590,7 +590,7 @@ namespace this_file
 
         float value = 0.0f ;
 
-        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) noexcept 
         { 
             NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
 
@@ -836,7 +836,7 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_shutdown( void_t ) 
+        virtual natus::application::result on_shutdown( void_t ) noexcept 
         { return natus::application::result::ok ; }
     };
     natus_res_typedef( test_app ) ;

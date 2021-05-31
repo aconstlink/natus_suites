@@ -72,7 +72,7 @@ namespace this_file
 
     private:
 
-        virtual natus::application::result on_init( void_t )
+        virtual natus::application::result on_init( void_t ) noexcept
         { 
             {
                 _camera_0.orthographic( 4.0f, 4.0f, 1.0f, 1000.0f ) ;
@@ -534,7 +534,7 @@ namespace this_file
 
         float value = 0.0f ;
 
-        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) noexcept 
         { 
             auto const dif = std::chrono::duration_cast< ::std::chrono::microseconds >( __clock_t::now() - _tp ) ;
             _tp = __clock_t::now() ;
@@ -561,7 +561,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) 
+        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) noexcept 
         { 
             static float_t v = 0.0f ;
             v += 0.01f ;
@@ -620,7 +620,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_shutdown( void_t ) 
+        virtual natus::application::result on_shutdown( void_t ) noexcept 
         { return natus::application::result::ok ; }
     };
     natus_res_typedef( test_app ) ;

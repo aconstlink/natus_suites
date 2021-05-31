@@ -80,7 +80,7 @@ namespace this_file
 
     private:
 
-        virtual natus::application::result on_init( void_t )
+        virtual natus::application::result on_init( void_t ) noexcept
         {
             natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
             {
@@ -140,7 +140,7 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t )
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) noexcept
         {
             {
                 natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
@@ -204,13 +204,13 @@ namespace this_file
             return natus::application::result::ok ;
         } 
 
-        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t )
+        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) noexcept
         {
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_shutdown( void_t )
+        virtual natus::application::result on_shutdown( void_t ) noexcept
         {
             return natus::application::result::ok ;
         }

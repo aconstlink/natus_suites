@@ -1171,7 +1171,7 @@ namespace this_file
 
     private:
 
-        virtual natus::application::result on_init( void_t ) noexcept
+        virtual natus::application::result on_init( void_t ) noexcept noexcept
         { 
             natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
             {
@@ -1617,7 +1617,7 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_shutdown( void_t ) 
+        virtual natus::application::result on_shutdown( void_t ) noexcept 
         { return natus::application::result::ok ; }
     };
     natus_res_typedef( test_app ) ;
