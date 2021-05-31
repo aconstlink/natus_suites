@@ -135,7 +135,7 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )
+        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )  noexcept
         {
             return natus::application::result::ok ;
         }
@@ -163,7 +163,7 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_audio( natus::application::app_t::audio_data_in_t )
+        virtual natus::application::result on_audio( natus::application::app_t::audio_data_in_t ) noexcept
         {
             if( *_play_res == natus::audio::result::initial )
             {
@@ -182,7 +182,7 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui )
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
             ImGui::SetNextWindowSize( ImVec2( 200, 200 ) ) ;
 

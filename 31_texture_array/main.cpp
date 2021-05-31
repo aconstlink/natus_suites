@@ -94,7 +94,7 @@ namespace this_file
         virtual ~test_app( void_t ) 
         {}
 
-        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )
+        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
             _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ),
                 float_t(wei.w) / float_t(wei.h), 1.0f, 10000.0f ) ;
@@ -506,7 +506,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui )
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
             //if( !_do_tool ) return natus::application::result::no_imgui ;
 

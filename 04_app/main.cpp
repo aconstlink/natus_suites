@@ -348,7 +348,7 @@ namespace this_file
         float value = 0.0f ;
         size_t ucount = 0 ;
 
-        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t dat ) 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t dat ) noexcept 
         { 
             float_t const dt = dat.sec_dt ;
             
@@ -482,7 +482,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui )
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
             ImGui::Begin( "Release" ) ;
             if( ImGui::Button( "Release" ) )

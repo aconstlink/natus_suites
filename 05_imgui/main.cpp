@@ -124,7 +124,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )
+        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
             _demo_width = float_t( wei.w ) ;
             _demo_height = float_t( wei.h ) ;
@@ -151,7 +151,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui )
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
             bool_t open = true ;
             //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;

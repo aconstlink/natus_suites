@@ -103,7 +103,7 @@ namespace this_file
         virtual ~test_app( void_t ) 
         {}
 
-        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei )
+        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
             _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ),
                 float_t(wei.w) / float_t(wei.h), 1.0f, 1000.0f ) ;
@@ -336,7 +336,7 @@ namespace this_file
 
         float value = 0.0f ;
 
-        virtual natus::application::result on_device( natus::application::app_t::device_data_in_t ) 
+        virtual natus::application::result on_device( natus::application::app_t::device_data_in_t ) noexcept 
         {
             {
                 natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
@@ -387,7 +387,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rdi ) 
+        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rdi ) noexcept 
         { 
             natus::log::global_t::status( "graphics: " + std::to_string( rdi.micro_dt ) ) ;
             _sr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
@@ -503,7 +503,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui )
+        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
 
