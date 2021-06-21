@@ -8,7 +8,7 @@
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
-#include <natus/profiling/macros.h>
+#include <natus/profile/macros.h>
 
 #include <natus/geometry/mesh/tri_mesh.h>
 #include <natus/geometry/mesh/flat_tri_mesh.h>

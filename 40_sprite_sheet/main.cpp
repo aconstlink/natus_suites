@@ -15,7 +15,7 @@
 #include <natus/gfx/util/quad.h>
 
 #include <natus/graphics/variable/variable_set.hpp>
-#include <natus/profiling/macros.h>
+#include <natus/profile/macros.h>
 
 #include <natus/geometry/mesh/polygon_mesh.h>
 #include <natus/geometry/mesh/tri_mesh.h>

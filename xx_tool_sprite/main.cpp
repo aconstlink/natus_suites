@@ -11,7 +11,7 @@
 
 #include <natus/graphics/shader/nsl_bridge.hpp>
 #include <natus/graphics/variable/variable_set.hpp>
-#include <natus/profiling/macros.h>
+#include <natus/profile/macros.h>
 
 #include <natus/format/global.h>
 #include <natus/format/nsl/nsl_module.h>

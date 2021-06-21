@@ -9,7 +9,7 @@
 #include <natus/gfx/primitive/primitive_render_2d.h> 
 
 #include <natus/graphics/variable/variable_set.hpp>
-#include <natus/profiling/macros.h>
+#include <natus/profile/macros.h>
 
 #include <natus/physics/particle_system.h>
 #include <natus/physics/force_fields.hpp>

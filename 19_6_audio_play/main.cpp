@@ -9,7 +9,7 @@
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/matrix/matrix4.hpp>
-#include <natus/profiling/macros.h>
+#include <natus/profile/macros.h>
 #include <natus/audio/buffer.hpp>
 #include <natus/io/database.h>
 #include <natus/format/global.h>

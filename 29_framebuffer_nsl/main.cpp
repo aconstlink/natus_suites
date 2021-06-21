@@ -7,7 +7,7 @@
 
 #include <natus/graphics/shader/nsl_bridge.hpp>
 #include <natus/graphics/variable/variable_set.hpp>
-#include <natus/profiling/macros.h>
+#include <natus/profile/macros.h>
 
 #include <natus/nsl/parser.h>
 #include <natus/nsl/database.hpp>

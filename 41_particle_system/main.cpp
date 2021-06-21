@@ -7,7 +7,7 @@
 #include <natus/device/global.h>
 #include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/gfx/primitive/primitive_render_2d.h> 
-#include <natus/profiling/macros.h>
+#include <natus/profile/macros.h>
 #include <natus/graphics/variable/variable_set.hpp>
 
 #include <natus/concurrent/parallel_for.hpp>
