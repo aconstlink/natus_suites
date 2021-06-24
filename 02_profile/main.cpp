@@ -46,7 +46,7 @@ void_t test_local_system()
     natus::log::global_t::status( "******************************** Local System ********************************** " ) ;
 
     {
-        auto const entries = psys.get_entries() ;
+        auto const entries = psys.get_and_reset_entries() ;
         for( auto const & e : entries )
         {
             natus::log::global_t::status( e.get_name() + " : " + std::to_string( e.get_duration<std::chrono::microseconds>().count() ) + " [micro]" ) ;
@@ -67,7 +67,7 @@ void_t test_global_system()
 
 
     {
-        auto const entries = natus::profile::global_t::sys().get_entries() ;
+        auto const entries = natus::profile::global_t::sys().get_and_reset_entries() ;
         for( auto const & e : entries )
         {
             natus::log::global_t::status( e.get_name() + " : " + std::to_string( e.get_duration<std::chrono::microseconds>().count() ) + " [micro]" ) ;
