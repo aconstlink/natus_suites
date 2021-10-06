@@ -3,6 +3,7 @@ project( "natus_tests" )
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build )
+set( CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage" )
 
 add_subdirectory( natus )
 list( APPEND CMAKE_MODULE_PATH 
@@ -36,7 +37,7 @@ set( subdirs
     "17_nsl"
     "18_nsl"
     "19_0_audio_oal_capture"
-    "19_0_system_audio_capture"
+    
     "19_1_audio_oal_gen"
     "19_2_audio_oal_capture_2"
     "19_3_audio_capture"
@@ -66,6 +67,7 @@ set( subdirs
 
 if( WIN32 )
   list( APPEND subdirs 
+    "19_0_system_audio_capture"
     "19_0_audio_wasapi_capture"
     "19_0_audio_wasapi_capture_2"
     )

@@ -5,6 +5,8 @@
 #include <natus/log/global.h>
 #include <natus/ntd/vector.hpp>
 
+#include <thread>
+
 using namespace natus::core::types ;
 
 void_t test_local_system()
