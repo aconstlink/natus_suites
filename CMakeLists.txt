@@ -3,7 +3,6 @@ project( "natus_tests" )
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build )
-set( CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage" )
 
 add_subdirectory( natus )
 list( APPEND CMAKE_MODULE_PATH 
