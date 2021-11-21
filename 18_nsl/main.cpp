@@ -202,9 +202,11 @@ namespace this_file
                 }
             }
 
+            natus::graphics::render_object_t rc = natus::graphics::render_object_t( "quad" ) ;
+
             {
-                _rc->link_geometry( "quad" ) ;
-                _rc->link_shader( "quad" ) ;
+                rc.link_geometry( "quad" ) ;
+                rc.link_shader( "quad" ) ;
             }
 
             // add variable set 0
@@ -219,9 +221,10 @@ namespace this_file
                     var->set( "loaded_image" ) ;
                 }
 
-                _rc->add_variable_set( ::std::move( vars ) ) ;
+                rc.add_variable_set( ::std::move( vars ) ) ;
             }
-
+            
+            _rc = std::move( rc ) ;
             _wid_async.async().configure( _rc ) ;
 
             return natus::application::result::ok ; 

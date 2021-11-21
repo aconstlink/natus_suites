@@ -1,5 +1,11 @@
 library lib_x
 {
+    void_t test_ops() 
+    {
+        int a = (50 * 10) + 1 ;
+        int b = ++( a - 10 * 30 )-- ;
+    }
+    void_t test_for( void_t ) { for( int i=0; i<10; ++(i) ){ abc; } }
     float_t my_x( float_t x ){ return x ; }
     float_t my_x( vec2_t x ){ return x.x ; }
 }
