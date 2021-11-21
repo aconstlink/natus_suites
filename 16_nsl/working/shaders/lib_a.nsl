@@ -17,6 +17,12 @@ library lib_a
     float_t pi = 3.1231324323f ;
     float_t a = 10.34234 ;
 
+    float_t myfunk( float_t a, float_t x )
+    {
+        nsl.lib_x.test_ops() ;
+        return step( a, nsl.lib_x.my_x( x ) ) ;
+    }
+
     float_t myfunk( float_t a, float_t b, float_t x )
     {
         return pulse( a, b, nsl.lib_x.my_x( x ) ) ;
@@ -24,6 +30,7 @@ library lib_a
 
     float_t myfunk( vec3_t a, vec3_t b, vec3_t x )
     {
+        nsl.lib_x.test_ops() ;
         return pulse( a, b, x ) ;
     }
 }

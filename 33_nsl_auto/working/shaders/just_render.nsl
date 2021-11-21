@@ -48,7 +48,7 @@ config myshaders.just_render
             float_t light = dot( normalize( in.nrm ), normalize( vec3_t( 1.0, 1.0, 0.5) ) ) ;
             out.color2 = vec4_t( vec3_t(light,light,light),1.0 ) ;
 
-            //out.color2 = nsl.dep.my_color2( out.color2 ) ;
+            out.color2 = nsl.dep.my_color2( out.color2 ) ;
         }
     }
 }

@@ -15,6 +15,7 @@ config myconfig
 
         void main()
         {
+            vec3_t p = nsl.lib_a.myfunk( vec3_t( 1.0, 1.0, 1.0 ), in.pos, vec3_t( 0.5 ) ) ;
             out.pos = proj * view * vec4_t( in.pos, 1.0 ) ; 
         }
     }
