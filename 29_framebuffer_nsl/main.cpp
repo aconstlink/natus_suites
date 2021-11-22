@@ -288,8 +288,8 @@ namespace this_file
                                 vec3_t pos = in.pos ;
                                 pos.xyz = pos.xyz * 10.0 ;
                                 out.tx = in.tx ;
-                                out.pos = proj ' view ' world ' vec4_t( pos, 1.0 ) ;
-                                out.nrm = normalize( world ' vec4_t( in.nrm, 0.0 ) ).xyz ;
+                                out.pos = proj * view * world * vec4_t( pos, 1.0 ) ;
+                                out.nrm = normalize( world * vec4_t( in.nrm, 0.0 ) ).xyz ;
                             }
                         }
 
@@ -307,7 +307,7 @@ namespace this_file
                             void main()
                             {
                                 float_t light = dot( normalize( in.nrm ), normalize( vec3_t( 1.0, 1.0, 0.5) ) ) ;
-                                out.color0 = color * texture( tex, in.tx ) ;
+                                out.color0 = color ' texture( tex, in.tx ) ;
                                 out.color1 = vec4_t( in.nrm, 1.0 ) ;
                                 out.color2 = vec4_t( light, light, light , 1.0 ) ;
                             }

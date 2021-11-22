@@ -22,7 +22,7 @@ config myconfig
         {
             // build in function
             vec3_t pos = nsl.math.xyz( nsl.math.xyz( in.pos * vec3_t( nsl.mylib.inner.pi) ) ) ;
-            out.pos = proj ' view ' nsl.math.to_vec4( pos ) ;
+            out.pos = proj * view * nsl.math.to_vec4( pos ) ;
         }
     }
 
