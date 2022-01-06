@@ -140,7 +140,7 @@ namespace uniform_grid
             auto const pixels = pixels_per_cell * cells_per_region * regions_per_grid ;
             auto const half = pixels >> natus::math::vec2ui_t( 1 ) ;
 
-            return v.min( half ).max( half.negated() ) ;
+            return v.min( half ).max( natus::math::vec2i_t( half ).negated() ) ;
         }
 
         //**************************************************************************

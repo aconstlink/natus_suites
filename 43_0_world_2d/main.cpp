@@ -9,6 +9,11 @@
 #include <natus/device/global.h>
 #include <natus/gfx/camera/pinhole_camera.h>
 #include <natus/gfx/primitive/primitive_render_2d.h> 
+#include <natus/gfx/font/text_render_2d.h>
+
+#include <natus/format/global.h>
+#include <natus/format/nsl/nsl_module.h>
+#include <natus/format/future_items.hpp>
 
 #include <natus/graphics/variable/variable_set.hpp>
 #include <natus/profile/macros.h>
@@ -50,6 +55,8 @@ namespace this_file
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
 
+        natus::math::vec2f_t _cur_mouse ;
+
         bool_t _do_tool = true ;
         
         uniform_grid::grid_t _grid = uniform_grid::grid_t( 
@@ -60,15 +67,19 @@ namespace this_file
             ) 
         ) ;
 
+        natus::io::database_res_t _db ;
+
     private: //
 
-        
+        natus::gfx::text_render_2d_res_t _tr ;
         natus::gfx::primitive_render_2d_res_t _pr ;
 
         bool_t _draw_debug = false ;
 
     private:
 
+        natus::math::vec2f_t _window_dims = natus::math::vec2f_t( 1.0f ) ;
+        natus::math::vec2f_t _aspect_scale = natus::math::vec2f_t( 1.0f ) ;
         natus::math::vec2f_t _extend = natus::math::vec2f_t( 100, 100 ) ;
 
     public:
@@ -92,12 +103,15 @@ namespace this_file
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
             _graphics = natus::graphics::async_views_t( { view1.async() } ) ;
             #endif
+
+            _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) noexcept : app( ::std::move( rhv ) ) 
         {
             _camera_0 = std::move( rhv._camera_0 ) ;
             _graphics = std::move( rhv._graphics ) ;
+            _db = std::move( rhv._db ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -111,6 +125,8 @@ namespace this_file
 
             _camera_0.orthographic( float_t(wei.w), float_t(wei.h), 1.0f, 1000.0f ) ;
 
+            _window_dims = window ;
+            _aspect_scale = ratio ;
             _extend = target * (ratio.x() < ratio.y() ? ratio.xx() : ratio.yy()) ;
 
             return natus::application::result::ok ;
@@ -186,6 +202,43 @@ namespace this_file
                 _pr->init( "particle_prim_render", _graphics ) ;
             }
 
+            // import fonts and create text render
+            {
+                natus::property::property_sheet_res_t ps = natus::property::property_sheet_t() ;
+
+                {
+                    natus::font::code_points_t pts ;
+                    for( uint32_t i = 33; i <= 126; ++i ) pts.emplace_back( i ) ;
+                    for( uint32_t i : {uint32_t( 0x00003041 )} ) pts.emplace_back( i ) ;
+                    ps->set_value< natus::font::code_points_t >( "code_points", pts ) ;
+                }
+
+                {
+                    natus::ntd::vector< natus::io::location_t > locations = 
+                    {
+                        natus::io::location_t("fonts.mitimasu.ttf"),
+                        //natus::io::location_t("")
+                    } ;
+                    ps->set_value( "additional_locations", locations ) ;
+                }
+
+                {
+                    ps->set_value<size_t>( "atlas_width", 128 ) ;
+                    ps->set_value<size_t>( "atlas_height", 512 ) ;
+                    ps->set_value<size_t>( "point_size", 90 ) ;
+                }
+
+                natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
+                auto fitem = mod_reg->import_from( natus::io::location_t( "fonts.LCD_Solid.ttf" ), _db, ps ) ;
+                natus::format::glyph_atlas_item_res_t ii = fitem.get() ;
+                if( ii.is_valid() )
+                {
+                    _tr = natus::gfx::text_render_2d_res_t( natus::gfx::text_render_2d_t( "my_text_render", _graphics ) ) ;
+                    
+                    _tr->init( std::move( *ii->obj ) ) ;
+                }
+            }
+
             // init particles
             {
                
@@ -218,6 +271,12 @@ namespace this_file
                 _do_tool = !_do_tool ;
             }
 
+            {
+                natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
+                _cur_mouse = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
+                _cur_mouse = _cur_mouse * (_window_dims * natus::math::vec2f_t(0.5f) );
+            }
+
             return natus::application::result::ok ; 
         }
 
@@ -248,7 +307,9 @@ namespace this_file
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
         {
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
+            _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
 
+            // grid rendering
             {
                 auto const cpos = _camera_0.get_position().xy() ;
                 natus::math::vec2f_t p0 = cpos + _extend * natus::math::vec2f_t(-0.5f,-0.5f) ;
@@ -334,6 +395,29 @@ namespace this_file
                         _pr->draw_line( 0, p0, p1, natus::math::vec4f_t( 1.0f) ) ;
                     }
                 }
+
+                {
+                    auto const cpos = _camera_0.get_position().xy() ;
+
+                    auto const m = _cur_mouse + cpos ;
+                    auto const mouse_global = _grid.get_dims().calc_cell_ij_global( natus::math::vec2i_t( m ) ) ;
+                    auto const ij = mouse_global ;
+                    
+                    auto const start = _grid.get_dims().transform_to_center( _grid.get_dims().cells_to_pixels( mouse_global ) )  ;
+                    auto const cdims = _grid.get_dims().get_pixels_per_cell() ;
+
+                    natus::math::vec2f_t p0 = start ;
+                    natus::math::vec2f_t p1 = start + natus::math::vec2f_t(0.0f,cdims.y()) ;
+                    natus::math::vec2f_t p2 = start + cdims ;
+                    natus::math::vec2f_t p3 = start + natus::math::vec2f_t(cdims.x(),0.0f) ;
+
+                    _pr->draw_rect( 0, p0, p1,p2,p3,
+                        natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f ),
+                        natus::math::vec4f_t( 1.0f ) ) ;
+
+                    _tr->draw_text( 1, 0, 13, natus::math::vec2f_t(p0), natus::math::vec4f_t(1.0f), 
+                        "(i,j) : (" + std::to_string( ij.x() ) + ", " + std::to_string( ij.y() ) + ")" ) ;
+                }
             }
             
             // draw extend of aspect
@@ -362,10 +446,13 @@ namespace this_file
             // render all
             {
                 _pr->prepare_for_rendering() ;
+                _tr->prepare_for_rendering() ;
                 for( size_t i=0; i<100+1; ++i )
                 {
                     _pr->render( i ) ;
+                    _tr->render( i ) ;
                 }
+                
             }
             
             {
@@ -373,7 +460,7 @@ namespace this_file
                 {
                     a.pop( natus::graphics::backend::pop_type::render_state ) ;
                 } ) ;
-            }
+            }            
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
@@ -384,7 +471,7 @@ namespace this_file
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
 
-            ImGui::Begin( "View Control" ) ;
+            ImGui::Begin( "Control and Info" ) ;
             {
                 float_t data[2] = {_extend.x(), _extend.y() } ;
                 ImGui::SliderFloat2( "Extend", data, 0.0f, 1000.0f, "%f", 1.0f ) ;
@@ -400,6 +487,11 @@ namespace this_file
                 ImGui::SliderFloat2( "Cam Pos", data, -10000.0f, 10000.0f, "%f", 1.0f ) ;
                 _camera_0.translate_to( natus::math::vec3f_t( data[0], data[1], _camera_0.get_position().z() ) ) ;
                 
+            }
+
+            {
+                ImGui::Text( "mx: %f, my: %f", _cur_mouse.x(), _cur_mouse.y() ) ;
+                //_cur_mouse
             }
 
             ImGui::End() ;
