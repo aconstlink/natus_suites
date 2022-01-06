@@ -100,6 +100,26 @@ namespace uniform_grid
             return *this ;
         }
 
+        natus::math::vec2ui_t get_regions_per_grid( void_t ) const noexcept
+        {
+            return regions_per_grid ;
+        }
+
+        natus::math::vec2ui_t get_cells_per_region( void_t ) const noexcept
+        {
+            return cells_per_region ;
+        }
+
+        natus::math::vec2ui_t get_pixels_per_cell( void_t ) const noexcept
+        {
+            return pixels_per_cell ;
+        }
+
+        natus::math::vec2ui_t get_pixels_per_region( void_t ) const noexcept
+        {
+            return cells_per_region * pixels_per_cell ;
+        }
+
         natus::math::vec2ui_t get_cells_global( void_t ) const noexcept
         {
             return regions_per_grid * cells_per_region ;
@@ -111,6 +131,16 @@ namespace uniform_grid
             auto const y = ij.y() % cells_per_region.y() ;
 
             return ij_id( natus::math::vec2ui_t(x, y), x + y * cells_per_region.x() ) ;
+        }
+
+        //**************************************************************************
+        // the incoming vector will be min/max to the grids bounds and returned.
+        natus::math::vec2i_t keep_in_range( natus::math::vec2i_t v ) const noexcept
+        {
+            auto const pixels = pixels_per_cell * cells_per_region * regions_per_grid ;
+            auto const half = pixels >> natus::math::vec2ui_t( 1 ) ;
+
+            return v.min( half ).max( half.negated() ) ;
         }
 
         //**************************************************************************
@@ -127,10 +157,8 @@ namespace uniform_grid
         natus::math::vec2ui_t calc_region_ij( natus::math::vec2i_cref_t pos ) const noexcept
         {
             auto const cdims = pixels_per_cell * cells_per_region ;
-            auto const cdims_half = cdims / natus::math::vec2ui_t( 2 ) ;
-
             auto const dims = cdims * regions_per_grid ;
-            auto const dims_half = dims / natus::math::vec2ui_t( 2 ) ;
+            auto const dims_half = dims >> natus::math::vec2ui_t( 1 ) ;
 
             natus::math::vec2ui_t const pos_global = dims_half + pos ;
 
@@ -141,11 +169,9 @@ namespace uniform_grid
         /// @param pos in pixels from the center of the field
         natus::math::vec2ui_t calc_cell_ij_global( natus::math::vec2i_cref_t pos ) const noexcept
         {
-            auto const cdims = pixels_per_cell * cells_per_region ;
-            auto const cdims_half = cdims / natus::math::vec2ui_t( 2 ) ;
-
-            auto const dims = cdims * regions_per_grid ;
-            auto const dims_half = dims / natus::math::vec2ui_t( 2 ) ;
+            auto const all_cells = cells_per_region * regions_per_grid ;
+            auto const dims = pixels_per_cell * all_cells ;
+            auto const dims_half = dims >> natus::math::vec2ui_t( 1 ) ;
 
             natus::math::vec2ui_t const pos_global = dims_half + pos ;
 
@@ -201,6 +227,16 @@ namespace uniform_grid
             return v / pixels_per_cell ;
         }
 
+        natus::math::vec2ui_t cells_to_pixels( natus::math::vec2ui_cref_t cells ) const noexcept
+        {
+            return cells * pixels_per_cell ;
+        }
+
+        natus::math::vec2ui_t regions_to_pixels( natus::math::vec2ui_cref_t regions ) const noexcept
+        {
+            return regions * cells_per_region * pixels_per_cell ;
+        }
+
         /// stores the area of involved regions and cells
         /// the area is determined by the four corners
         struct regions_and_cells
@@ -238,8 +274,8 @@ namespace uniform_grid
             
             // cells
             {
-                auto const r = this_t::pixels_to_cells( radius ) ;
-                auto const ij = this_t::calc_cell_ij_global( pos ) ;
+                auto const r = this_t::pixels_to_cells( radius ) + natus::math::vec2ui_t( 1 ) ;
+                auto const ij = this_t::calc_cell_ij_global( this_t::keep_in_range( pos ) ) ;
                 auto const min = ij - natus::math::vec2ui_t( ij.min_ed( r ) ) ;
                 auto const max = (ij + natus::math::vec2ui_t( r )).min( this_t::get_cells_global() ) ;
 
@@ -250,11 +286,24 @@ namespace uniform_grid
             }
 
             // regions
+            // for the min region, the ij is rounded down
+            // for the max region, the ij is rounded up
+            // otherwise, integer division problems with the ij happen
+            // when doing a dif with the ij values.
             {
-                for( size_t i=0; i<4; ++i )
-                {
-                    od.regions[i] = od.cells[ i ] / cells_per_region ;
-                }
+                auto const m2 = od.cells[ 0 ].modd( cells_per_region ) ;
+                auto const min = od.cells[ 0 ] - od.cells[ 0 ].min_ed( cells_per_region ) + m2  ;
+
+                // need to round up the max value
+                auto const m1 = od.cells[ 2 ].modd( cells_per_region ) ;
+                auto const max = od.cells[ 2 ] + cells_per_region - m1 ; 
+                
+
+                od.regions[0] = min / cells_per_region ;
+                od.regions[1] = natus::math::vec2ui_t( min.x(), max.y() ) / cells_per_region ;
+                od.regions[2] = max / cells_per_region ;
+                od.regions[3] = natus::math::vec2ui_t( max.x(), min.y() ) / cells_per_region ;
+
             }
 
             return od ;
