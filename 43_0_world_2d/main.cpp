@@ -61,7 +61,7 @@ namespace this_file
         
         uniform_grid::grid_t _grid = uniform_grid::grid_t( 
             uniform_grid::dimensions_t( 
-                natus::math::vec2ui_t(10), // regions_per_grid
+                natus::math::vec2ui_t(100), // regions_per_grid
                 natus::math::vec2ui_t(16), // cells_per_region
                 natus::math::vec2ui_t(16)  // pixels_per_cell
             ) 
@@ -75,6 +75,17 @@ namespace this_file
         natus::gfx::primitive_render_2d_res_t _pr ;
 
         bool_t _draw_debug = false ;
+
+    private:
+
+        enum class draw_type
+        {
+            none, line, rect, circle
+        };
+
+        draw_type _draw_type = draw_type::none ;
+        natus::math::vec2ui_t _start_ij ;
+        natus::math::vec2ui_t _end_ij ;
 
     private:
 
@@ -277,6 +288,24 @@ namespace this_file
                 _cur_mouse = _cur_mouse * (_window_dims * natus::math::vec2f_t(0.5f) );
             }
 
+            {
+                natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
+
+                auto const cpos = _camera_0.get_position().xy() ;
+                auto const m = _cur_mouse + cpos ;
+                _end_ij = _grid.get_dims().calc_cell_ij_global( natus::math::vec2i_t( m ) ) ;
+
+                if( mouse.is_pressed( natus::device::layouts::three_mouse::button::left ) )
+                {
+                    _draw_type = draw_type::line ;
+                    _start_ij = _end_ij ;
+                }
+                else if( mouse.is_released( natus::device::layouts::three_mouse::button::left ) )
+                {
+                    _draw_type = draw_type::none ;
+                }
+            }
+
             return natus::application::result::ok ; 
         }
 
@@ -417,6 +446,57 @@ namespace this_file
 
                     _tr->draw_text( 1, 0, 13, natus::math::vec2f_t(p0), natus::math::vec4f_t(1.0f), 
                         "(i,j) : (" + std::to_string( ij.x() ) + ", " + std::to_string( ij.y() ) + ")" ) ;
+                }
+            }
+
+            // draw test primitives
+            {
+                if( _draw_type == draw_type::line )
+                {
+                    auto const a = natus::math::vec2i_t( _start_ij ) ;
+                    auto const b = natus::math::vec2i_t( _end_ij ) ;
+
+                    auto const dd = (a - b).abs() * natus::math::vec2i_t( 1, -1 ) ;
+                    auto const sd = a.less_than( b ).select( 
+                        natus::math::vec2i_t(1,1), natus::math::vec2i_t(-1,-1) ) ;
+
+                    int_t err = dd.dot( natus::math::vec2i_t( 1 ) ) ;
+                    auto x = a ;
+
+                    while( true )
+                    {
+                        // draw
+                        {
+                            auto const mouse_global = x ;
+                            auto const cdims = _grid.get_dims().get_pixels_per_cell() ;
+
+                            auto const start = _grid.get_dims().transform_to_center( _grid.get_dims().cells_to_pixels( mouse_global ) )  ;
+
+                            natus::math::vec2f_t p0 = start ;
+                            natus::math::vec2f_t p1 = start + natus::math::vec2f_t(0.0f,cdims.y()) ;
+                            natus::math::vec2f_t p2 = start + cdims ;
+                            natus::math::vec2f_t p3 = start + natus::math::vec2f_t(cdims.x(),0.0f) ;
+
+                            _pr->draw_rect( 1, p0, p1,p2,p3,
+                                natus::math::vec4f_t( 1.0f, 0.0f, 0.0f, 1.0f ),
+                                natus::math::vec4f_t( 1.0f ) ) ;
+                        }
+                        if( x.equal( _end_ij ).all() ) break ;
+
+                        int_t const e2 = err * 2 ;
+
+                        if( e2 >= dd.y() )
+                        {
+                            err += dd.y() ;
+                            x += natus::math::vec2i_t( sd.x(), 0 ) ;
+                        }
+
+                        if( e2 <= dd.x() )
+                        {
+                            err += dd.x() ;
+                            x += natus::math::vec2i_t( 0, sd.y() ) ;
+                        }
+                    }
                 }
             }
             
