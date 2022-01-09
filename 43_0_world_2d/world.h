@@ -291,24 +291,21 @@ namespace uniform_grid
             // otherwise, integer division problems with the ij happen
             // when doing a dif with the ij values.
             {
+                // need to round down the min value for non-fractional division
                 auto const m2 = od.cells[ 0 ].modd( cells_per_region ) ;
-                auto const min = od.cells[ 0 ] - od.cells[ 0 ].min_ed( cells_per_region ) + m2  ;
+                auto const min = od.cells[ 0 ] - od.cells[ 0 ].min_ed( cells_per_region ) + (cells_per_region-m2)  ;
 
-                // need to round up the max value
+                // need to round up the max value for non-fractional division
                 auto const m1 = od.cells[ 2 ].modd( cells_per_region ) ;
-                auto const max = od.cells[ 2 ] + cells_per_region - m1 ; 
-                
+                auto const max = od.cells[ 2 ] + cells_per_region - m1 ;
 
                 od.regions[0] = min / cells_per_region ;
                 od.regions[1] = natus::math::vec2ui_t( min.x(), max.y() ) / cells_per_region ;
                 od.regions[2] = max / cells_per_region ;
                 od.regions[3] = natus::math::vec2ui_t( max.x(), min.y() ) / cells_per_region ;
-
             }
-
             return od ;
         }
-
     };
     natus_typedef( dimensions ) ;
 }

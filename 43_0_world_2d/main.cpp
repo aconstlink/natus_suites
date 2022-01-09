@@ -129,7 +129,7 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            natus::math::vec2f_t const target = natus::math::vec2f_t(800, 600) ; 
+            natus::math::vec2f_t const target = natus::math::vec2f_t(600, 600) ; 
             natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
 
             natus::math::vec2f_t const ratio = window / target ;
@@ -347,8 +347,8 @@ namespace this_file
                 natus::math::vec2f_t p3 = cpos + _extend * natus::math::vec2f_t(+0.5f,-0.5f) ;
 
                 uniform_grid::dimensions::regions_and_cells_t rac = 
-                    _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos.ceiled() ), 
-                        natus::math::vec2ui_t( _extend.ceiled() ) >> natus::math::vec2ui_t( 1 ) ) ;
+                    _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos.floored() ), 
+                        natus::math::vec2ui_t( _extend.floored() ) >> natus::math::vec2ui_t( 1 ) ) ;
 
                 // draw cells
                 {
@@ -389,7 +389,6 @@ namespace this_file
 
                 // draw regions
                 {
-                    auto const num_cells = rac.cell_dif() ;
                     auto const num_region = rac.region_dif() ;
                     auto const pixels_min = _grid.get_dims().regions_to_pixels( rac.region_min() ) ;
                     auto const view_pixels = _grid.get_dims().regions_to_pixels( num_region ) ;
@@ -425,6 +424,7 @@ namespace this_file
                     }
                 }
 
+                // draw current cells for mouse pos in grid
                 {
                     auto const cpos = _camera_0.get_position().xy() ;
 
@@ -450,8 +450,8 @@ namespace this_file
             }
 
             // draw test primitives
-            // Bresenham from Wikipedia at the bottom of the page
             {
+                // Bresenham line algo from Wikipedia at the bottom of the page
                 if( _draw_type == draw_type::line )
                 {
                     auto const a = natus::math::vec2i_t( _start_ij ) ;
@@ -560,7 +560,7 @@ namespace this_file
 
             {
                 float_t data[2] = {_camera_0.get_position().x(), _camera_0.get_position().y() } ;
-                ImGui::SliderFloat2( "Cam Pos", data, -10000.0f, 10000.0f, "%f", 1.0f ) ;
+                ImGui::SliderFloat2( "Cam Pos", data, -100.0f, 100.0f, "%f", 1.0f ) ;
                 _camera_0.translate_to( natus::math::vec3f_t( data[0], data[1], _camera_0.get_position().z() ) ) ;
                 
             }
@@ -568,6 +568,9 @@ namespace this_file
             {
                 ImGui::Text( "mx: %f, my: %f", _cur_mouse.x(), _cur_mouse.y() ) ;
                 //_cur_mouse
+            }
+
+            {
             }
 
             ImGui::End() ;
