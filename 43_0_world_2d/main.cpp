@@ -450,6 +450,7 @@ namespace this_file
             }
 
             // draw test primitives
+            // Bresenham from Wikipedia at the bottom of the page
             {
                 if( _draw_type == draw_type::line )
                 {
@@ -485,17 +486,12 @@ namespace this_file
 
                         int_t const e2 = err * 2 ;
 
-                        if( e2 >= dd.y() )
-                        {
-                            err += dd.y() ;
-                            x += natus::math::vec2i_t( sd.x(), 0 ) ;
-                        }
+                        auto const selector = 
+                            natus::math::vec2i_t( e2, dd.x() ).greater_equal_than( 
+                            natus::math::vec2i_t( dd.y(), e2 ) ) ;
 
-                        if( e2 <= dd.x() )
-                        {
-                            err += dd.x() ;
-                            x += natus::math::vec2i_t( 0, sd.y() ) ;
-                        }
+                        x += selector.select( sd, natus::math::vec2i_t( 0 ) ) ;
+                        err += selector.select( dd.yx(), natus::math::vec2i_t(0) ).dot( natus::math::vec2i_t(1) ) ;
                     }
                 }
             }
