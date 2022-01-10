@@ -61,9 +61,9 @@ namespace this_file
         
         uniform_grid::grid_t _grid = uniform_grid::grid_t( 
             uniform_grid::dimensions_t( 
-                natus::math::vec2ui_t(100), // regions_per_grid
+                natus::math::vec2ui_t(1000), // regions_per_grid
                 natus::math::vec2ui_t(16), // cells_per_region
-                natus::math::vec2ui_t(16)  // pixels_per_cell
+                natus::math::vec2ui_t(8)  // pixels_per_cell
             ) 
         ) ;
 
@@ -92,6 +92,12 @@ namespace this_file
         natus::math::vec2f_t _window_dims = natus::math::vec2f_t( 1.0f ) ;
         natus::math::vec2f_t _aspect_scale = natus::math::vec2f_t( 1.0f ) ;
         natus::math::vec2f_t _extend = natus::math::vec2f_t( 100, 100 ) ;
+        natus::math::vec2f_t _preload_extend = natus::math::vec2f_t( 100, 100 ) ;
+
+        void_t update_preload_extenxd( void_t ) noexcept
+        {
+            _preload_extend = _extend + natus::math::vec2f_t( _grid.get_dims().get_pixels_per_region() * 2 ) ;
+        }
 
     public:
 
@@ -139,6 +145,7 @@ namespace this_file
             _window_dims = window ;
             _aspect_scale = ratio ;
             _extend = target * (ratio.x() < ratio.y() ? ratio.xx() : ratio.yy()) ;
+            this_t::update_preload_extenxd() ;
 
             return natus::application::result::ok ;
         }
@@ -333,93 +340,108 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        void_t draw_cells( uniform_grid::dimensions::regions_and_cells_cref_t rac ) noexcept
+        {
+            auto const num_cells = rac.cell_dif() ;
+            auto const pixels_min = _grid.get_dims().cells_to_pixels( rac.cell_min() ) ;
+            auto const view_pixels = _grid.get_dims().cells_to_pixels( num_cells ) ;
+
+            // x lines / vertical lines
+            {
+                auto const start = _grid.get_dims().transform_to_center( pixels_min ) ;
+                natus::math::vec2f_t p0( start ) ;
+                natus::math::vec2f_t p1( start + natus::math::vec2i_t( 0, view_pixels.y() ) ) ;
+
+                for( uint_t i = 0 ; i < num_cells.x() +1 ; ++i )
+                {
+                    _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
+                    p0 = p0 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_cell().x()), 0.0f ) ;
+                    p1 = p1 + natus::math::vec2f_t( float_t(_grid.get_dims().get_pixels_per_cell().x()), 0.0f ) ;
+                }
+            }
+
+            // y lines / horizontal lines
+            {
+                auto const start = _grid.get_dims().transform_to_center( pixels_min ) ;
+                natus::math::vec2f_t p0( start ) ;
+                natus::math::vec2f_t p1( start + natus::math::vec2i_t( view_pixels.x(), 0  ) ) ;
+                        
+                for( uint_t i = 0 ; i < num_cells.y() + 1 ; ++i )
+                {
+                    _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
+                    p0 = p0 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_cell().y() ) ) ;
+                    p1 = p1 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_cell().y() ) ) ;
+                }
+            }
+        }
+
+        void_t draw_regions( uniform_grid::dimensions::regions_and_cells_cref_t rac, 
+            size_t l, natus::math::vec4f_cref_t border_color = natus::math::vec4f_t(1.0f) ) noexcept
+        {
+            auto const num_region = rac.region_dif() ;
+            auto const pixels_min = _grid.get_dims().regions_to_pixels( rac.region_min() ) ;
+            auto const view_pixels = _grid.get_dims().regions_to_pixels( num_region ) ;
+
+            // x lines / vertical lines
+            {
+                auto const start = _grid.get_dims().transform_to_center( pixels_min ) ;
+                natus::math::vec2f_t p0( start ) ;
+                natus::math::vec2f_t p1( start + natus::math::vec2i_t( 0, view_pixels.y() ) ) ;
+
+                for( uint_t i = 0 ; i < num_region.x() + 1; ++i )
+                {
+                    _pr->draw_line( l, p0, p1, border_color ) ;
+                    p0 = p0 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_region().x() ), 0.0f ) ;
+                    p1 = p1 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_region().x() ), 0.0f ) ;
+                }
+            }
+
+            // y lines / horizontal lines
+            {
+                auto const start = _grid.get_dims().transform_to_center( pixels_min ) ;
+                natus::math::vec2f_t p0( start ) ;
+                natus::math::vec2f_t p1( start + natus::math::vec2i_t( view_pixels.x(), 0  ) ) ;
+                        
+                for( uint_t i = 0 ; i < num_region.y() + 1; ++i )
+                {
+                    _pr->draw_line( l, p0, p1, border_color ) ;
+                    p0 = p0 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_region().y() ) ) ;
+                    p1 = p1 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_region().y() ) ) ;
+                }
+            }
+        }
+
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
         {
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
 
             // grid rendering
+            
             {
                 auto const cpos = _camera_0.get_position().xy() ;
-                natus::math::vec2f_t p0 = cpos + _extend * natus::math::vec2f_t(-0.5f,-0.5f) ;
-                natus::math::vec2f_t p1 = cpos + _extend * natus::math::vec2f_t(-0.5f,+0.5f) ;
-                natus::math::vec2f_t p2 = cpos + _extend * natus::math::vec2f_t(+0.5f,+0.5f) ;
-                natus::math::vec2f_t p3 = cpos + _extend * natus::math::vec2f_t(+0.5f,-0.5f) ;
 
-                uniform_grid::dimensions::regions_and_cells_t rac = 
+                // draw grid for extend
+                {
+                    uniform_grid::dimensions::regions_and_cells_t rac = 
                     _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos ), 
                         natus::math::vec2ui_t( _extend.floored() ) >> natus::math::vec2ui_t( 1 ) ) ;
 
-                // draw cells
-                {
-                    auto const num_cells = rac.cell_dif() ;
-                    auto const pixels_min = _grid.get_dims().cells_to_pixels( rac.cell_min() ) ;
-                    auto const view_pixels = _grid.get_dims().cells_to_pixels( num_cells ) ;
+                    // draw cells
+                    this_t::draw_cells( rac ) ;
 
-                    // x lines / vertical lines
-                    {
-                        auto const start = _grid.get_dims().transform_to_center( pixels_min ) ;
-                        natus::math::vec2f_t p0( start ) ;
-                        natus::math::vec2f_t p1( start + natus::math::vec2i_t( 0, view_pixels.y() ) ) ;
-
-                        for( uint_t i = 0 ; i < num_cells.x() +1 ; ++i )
-                        {
-                            _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
-                            p0 = p0 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_cell().x()), 0.0f ) ;
-                            p1 = p1 + natus::math::vec2f_t( float_t(_grid.get_dims().get_pixels_per_cell().x()), 0.0f ) ;
-                        }
-                    }
-
-                    // y lines / horizontal lines
-                    {
-                        auto const start = _grid.get_dims().transform_to_center( pixels_min ) ;
-                        natus::math::vec2f_t p0( start ) ;
-                        natus::math::vec2f_t p1( start + natus::math::vec2i_t( view_pixels.x(), 0  ) ) ;
-                        
-                        for( uint_t i = 0 ; i < num_cells.y() ; ++i )
-                        {
-                            _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
-                            p0 = p0 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_cell().y() ) ) ;
-                            p1 = p1 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_cell().y() ) ) ;
-                        }
-                        _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
-                    }
+                    // draw regions
+                    this_t::draw_regions( rac, 3 ) ;
                 }
 
-                // draw regions
+                // draw regions for preload extend
                 {
-                    auto const num_region = rac.region_dif() ;
-                    auto const pixels_min = _grid.get_dims().regions_to_pixels( rac.region_min() ) ;
-                    auto const view_pixels = _grid.get_dims().regions_to_pixels( num_region ) ;
+                    uniform_grid::dimensions::regions_and_cells_t rac = 
+                    _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos ), 
+                        natus::math::vec2ui_t( _preload_extend.floored() ) >> natus::math::vec2ui_t( 1 ) ) ;
 
-                    // x lines / vertical lines
-                    {
-                        auto const start = _grid.get_dims().transform_to_center( pixels_min ) ;
-                        natus::math::vec2f_t p0( start ) ;
-                        natus::math::vec2f_t p1( start + natus::math::vec2i_t( 0, view_pixels.y() ) ) ;
-
-                        for( uint_t i = 0 ; i < num_region.x() + 1; ++i )
-                        {
-                            _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(1.0f) ) ;
-                            p0 = p0 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_region().x() ), 0.0f ) ;
-                            p1 = p1 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_region().x() ), 0.0f ) ;
-                        }
-                    }
-
-                    // y lines / horizontal lines
-                    {
-                        auto const start = _grid.get_dims().transform_to_center( pixels_min ) ;
-                        natus::math::vec2f_t p0( start ) ;
-                        natus::math::vec2f_t p1( start + natus::math::vec2i_t( view_pixels.x(), 0  ) ) ;
-                        
-                        for( uint_t i = 0 ; i < num_region.y() ; ++i )
-                        {
-                            _pr->draw_line( 0, p0, p1, natus::math::vec4f_t( 1.0f) ) ;
-                            p0 = p0 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_region().y() ) ) ;
-                            p1 = p1 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_region().y() ) ) ;
-                        }
-                        _pr->draw_line( 0, p0, p1, natus::math::vec4f_t( 1.0f) ) ;
-                    }
+                    // draw regions
+                    this_t::draw_regions( rac, 2, natus::math::vec4f_t( 0.0f, 0.0f, 0.5f, 1.0f) ) ;
                 }
 
                 // draw current cells for mouse pos in grid
@@ -510,6 +532,22 @@ namespace this_file
                 _pr->draw_rect( 50, p0, p1, p2, p3, color0, color1 ) ;
             }
 
+            // draw preload extend 
+            if( _draw_debug )
+            {
+                auto const cpos = _camera_0.get_position().xy() ;
+
+                natus::math::vec2f_t p0 = cpos + _preload_extend * natus::math::vec2f_t(-0.5f,-0.5f) ;
+                natus::math::vec2f_t p1 = cpos + _preload_extend * natus::math::vec2f_t(-0.5f,+0.5f) ;
+                natus::math::vec2f_t p2 = cpos + _preload_extend * natus::math::vec2f_t(+0.5f,+0.5f) ;
+                natus::math::vec2f_t p3 = cpos + _preload_extend * natus::math::vec2f_t(+0.5f,-0.5f) ;
+
+                natus::math::vec4f_t color0( 1.0f, 1.0f, 1.0f, 0.0f ) ;
+                natus::math::vec4f_t color1( 0.0f, 0.0f, 1.0f, 1.0f ) ;
+
+                _pr->draw_rect( 50, p0, p1, p2, p3, color0, color1 ) ;
+            }
+
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
@@ -550,6 +588,7 @@ namespace this_file
                 float_t data[2] = {_extend.x(), _extend.y() } ;
                 ImGui::SliderFloat2( "Extend", data, 0.0f, 1000.0f, "%f", 1.0f ) ;
                 _extend.x( data[0] ) ; _extend.y( data[1] ) ;
+                this_t::update_preload_extenxd() ;
             }
 
             {
@@ -558,7 +597,7 @@ namespace this_file
 
             {
                 float_t data[2] = {_camera_0.get_position().x(), _camera_0.get_position().y() } ;
-                ImGui::SliderFloat2( "Cam Pos", data, -100.0f, 100.0f, "%f", 1.0f ) ;
+                ImGui::SliderFloat2( "Cam Pos", data, -1000.0f, 1000.0f, "%f", 1.0f ) ;
                 _camera_0.translate_to( natus::math::vec3f_t( data[0], data[1], _camera_0.get_position().z() ) ) ;
                 
             }
