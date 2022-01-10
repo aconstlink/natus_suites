@@ -347,7 +347,7 @@ namespace this_file
                 natus::math::vec2f_t p3 = cpos + _extend * natus::math::vec2f_t(+0.5f,-0.5f) ;
 
                 uniform_grid::dimensions::regions_and_cells_t rac = 
-                    _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos.floored() ), 
+                    _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos ), 
                         natus::math::vec2ui_t( _extend.floored() ) >> natus::math::vec2ui_t( 1 ) ) ;
 
                 // draw cells
@@ -362,13 +362,12 @@ namespace this_file
                         natus::math::vec2f_t p0( start ) ;
                         natus::math::vec2f_t p1( start + natus::math::vec2i_t( 0, view_pixels.y() ) ) ;
 
-                        for( uint_t i = 0 ; i < num_cells.x() ; ++i )
+                        for( uint_t i = 0 ; i < num_cells.x() +1 ; ++i )
                         {
                             _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
                             p0 = p0 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_cell().x()), 0.0f ) ;
                             p1 = p1 + natus::math::vec2f_t( float_t(_grid.get_dims().get_pixels_per_cell().x()), 0.0f ) ;
                         }
-                        _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
                     }
 
                     // y lines / horizontal lines
@@ -399,13 +398,12 @@ namespace this_file
                         natus::math::vec2f_t p0( start ) ;
                         natus::math::vec2f_t p1( start + natus::math::vec2i_t( 0, view_pixels.y() ) ) ;
 
-                        for( uint_t i = 0 ; i < num_region.x() ; ++i )
+                        for( uint_t i = 0 ; i < num_region.x() + 1; ++i )
                         {
                             _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(1.0f) ) ;
                             p0 = p0 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_region().x() ), 0.0f ) ;
                             p1 = p1 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_region().x() ), 0.0f ) ;
                         }
-                        _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(1.0f) ) ;
                     }
 
                     // y lines / horizontal lines
