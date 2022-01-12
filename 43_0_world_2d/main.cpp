@@ -89,10 +89,13 @@ namespace this_file
 
     private:
 
+        natus::math::vec2f_t _target = natus::math::vec2f_t( 800, 600.0f ) ;
         natus::math::vec2f_t _window_dims = natus::math::vec2f_t( 1.0f ) ;
         natus::math::vec2f_t _aspect_scale = natus::math::vec2f_t( 1.0f ) ;
         natus::math::vec2f_t _extend = natus::math::vec2f_t( 100, 100 ) ;
         natus::math::vec2f_t _preload_extend = natus::math::vec2f_t( 100, 100 ) ;
+
+        bool_t _use_window_for_camera = true ;
 
         void_t update_preload_extenxd( void_t ) noexcept
         {
@@ -135,20 +138,27 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            natus::math::vec2f_t const target = natus::math::vec2f_t(600, 600) ; 
+            natus::math::vec2f_t const target = _target ; 
             natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
 
             natus::math::vec2f_t const ratio = window / target ;
 
-            _camera_0.orthographic( float_t(wei.w), float_t(wei.h), 1.0f, 1000.0f ) ;
-
             _window_dims = window ;
             _aspect_scale = ratio ;
-            _extend = target * (ratio.x() < ratio.y() ? ratio.xx() : ratio.yy()) ;
+
+            this_t::update_extend() ;
             this_t::update_preload_extenxd() ;
 
             return natus::application::result::ok ;
         }
+
+        // some side-effects: updates internal variables.
+        void_t update_extend( void_t ) noexcept
+        {
+            auto const ratio = _aspect_scale ;
+            _extend = _target * (ratio.x() < ratio.y() ? ratio.xx() : ratio.yy()) ;
+        }
+        
 
     private:
 
@@ -257,11 +267,6 @@ namespace this_file
                 }
             }
 
-            // init particles
-            {
-               
-            }
-
             {
                 uniform_grid::ij_id_t id = _grid.get_dims().calc_cell_ij_id( natus::math::vec2ui_t( 10, 10 ) ) ;
                 int const bp = 0 ;
@@ -269,8 +274,6 @@ namespace this_file
             
             return natus::application::result::ok ; 
         }
-
-        float value = 0.0f ;
 
         virtual natus::application::result on_device( device_data_in_t ) noexcept 
         { 
@@ -319,24 +322,12 @@ namespace this_file
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ud ) noexcept 
         { 
             NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
-
-            //std::this_thread::sleep_for( std::chrono::milliseconds(5) ) ;
-
             return natus::application::result::ok ; 
         }
 
         virtual natus::application::result on_physics( natus::application::app_t::physics_data_in_t ud ) noexcept
         {
             NATUS_PROFILING_COUNTER_HERE( "Physics Clock" ) ;
-
-            static float_t f = 0.0f ;
-            f += 0.0001f ;
-            if( f > 2.0f * natus::math::constants<float_t>::pi() )
-                f = 0.0f ;
-
-            //_camera_0.translate_by( natus::math::vec3f_t( 10.0f * std::sin( f ), 0.0f, 0.0f ) ) ;
-            
-
             return natus::application::result::ok ; 
         }
 
@@ -413,11 +404,18 @@ namespace this_file
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
         {
+            if( !_use_window_for_camera )
+            {
+                this_t::update_extend() ;
+                _camera_0.orthographic( _extend.x(), _extend.y(), 1.0f, 1000.0f ) ;
+            }
+            else
+                _camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
 
             // grid rendering
-            
             {
                 auto const cpos = _camera_0.get_position().xy() ;
 
@@ -425,7 +423,7 @@ namespace this_file
                 {
                     uniform_grid::dimensions::regions_and_cells_t rac = 
                     _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos ), 
-                        natus::math::vec2ui_t( _extend.floored() ) >> natus::math::vec2ui_t( 1 ) ) ;
+                        natus::math::vec2ui_t( _extend ) >> natus::math::vec2ui_t( 1 ) ) ;
 
                     // draw cells
                     this_t::draw_cells( rac ) ;
@@ -438,7 +436,7 @@ namespace this_file
                 {
                     uniform_grid::dimensions::regions_and_cells_t rac = 
                     _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos ), 
-                        natus::math::vec2ui_t( _preload_extend.floored() ) >> natus::math::vec2ui_t( 1 ) ) ;
+                        natus::math::vec2ui_t( _preload_extend ) >> natus::math::vec2ui_t( 1 ) ) ;
 
                     // draw regions
                     this_t::draw_regions( rac, 2, natus::math::vec4f_t( 0.0f, 0.0f, 0.5f, 1.0f) ) ;
@@ -585,10 +583,14 @@ namespace this_file
 
             ImGui::Begin( "Control and Info" ) ;
             {
-                float_t data[2] = {_extend.x(), _extend.y() } ;
-                ImGui::SliderFloat2( "Extend", data, 0.0f, 1000.0f, "%f", 1.0f ) ;
-                _extend.x( data[0] ) ; _extend.y( data[1] ) ;
+                int_t data[2] = { int_t( _extend.x() ), int_t( _extend.y() ) } ;
+                ImGui::SliderInt2( "Extend", data, 0.0f, 1000, "%i", 1.0f ) ;
+                _extend.x( float_t( data[0] ) ) ; _extend.y( float_t( data[1] ) ) ;
                 this_t::update_preload_extenxd() ;
+            }
+
+            {
+                ImGui::Checkbox( "Windows Dims for Camera", &_use_window_for_camera ) ;
             }
 
             {
