@@ -63,8 +63,8 @@ namespace this_file
 
         bool_t _do_tool = true ;
         
-        uniform_grid::grid_t _grid = uniform_grid::grid_t( 
-            uniform_grid::dimensions_t( 
+        world::grid_t _grid = world::grid_t( 
+            world::dimensions_t( 
                 natus::math::vec2ui_t(1000), // regions_per_grid
                 natus::math::vec2ui_t(16), // cells_per_region
                 natus::math::vec2ui_t(8)  // pixels_per_cell
@@ -272,7 +272,7 @@ namespace this_file
             }
 
             {
-                uniform_grid::ij_id_t id = _grid.get_dims().calc_cell_ij_id( natus::math::vec2ui_t( 10, 10 ) ) ;
+                world::ij_id_t id = _grid.get_dims().calc_cell_ij_id( natus::math::vec2ui_t( 10, 10 ) ) ;
                 int const bp = 0 ;
             }
             
@@ -302,6 +302,7 @@ namespace this_file
                 _cur_mouse = _cur_mouse * (_window_dims * natus::math::vec2f_t(0.5f) );
             }
 
+            // used for drawing algorithms in cells
             {
                 natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
 
@@ -320,6 +321,23 @@ namespace this_file
                 }
             }
 
+            // move camera with mouse
+            {
+                natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
+                static auto m_rel_old = natus::math::vec2f_t() ;
+                auto const m_rel = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
+
+                auto const cpos = _camera_0.get_position().xy() ;
+                auto const m = cpos + (m_rel-m_rel_old).negated() * 100.0f ;
+
+                if( mouse.is_pressing( natus::device::layouts::three_mouse::button::left ) )
+                {
+                    _camera_0.translate_to( natus::math::vec3f_t( m.x(), m.y(), _camera_0.get_position().z() ) ) ;
+                }
+
+                m_rel_old = m_rel ;
+            }
+
             return natus::application::result::ok ; 
         }
 
@@ -335,7 +353,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        void_t draw_cells( uniform_grid::dimensions::regions_and_cells_cref_t rac ) noexcept
+        void_t draw_cells( world::dimensions::regions_and_cells_cref_t rac ) noexcept
         {
             auto const num_cells = rac.cell_dif() ;
             auto const pixels_min = _grid.get_dims().cells_to_pixels( rac.cell_min() ) ;
@@ -370,7 +388,7 @@ namespace this_file
             }
         }
 
-        void_t draw_regions( uniform_grid::dimensions::regions_and_cells_cref_t rac, 
+        void_t draw_regions( world::dimensions::regions_and_cells_cref_t rac, 
             size_t l, natus::math::vec4f_cref_t border_color = natus::math::vec4f_t(1.0f) ) noexcept
         {
             auto const num_region = rac.region_dif() ;
@@ -425,7 +443,7 @@ namespace this_file
 
                 // draw grid for extend
                 {
-                    uniform_grid::dimensions::regions_and_cells_t rac = 
+                    world::dimensions::regions_and_cells_t rac = 
                     _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos ), 
                         natus::math::vec2ui_t( _extend ) >> natus::math::vec2ui_t( 1 ) ) ;
 
@@ -438,7 +456,7 @@ namespace this_file
 
                 // draw regions for preload extend
                 {
-                    uniform_grid::dimensions::regions_and_cells_t rac = 
+                    world::dimensions::regions_and_cells_t rac = 
                     _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos ), 
                         natus::math::vec2ui_t( _preload_extend ) >> natus::math::vec2ui_t( 1 ) ) ;
 
@@ -470,7 +488,9 @@ namespace this_file
                         "(i,j) : (" + std::to_string( ij.x() ) + ", " + std::to_string( ij.y() ) + ")" ) ;
                 }
             }
-
+            
+            // disable for now. Using mouse for camera movement.
+            #if 0
             // draw test primitives
             {
                 // Bresenham line algo from Wikipedia at the bottom of the page
@@ -517,6 +537,7 @@ namespace this_file
                     }
                 }
             }
+            #endif
             
             // draw extend of aspect
             if( _draw_debug )
@@ -611,9 +632,6 @@ namespace this_file
             {
                 ImGui::Text( "mx: %f, my: %f", _cur_mouse.x(), _cur_mouse.y() ) ;
                 //_cur_mouse
-            }
-
-            {
             }
 
             ImGui::End() ;

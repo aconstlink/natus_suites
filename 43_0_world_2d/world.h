@@ -7,7 +7,7 @@
 #include <natus/ntd/vector.hpp>
 #include <natus/core/types.hpp>
 
-namespace uniform_grid
+namespace world
 {
     using namespace natus::core::types ;
     class ij_id
@@ -54,7 +54,7 @@ namespace uniform_grid
     natus_typedef( ij_id ) ;
 }
 
-namespace uniform_grid
+namespace world
 {
     using namespace natus::core::types ;
 
@@ -304,6 +304,7 @@ namespace uniform_grid
                 od.regions[2] = max / cells_per_region ;
                 od.regions[3] = natus::math::vec2ui_t( max.x(), min.y() ) / cells_per_region ;
             }
+
             return od ;
         }
     };
@@ -312,7 +313,7 @@ namespace uniform_grid
 
 
 
-namespace uniform_grid
+namespace world
 {
     using namespace natus::core::types ;
 
@@ -341,15 +342,15 @@ namespace uniform_grid
         natus_this_typedefs( grid ) ;
 
         natus::ntd::vector< data< region > > _regions ;
-        uniform_grid::dimensions_t _dims ;
+        world::dimensions_t _dims ;
 
     public:
 
         grid( void_t ) noexcept {}
-        grid( uniform_grid::dimensions_cref_t dims ) noexcept : _dims( dims ){}
+        grid( world::dimensions_cref_t dims ) noexcept : _dims( dims ){}
         ~grid( void_t ) noexcept {}
 
-        uniform_grid::dimensions_cref_t get_dims( void_t ) const noexcept
+        world::dimensions_cref_t get_dims( void_t ) const noexcept
         {
             return _dims ;
         }
