@@ -61,7 +61,8 @@ set( subdirs
     "40_sprite_sheet"
     "41_particle_system"
     "42_particle_system"
-    "43_0_world_2d"
+    "43_inv_space_2d"
+    "44_0_world_2d"
     "xx_tool_sprite"
     )
 
