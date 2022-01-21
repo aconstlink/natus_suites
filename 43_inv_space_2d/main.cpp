@@ -355,7 +355,8 @@ namespace this_file
 
             // vertical lines
             {
-                natus::math::vec2f_t const start = (c0 - cc.origin()).get_vector() ;
+                auto const off = world::coord_2d_t::granularity_half() ;
+                natus::math::vec2f_t const start = (c0 - cc.origin()).get_vector() - off ;
                 natus::math::vec2f_t const adv = world::coord_2d_t::granularity() ;
 
                 natus::math::vec2f_t p0( start ) ;
@@ -371,7 +372,8 @@ namespace this_file
 
             // y lines / horizontal lines
             {
-                natus::math::vec2f_t const start = (c0 - cc.origin()).get_vector() ;
+                auto const off = world::coord_2d_t::granularity_half() ;
+                natus::math::vec2f_t const start = (c0 - cc.origin()).get_vector() - off ;
                 natus::math::vec2f_t const adv = world::coord_2d_t::granularity() ;
 
                 natus::math::vec2f_t p0( start ) ;
@@ -398,6 +400,18 @@ namespace this_file
         }
 
         //***********************************************************************************
+        void_t draw_camera( void_t ) noexcept
+        {
+            world::coord_2d_t const cc = _ccamera_0 ;
+            world::coord_2d_t const c0 = _ccamera_0 ;
+            natus::math::vec2f_t const p0 = (c0 - cc.origin()).get_vector() ;
+            natus::math::vec2f_t const p1 = (c0.origin() - cc.origin()).get_vector() ;
+
+            _pr->draw_circle( 1, 2, p0, 2.0f, natus::math::vec4f_t(0.0f,1.0f,0.0f,1.0f), natus::math::vec4f_t(0.0f,1.0f,0.0f,1.0f) ) ;
+            _pr->draw_line( 1, p0, p1, natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f) ) ;
+        }
+
+        //***********************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
         {
             _camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
@@ -409,6 +423,7 @@ namespace this_file
             {
                 this_t::draw_sections() ;
                 this_t::draw_mouse() ;
+                this_t::draw_camera() ;
             }
             
             // draw extend of aspect

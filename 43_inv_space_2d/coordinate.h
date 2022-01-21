@@ -16,7 +16,7 @@ namespace world
     private:
 
         // Section id
-        natus::math::vec2i_t _ij = natus::math::vec2i_t( uint_t(-1) >> 1 ) / this_t::granularity() ;
+        natus::math::vec2i_t _ij ;
 
         // relative position to sector origin
         // could also be a direction, depending on the operation done
@@ -30,8 +30,9 @@ namespace world
         // 2. there can not be any positions greater than the granularity
         this_ref_t evaluate( void_t ) noexcept
         {
-            natus::math::vec2i_t const ij_min = _vec.less_than( natus::math::vec2i_t(0) ).select( natus::math::vec2i_t(-1), natus::math::vec2i_t(0) ) ;
-            natus::math::vec2i_t const ij_rel = (natus::math::vec2i_t( _vec ) / this_t::granularity()) + ij_min ;
+            natus::math::vec2f_t const tmp = _vec + natus::math::vec2f_t( this_t::granularity_half() ) ;
+            natus::math::vec2i_t const ij_min = tmp.less_than( natus::math::vec2i_t(0) ).select( natus::math::vec2i_t(-1), natus::math::vec2i_t(0) ) ;
+            natus::math::vec2i_t const ij_rel = (natus::math::vec2i_t( tmp ) / this_t::granularity()) + ij_min ;
             
             _ij = _ij + ij_rel ;
             _vec = (ij_rel * this_t::granularity()).negate() + _vec ;
@@ -106,6 +107,11 @@ namespace world
         static natus::math::vec2i_t granularity( void_t ) noexcept
         {
             return natus::math::vec2i_t( G ) ;
+        }
+
+        static natus::math::vec2i_t granularity_half( void_t ) noexcept
+        {
+            return natus::math::vec2i_t( G ) >> natus::math::vec2i_t( 1 ) ;
         }
 
     public:
