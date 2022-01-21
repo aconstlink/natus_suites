@@ -91,6 +91,11 @@ namespace world
             return this_t( ij ) ;
         }
 
+        static this_t zero( void_t ) noexcept
+        {
+            return this_t( natus::math::vec2ui_t(0) ) ;
+        }
+
         this_t origin( void_t ) const noexcept
         {
             return this_t( natus::math::vec2ui_t( _ij ) ) ;

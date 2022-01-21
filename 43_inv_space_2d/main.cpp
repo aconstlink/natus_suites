@@ -63,7 +63,7 @@ namespace this_file
         natus::device::ascii_device_res_t _dev_ascii ;
 
         natus::math::vec2f_t _cur_mouse ;
-        world::coord_2d_t _ccur_mouse ;
+        world::coord_2d_t _ccur_mouse = world::coord_2d_t::zero() ;
 
         bool_t _do_tool = true ;
         
@@ -322,18 +322,21 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        //***********************************************************************************
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ud ) noexcept 
         { 
             NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
             return natus::application::result::ok ; 
         }
 
+        //***********************************************************************************
         virtual natus::application::result on_physics( natus::application::app_t::physics_data_in_t ud ) noexcept
         {
             NATUS_PROFILING_COUNTER_HERE( "Physics Clock" ) ;
             return natus::application::result::ok ; 
         }
 
+        //***********************************************************************************
         void_t draw_sections( void_t ) noexcept
         {
             natus::math::vec2f_t const eh = natus::math::vec2ui_t( _extend ) >> natus::math::vec2ui_t( 1 ) ;
@@ -383,6 +386,18 @@ namespace this_file
             }
         }
 
+        //***********************************************************************************
+        void_t draw_mouse( void_t ) noexcept
+        {
+            world::coord_2d_t const cc = _ccamera_0 ;
+            world::coord_2d_t const c0 = _ccur_mouse ;
+            natus::math::vec2f_t const p0 = (c0.origin() - cc.origin()).get_vector() ;
+            natus::math::vec2f_t const p1 = (c0 - cc.origin()).get_vector() ;
+
+            _pr->draw_line( 1, p0, p1, natus::math::vec4f_t(0.0f,1.0f,0.0f,1.0f) ) ;
+        }
+
+        //***********************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
         {
             _camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
@@ -390,22 +405,10 @@ namespace this_file
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
-
-            // grid rendering
+            
             {
-                auto const cpos = _camera_0.get_position().xy() ;
-
                 this_t::draw_sections() ;
-
-                // draw grid for extend
-                {
-                    
-                }
-
-                // draw regions for preload extend
-                {
-                   
-                }
+                this_t::draw_mouse() ;
             }
             
             // draw extend of aspect
@@ -455,6 +458,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        //***********************************************************************************
         virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
@@ -487,14 +491,19 @@ namespace this_file
 
             if( ImGui::Begin( "Mouse Info" ) )
             {
+                // mouse coords
                 {
-                    uint_t data[2] = {_ccur_mouse.get_ij().x(), _ccur_mouse.get_ij().y() } ;
-                    ImGui::Text( "i: %d, j: %d", data[0], data[1] ) ;
-                }
+                    auto const tmp = _ccamera_0 + _ccur_mouse ;
+                    {
+                    
+                        uint_t data[2] = {tmp.get_ij().x(), tmp.get_ij().y() } ;
+                        ImGui::Text( "i: %d, j: %d", data[0], data[1] ) ;
+                    }
 
-                {
-                    float_t data[2] = {_ccur_mouse.get_vector().x(), _ccur_mouse.get_vector().y() } ;
-                    ImGui::Text( "x: %f, y: %f", data[0], data[1] ) ;
+                    {
+                        float_t data[2] = {tmp.get_vector().x(), tmp.get_vector().y() } ;
+                        ImGui::Text( "x: %f, y: %f", data[0], data[1] ) ;
+                    }
                 }
 
                 ImGui::End() ;
@@ -504,6 +513,7 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
+        //***********************************************************************************
         virtual natus::application::result on_shutdown( void_t ) noexcept 
         { return natus::application::result::ok ; }
     };
