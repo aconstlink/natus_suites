@@ -1,4 +1,6 @@
 
+#include "coordinate.h"
+
 #include <natus/application/global.h>
 #include <natus/application/app.h>
 #include <natus/tool/imgui/custom_widgets.h>
@@ -55,11 +57,13 @@ namespace this_file
         natus::graphics::state_object_res_t _root_render_states ;
                 
         natus::gfx::pinhole_camera_t _camera_0 ;
+        world::coord_2d_t _ccamera_0 ;
 
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
 
         natus::math::vec2f_t _cur_mouse ;
+        world::coord_2d_t _ccur_mouse ;
 
         bool_t _do_tool = true ;
         
@@ -278,8 +282,10 @@ namespace this_file
 
             {
                 natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
-                _cur_mouse = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
-                _cur_mouse = _cur_mouse * (_window_dims * natus::math::vec2f_t(0.5f) );
+                auto const rel = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
+                _cur_mouse = rel * (_window_dims * natus::math::vec2f_t(0.5f) );
+
+                _ccur_mouse = rel * (_window_dims * natus::math::vec2f_t(0.5f) ) ;
             }
 
             // used for drawing algorithms in cells
@@ -304,12 +310,10 @@ namespace this_file
                 static auto m_rel_old = natus::math::vec2f_t() ;
                 auto const m_rel = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
 
-                auto const cpos = _camera_0.get_position().xy() ;
-                auto const m = cpos + (m_rel-m_rel_old).negated() * 100.0f ;
-
                 if( mouse.is_pressing( natus::device::layouts::three_mouse::button::left ) )
                 {
-                    _camera_0.translate_to( natus::math::vec3f_t( m.x(), m.y(), _camera_0.get_position().z() ) ) ;
+                    _ccamera_0 = _ccamera_0 + (m_rel-m_rel_old).negated() * 100.0f ;
+                    _camera_0.translate_to( natus::math::vec3f_t( _ccamera_0.get_vector().x(), _ccamera_0.get_vector().y(), _camera_0.get_position().z() ) ) ;
                 }
 
                 m_rel_old = m_rel ;
@@ -330,19 +334,59 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        
+        void_t draw_sections( void_t ) noexcept
+        {
+            natus::math::vec2f_t const eh = natus::math::vec2ui_t( _extend ) >> natus::math::vec2ui_t( 1 ) ;
+
+            auto const p0 = _ccamera_0 + natus::math::vec2f_t( -eh.x(), -eh.y() ) ;
+            auto const p1 = _ccamera_0 + natus::math::vec2f_t( -eh.x(), +eh.y() ) ;
+            auto const p2 = _ccamera_0 + natus::math::vec2f_t( +eh.x(), +eh.y() ) ;
+            auto const p3 = _ccamera_0 + natus::math::vec2f_t( +eh.x(), -eh.y() ) ;
+
+            world::coord_2d_t const cc = _ccamera_0 ;
+            world::coord_2d_t const c0 = p0.origin() ;
+            world::coord_2d_t const c1 = p2.origin() + natus::math::vec2ui_t(1) ;
+
+            auto const rel = c1 - c0 ;
+            auto const num_sectors = rel.get_ij()  ;
+
+            // vertical lines
+            {
+                natus::math::vec2f_t const start = (c0 - cc.origin()).get_vector() ;
+                natus::math::vec2f_t const adv = world::coord_2d_t::granularity() ;
+
+                natus::math::vec2f_t p0( start ) ;
+                natus::math::vec2f_t p1( start + natus::math::vec2f_t( 0.0f, (c1 - c0).get_vector().y() ) ) ;
+
+                for( uint_t i = 0 ; i < num_sectors.x() + 1; ++i )
+                {
+                    _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f) ) ;
+                    p0 = p0 + natus::math::vec2f_t( adv.x(), 0.0f ) ;
+                    p1 = p1 + natus::math::vec2f_t( adv.x(), 0.0f ) ;
+                }
+            }
+
+            // y lines / horizontal lines
+            {
+                natus::math::vec2f_t const start = (c0 - cc.origin()).get_vector() ;
+                natus::math::vec2f_t const adv = world::coord_2d_t::granularity() ;
+
+                natus::math::vec2f_t p0( start ) ;
+                natus::math::vec2f_t p1( start + natus::math::vec2f_t( (c1 - c0).get_vector().x(), 0.0f ) ) ;
+                        
+                for( uint_t i = 0 ; i < num_sectors.y() + 1; ++i )
+                {
+                    _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f) ) ;
+                    p0 = p0 + natus::math::vec2f_t( 0.0f, adv.y() ) ;
+                    p1 = p1 + natus::math::vec2f_t( 0.0f, adv.y() ) ;
+                }
+            }
+        }
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
         {
-            #if 0
-            if( !_use_window_for_camera )
-            {
-                this_t::update_extend() ;
-                _camera_0.orthographic( _extend.x(), _extend.y(), 1.0f, 1000.0f ) ;
-            }
-            else
-                _camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
-            #endif
+            _camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+            
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
@@ -350,6 +394,8 @@ namespace this_file
             // grid rendering
             {
                 auto const cpos = _camera_0.get_position().xy() ;
+
+                this_t::draw_sections() ;
 
                 // draw grid for extend
                 {
@@ -413,35 +459,47 @@ namespace this_file
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
 
-            ImGui::Begin( "Control and Info" ) ;
+            if( ImGui::Begin( "Control and Info" ) )
             {
-                int_t data[2] = { int_t( _extend.x() ), int_t( _extend.y() ) } ;
-                ImGui::SliderInt2( "Extend", data, 0.0f, 1000, "%i", 1.0f ) ;
-                _extend.x( float_t( data[0] ) ) ; _extend.y( float_t( data[1] ) ) ;
+                {
+                    int_t data[2] = { int_t( _extend.x() ), int_t( _extend.y() ) } ;
+                    ImGui::SliderInt2( "Extend", data, 0.0f, 1000, "%i", 1.0f ) ;
+                    _extend.x( float_t( data[0] ) ) ; _extend.y( float_t( data[1] ) ) ;
                 
-            }
+                }
 
-            {
+                {
                 
-            }
+                }
 
+                {
+                    ImGui::Checkbox( "Draw Debug", &_draw_debug ) ;
+                }
+
+                {
+                    ImGui::Text( "mx: %f, my: %f", _cur_mouse.x(), _cur_mouse.y() ) ;
+                    //_cur_mouse
+                }
+
+                ImGui::End() ;
+            }
+            
+
+            if( ImGui::Begin( "Mouse Info" ) )
             {
-                ImGui::Checkbox( "Draw Debug", &_draw_debug ) ;
-            }
+                {
+                    uint_t data[2] = {_ccur_mouse.get_ij().x(), _ccur_mouse.get_ij().y() } ;
+                    ImGui::Text( "i: %d, j: %d", data[0], data[1] ) ;
+                }
 
-            {
-                float_t data[2] = {_camera_0.get_position().x(), _camera_0.get_position().y() } ;
-                ImGui::SliderFloat2( "Cam Pos", data, -1000.0f, 1000.0f, "%f", 1.0f ) ;
-                _camera_0.translate_to( natus::math::vec3f_t( data[0], data[1], _camera_0.get_position().z() ) ) ;
-                
-            }
+                {
+                    float_t data[2] = {_ccur_mouse.get_vector().x(), _ccur_mouse.get_vector().y() } ;
+                    ImGui::Text( "x: %f, y: %f", data[0], data[1] ) ;
+                }
 
-            {
-                ImGui::Text( "mx: %f, my: %f", _cur_mouse.x(), _cur_mouse.y() ) ;
-                //_cur_mouse
+                ImGui::End() ;
             }
-
-            ImGui::End() ;
+            
 
             return natus::application::result::ok ;
         }

@@ -4,7 +4,7 @@ set( sources
     
     
     main.cpp
-
+    coordinate.h
     
     )
 
