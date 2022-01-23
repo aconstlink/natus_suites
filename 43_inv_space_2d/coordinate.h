@@ -15,7 +15,7 @@ namespace world
 
     private:
 
-        // Section id
+        // sector id
         natus::math::vec2i_t _ij ;
 
         // relative position to sector origin
@@ -26,10 +26,9 @@ namespace world
         
         // evaluate internal parameters to be
         // correct sector coordinate
-        // 1. there can not be any negative positions(except for relative coords)
-        // 2. there can not be any positions greater than the granularity
         this_ref_t evaluate( void_t ) noexcept
         {
+            // transform _vec to bottom left of sector for easier sector calculation in the next two statements
             natus::math::vec2f_t const tmp = _vec + natus::math::vec2f_t( this_t::granularity_half() ) ;
             natus::math::vec2i_t const ij_min = tmp.less_than( natus::math::vec2i_t(0) ).select( natus::math::vec2i_t(-1), natus::math::vec2i_t(0) ) ;
             natus::math::vec2i_t const ij_rel = (natus::math::vec2i_t( tmp ) / this_t::granularity()) + ij_min ;
@@ -52,7 +51,7 @@ namespace world
         ~coordinate( void_t ) noexcept {}
 
 
-    private:
+    public:
 
         coordinate( natus::math::vec2ui_cref_t ij ) noexcept
         {
@@ -62,24 +61,26 @@ namespace world
         coordinate( natus::math::vec2f_cref_t pos ) noexcept
         {
             _vec = pos ;
+            this_t::evaluate() ;
         }
 
         coordinate( natus::math::vec2ui_cref_t ij, natus::math::vec2f_cref_t pos ) noexcept
         {
             _ij = ij ;
             _vec = pos ;
+            this_t::evaluate() ;
         }
 
     public:
 
         static this_t from_position( natus::math::vec2f_cref_t pos ) noexcept
         {
-            return this_t( pos ).evaluate() ;
+            return this_t( pos );//.evaluate() ;
         }
 
         static this_t from_sector( natus::math::vec2ui_cref_t ij ) noexcept
         {
-            return this_t( ij ).evaluate() ;
+            return this_t( ij );//.evaluate() ;
         }
 
         static this_t from_direction( natus::math::vec2f_cref_t pos ) noexcept
@@ -136,7 +137,7 @@ namespace world
         
         this_t operator + ( natus::math::vec2f_cref_t f ) const noexcept
         {
-            return this_t( _ij, _vec + f ).evaluate() ;
+            return this_t( _ij, _vec + f );//.evaluate() ;
         }
 
         this_t operator - ( natus::math::vec2f_cref_t f ) const noexcept
@@ -146,19 +147,24 @@ namespace world
 
         this_t operator + ( natus::math::vec2ui_cref_t ij ) const noexcept
         {
-            return this_t( _ij + ij, _vec ).evaluate() ;
+            return this_t( _ij + ij, _vec );//.evaluate() ;
         }
 
         this_t operator + ( this_cref_t c ) const noexcept
         {
-            return this_t( _ij + c._ij, _vec + c._vec ).evaluate() ;
+            return this_t( _ij + c._ij, _vec + c._vec );//.evaluate() ;
+        }
+
+        this_ref_t operator += ( this_cref_t c ) noexcept
+        {
+            _ij += c._ij ;
+            _vec += c._vec ;
+            return this_t::evaluate() ;
         }
 
         this_t operator - ( this_cref_t c ) const noexcept
         {
-            auto const ij_dif = _ij - c._ij ;
-            auto const v = _vec + natus::math::vec2f_t( ij_dif * this_t::granularity() ) ;
-            return this_t( ij_dif, v - c._vec ) ;
+            return this_t( _ij - c._ij, _vec - c._vec ) ;
         }
 
     public:
@@ -168,10 +174,17 @@ namespace world
             return _ij ;
         }
 
+        /// return the local vector ( the vector within the sector )
         natus::math::vec2f_t get_vector( void_t ) const noexcept
         {
             return _vec ;
         }
+
+        /// convert coordinate to ordinary euclidean vector
+        natus::math::vec2f_t euclidean( void_t ) const noexcept
+        {
+            return natus::math::vec2f_t( _ij * this_t::granularity() + _vec ) ;
+        }
     };
-    natus_typedefs( coordinate<100>, coord_2d ) ;
+    natus_typedefs( coordinate<200>, coord_2d ) ;
 }

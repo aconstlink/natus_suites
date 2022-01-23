@@ -63,7 +63,8 @@ namespace this_file
         natus::device::ascii_device_res_t _dev_ascii ;
 
         natus::math::vec2f_t _cur_mouse ;
-        world::coord_2d_t _ccur_mouse = world::coord_2d_t::zero() ;
+        world::coord_2d_t _ccur_mouse ;
+        world::coord_2d_t _ccur_mouse_global ;
 
         bool_t _do_tool = true ;
         
@@ -285,7 +286,11 @@ namespace this_file
                 auto const rel = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
                 _cur_mouse = rel * (_window_dims * natus::math::vec2f_t(0.5f) );
 
-                _ccur_mouse = rel * (_window_dims * natus::math::vec2f_t(0.5f) ) ;
+                {
+                    world::coord_2d_t a = rel * (_window_dims * natus::math::vec2f_t(0.5f) ) ;
+                    _ccur_mouse_global = a + _ccamera_0 ;
+                    _ccur_mouse = a ;
+                }
             }
 
             // used for drawing algorithms in cells
@@ -356,11 +361,11 @@ namespace this_file
             // vertical lines
             {
                 auto const off = world::coord_2d_t::granularity_half() ;
-                natus::math::vec2f_t const start = (c0 - cc.origin()).get_vector() - off ;
+                natus::math::vec2f_t const start = (c0 - cc.origin()).euclidean() - off ;
                 natus::math::vec2f_t const adv = world::coord_2d_t::granularity() ;
 
                 natus::math::vec2f_t p0( start ) ;
-                natus::math::vec2f_t p1( start + natus::math::vec2f_t( 0.0f, (c1 - c0).get_vector().y() ) ) ;
+                natus::math::vec2f_t p1( start + natus::math::vec2f_t( 0.0f, rel.euclidean().y() ) ) ;
 
                 for( uint_t i = 0 ; i < num_sectors.x() + 1; ++i )
                 {
@@ -373,11 +378,11 @@ namespace this_file
             // y lines / horizontal lines
             {
                 auto const off = world::coord_2d_t::granularity_half() ;
-                natus::math::vec2f_t const start = (c0 - cc.origin()).get_vector() - off ;
+                natus::math::vec2f_t const start = (c0 - cc.origin()).euclidean() - off ;
                 natus::math::vec2f_t const adv = world::coord_2d_t::granularity() ;
 
                 natus::math::vec2f_t p0( start ) ;
-                natus::math::vec2f_t p1( start + natus::math::vec2f_t( (c1 - c0).get_vector().x(), 0.0f ) ) ;
+                natus::math::vec2f_t p1( start + natus::math::vec2f_t( rel.euclidean().x(), 0.0f ) ) ;
                         
                 for( uint_t i = 0 ; i < num_sectors.y() + 1; ++i )
                 {
@@ -392,9 +397,10 @@ namespace this_file
         void_t draw_mouse( void_t ) noexcept
         {
             world::coord_2d_t const cc = _ccamera_0 ;
-            world::coord_2d_t const c0 = _ccur_mouse ;
-            natus::math::vec2f_t const p0 = (c0.origin() - cc.origin()).get_vector() ;
-            natus::math::vec2f_t const p1 = (c0 - cc.origin()).get_vector() ;
+            world::coord_2d_t const c0 = _ccur_mouse_global ;
+            world::coord_2d_t const c1 = _ccur_mouse ;
+            natus::math::vec2f_t const p0 = (c0.origin() - cc.origin()).euclidean() ;
+            natus::math::vec2f_t const p1 = (c1 + cc - cc.origin()).euclidean() ;
 
             _pr->draw_line( 1, p0, p1, natus::math::vec4f_t(0.0f,1.0f,0.0f,1.0f) ) ;
         }
@@ -404,8 +410,8 @@ namespace this_file
         {
             world::coord_2d_t const cc = _ccamera_0 ;
             world::coord_2d_t const c0 = _ccamera_0 ;
-            natus::math::vec2f_t const p0 = (c0 - cc.origin()).get_vector() ;
-            natus::math::vec2f_t const p1 = (c0.origin() - cc.origin()).get_vector() ;
+            natus::math::vec2f_t const p0 = (c0 - cc.origin()).euclidean() ;
+            natus::math::vec2f_t const p1 = (c0.origin() - cc.origin()).euclidean() ;
 
             _pr->draw_circle( 1, 2, p0, 2.0f, natus::math::vec4f_t(0.0f,1.0f,0.0f,1.0f), natus::math::vec4f_t(0.0f,1.0f,0.0f,1.0f) ) ;
             _pr->draw_line( 1, p0, p1, natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f) ) ;
@@ -508,7 +514,27 @@ namespace this_file
             {
                 // mouse coords
                 {
-                    auto const tmp = _ccamera_0 + _ccur_mouse ;
+                    auto const tmp = _ccur_mouse_global ;
+                    {
+                    
+                        uint_t data[2] = {tmp.get_ij().x(), tmp.get_ij().y() } ;
+                        ImGui::Text( "i: %d, j: %d", data[0], data[1] ) ;
+                    }
+
+                    {
+                        float_t data[2] = {tmp.get_vector().x(), tmp.get_vector().y() } ;
+                        ImGui::Text( "x: %f, y: %f", data[0], data[1] ) ;
+                    }
+                }
+
+                ImGui::End() ;
+            }
+
+            if( ImGui::Begin( "Camera Info" ) )
+            {
+                // mouse coords
+                {
+                    auto const tmp = _ccamera_0 ;
                     {
                     
                         uint_t data[2] = {tmp.get_ij().x(), tmp.get_ij().y() } ;
