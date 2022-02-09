@@ -63,6 +63,8 @@ set( subdirs
     "42_particle_system"
     "43_inv_space_2d"
     "44_0_world_2d"
+    "44_1_tile_render"
+    "44_2_world_2d"
     "xx_tool_sprite"
     )
 

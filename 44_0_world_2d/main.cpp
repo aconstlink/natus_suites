@@ -37,9 +37,8 @@
 #include <thread>
 
 // this is about preparing the uniform grid methods for games
-// it draw the grid with the camera extend and an extened extend 
-// which represents the preload extend for later on preparing the
-// region textures.
+// it draws the grid with the camera extend and an extened extend 
+// which represents the preload region for texture generation/fetching 
 namespace this_file
 {
     using namespace natus::core::types ;
