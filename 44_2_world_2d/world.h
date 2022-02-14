@@ -271,6 +271,13 @@ namespace world
             {
                 return regions[ 0 ] ;
             }
+
+            bool_t is_region_inside( natus::math::vec2ui_cref_t r ) const noexcept
+            {
+                return 
+                    r.greater_equal_than( region_min() ).all() && 
+                    r.less_equal_than( region_min() + region_dif() ).all() ;
+            }
         };
         natus_typedef( regions_and_cells ) ;
 

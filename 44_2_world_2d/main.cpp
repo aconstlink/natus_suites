@@ -402,12 +402,37 @@ namespace this_file
             }
         }
 
+        void_t release_tiles( world::dimensions::regions_and_cells_cref_t rac, world::dimensions::regions_and_cells_cref_t rac_old ) noexcept
+        {
+            auto const num_region = rac_old.region_dif() ;
+
+            for( uint_t x = 0 ; x < num_region.x() ; ++x )
+            {
+                for( uint_t y = 0 ; y < num_region.y(); ++y )
+                {
+                    if( !rac.is_region_inside( rac_old.region_min() + natus::math::vec2ui_t( x, y ) ) )
+                    {
+                        world::ij_id_t const id = _grid.get_dims().calc_cell_ij_id( rac_old.region_min() + natus::math::vec2ui_t( x, y ) ) ;
+                        _tir->release_tile( id.get_id() ) ;
+                    }
+                }
+            }
+        }
+
         void_t fill_tiles( world::dimensions::regions_and_cells_cref_t rac ) noexcept
         {
-            world::ij_id_t id = _grid.get_dims().calc_cell_ij_id( rac.region_min() ) ;
-            auto t = _tir->acquire_tile( id.get_id() ) ;
-            t->resize(1) ;
-            t->draw( [&]( proto::tile_render_2d::tile::items_ref_t items ){} ) ;
+            auto const num_region = rac.region_dif() ;
+
+            for( uint_t x = 0 ; x < num_region.x() ; ++x )
+            {
+                for( uint_t y = 0 ; y < num_region.y(); ++y )
+                {
+                    world::ij_id_t const id = _grid.get_dims().calc_cell_ij_id( rac.region_min() + natus::math::vec2ui_t( x, y ) ) ;
+                    auto t = _tir->acquire_tile( id.get_id() ) ;
+                    t->resize(1) ;
+                    t->draw( [&]( proto::tile_render_2d::tile::items_ref_t items ){} ) ;
+                }
+            }
         }
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
@@ -482,7 +507,12 @@ namespace this_file
                     _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos ), 
                         natus::math::vec2ui_t( _extend ) >> natus::math::vec2ui_t( 1 ) ) ;
 
+                static world::dimensions::regions_and_cells_t rac_ = rac ;
+
+                this_t::release_tiles( rac, rac_ ) ;
                 this_t::fill_tiles( rac ) ;
+
+                rac_ = rac ;
             }
             
             // draw extend of aspect

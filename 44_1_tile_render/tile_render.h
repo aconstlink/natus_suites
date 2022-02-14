@@ -373,7 +373,7 @@ namespace proto
             } 
 
             {
-                _quad = natus::gfx::quad_t( name + "framebuffer_quad" ) ;
+                _quad = natus::gfx::quad_res_t( natus::gfx::quad_t( name + "framebuffer_quad" ) ) ;
                 _quad->init( _asyncs ) ;
                 _quad->set_texture( name + ".framebuffer.0" ) ;
             }

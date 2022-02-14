@@ -456,6 +456,7 @@ namespace proto
             size_t get_location( void_t ) const noexcept{ return _loc ; }
 
             bool_t has_changed( void_t ) const noexcept{ return _has_changed ; }
+            void_t set_change( bool_t const b ) noexcept { _has_changed = b ; }
         };
         natus_res_typedef( tile ) ;
 
@@ -509,20 +510,28 @@ namespace proto
             }
 
             (*iter)->set_id( id ) ;
+
             return *iter ;
+        }
+
+        void_t release_tile( size_t const id ) noexcept
+        {
+            this_t::release_tile( this_t::acquire_tile( id ) ) ;
         }
 
         // releases the tile and its cache
         void_t release_tile( tile_res_t t ) noexcept
         {
-            t->set_id( size_t( -1 ) ) ;
-
             // @todo: may not be required to be cleared
             if( t->get_location() < _tile_locations.size() )
             {
+                natus::concurrent::lock_guard_t lk( _tiles_mtx ) ;
                 _tile_locations[ t->get_location() ].used = false ;
             }
+
+            t->set_id( size_t( -1 ) ) ;
             t->set_location( size_t( -1 ) ) ;
+            t->set_change( false ) ;
         }
 
         // 
@@ -543,6 +552,7 @@ namespace proto
                         a.pop( natus::graphics::backend::pop_type::render_state ) ;
                         a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                     } ) ;
+                    t->set_change( false ) ;
                 }
             }
 
