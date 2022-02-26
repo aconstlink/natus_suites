@@ -80,6 +80,7 @@ namespace this_file
         bool_t _draw_debug = false ;
 
         proto::tile_render_2d_res_t _tir ;
+        natus::ntd::vector< world::ij_id_t > _used_tiles ;
 
     private:
 
@@ -202,7 +203,7 @@ namespace this_file
                     rss.polygon_s.do_change = true ;
                     rss.polygon_s.ss.do_activate = true ;
                     rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
-                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
+                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
 
                     rss.clear_s.do_change = true ;
@@ -412,8 +413,10 @@ namespace this_file
                 {
                     if( !rac.is_region_inside( rac_old.region_min() + natus::math::vec2ui_t( x, y ) ) )
                     {
-                        world::ij_id_t const id = _grid.get_dims().calc_cell_ij_id( rac_old.region_min() + natus::math::vec2ui_t( x, y ) ) ;
-                        _tir->release_tile( id.get_id() ) ;
+                        world::ij_id_t const id = _grid.get_dims().calc_region_ij_id( rac_old.region_min() + natus::math::vec2ui_t( x, y ) ) ;
+                        _tir->release_tile( 0, id.get_id() ) ;
+
+                        //natus::log::global_t::status("Release : " + std::to_string(id.get_id()) ) ;
                     }
                 }
             }
@@ -422,15 +425,30 @@ namespace this_file
         void_t fill_tiles( world::dimensions::regions_and_cells_cref_t rac ) noexcept
         {
             auto const num_region = rac.region_dif() ;
+            auto const pixels_min = _grid.get_dims().regions_to_pixels( rac.region_min() ) ;
+            auto const view_pixels = _grid.get_dims().regions_to_pixels( num_region ) ;
+
+            auto const start = _grid.get_dims().transform_to_center( pixels_min ) ;
 
             for( uint_t x = 0 ; x < num_region.x() ; ++x )
             {
                 for( uint_t y = 0 ; y < num_region.y(); ++y )
                 {
-                    world::ij_id_t const id = _grid.get_dims().calc_cell_ij_id( rac.region_min() + natus::math::vec2ui_t( x, y ) ) ;
-                    auto t = _tir->acquire_tile( id.get_id() ) ;
+                    world::ij_id_t const id = _grid.get_dims().calc_region_ij_id( rac.region_min() + natus::math::vec2ui_t( x, y ) ) ;
+                    auto t = _tir->acquire_tile( 0, id.get_id() ) ;
+                    
+                    
                     t->resize(1) ;
                     t->draw( [&]( proto::tile_render_2d::tile::items_ref_t items ){} ) ;
+                    
+                    natus::math::vec2f_t const pixels_per_regions( _grid.get_dims().get_pixels_per_region() ) ;
+
+                    natus::math::vec2f_t p0 = start + pixels_per_regions * natus::math::vec2f_t( float_t( x ), float_t( y ) ) +
+                        pixels_per_regions * natus::math::vec2f_t(0.5f) ;
+
+                    t->transform( p0, pixels_per_regions * natus::math::vec2f_t(0.5f) ) ;
+                    
+                    _used_tiles.emplace_back( id ) ;
                 }
             }
         }
@@ -447,6 +465,7 @@ namespace this_file
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
+            _tir->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
 
             // grid rendering
             {
@@ -512,6 +531,10 @@ namespace this_file
                 this_t::release_tiles( rac, rac_ ) ;
                 this_t::fill_tiles( rac ) ;
 
+                if( rac_.regions[0].x() != rac.regions[0].x() )
+                {
+                    int bp = 0 ;
+                }
                 rac_ = rac ;
             }
             

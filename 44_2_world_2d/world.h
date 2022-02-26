@@ -133,6 +133,14 @@ namespace world
             return ij_id( natus::math::vec2ui_t(x, y), x + y * cells_per_region.x() ) ;
         }
 
+        ij_id calc_region_ij_id( natus::math::vec2ui_cref_t ij ) const noexcept
+        {
+            auto const x = ij.x() % regions_per_grid.x() ;
+            auto const y = ij.y() % regions_per_grid.y() ;
+
+            return ij_id( natus::math::vec2ui_t(x, y), x + y * regions_per_grid.x() ) ;
+        }
+
         natus::math::vec2ui_t relative_to_absolute( natus::math::vec2i_cref_t v ) const noexcept
         {
             auto const dims = pixels_per_cell * cells_per_region * regions_per_grid ;
@@ -272,11 +280,16 @@ namespace world
                 return regions[ 0 ] ;
             }
 
+            natus::math::vec2ui_t region_max( void_t ) const
+            {
+                return regions[ 2 ] ;
+            }
+
             bool_t is_region_inside( natus::math::vec2ui_cref_t r ) const noexcept
             {
                 return 
                     r.greater_equal_than( region_min() ).all() && 
-                    r.less_equal_than( region_min() + region_dif() ).all() ;
+                    r.less_equal_than( region_max() ).all() ;
             }
         };
         natus_typedef( regions_and_cells ) ;

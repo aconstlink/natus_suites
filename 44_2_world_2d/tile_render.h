@@ -2,6 +2,7 @@
 
 #include <natus/gfx/sprite/sprite_render_2d.h>
 #include <natus/gfx/util/quad.h>
+#include <natus/concurrent/mrsw.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/vector/vector2.hpp>
 #include <natus/core/types.hpp>
@@ -22,6 +23,8 @@ namespace proto
 
     private:
 
+        natus::ntd::string_t _name ;
+
         natus::graphics::async_views_t _asyncs ;
 
         natus::graphics::geometry_object_res_t _gconfig ;
@@ -32,10 +35,11 @@ namespace proto
 
         natus::gfx::quad_res_t _quad ;
 
-        // framebuffers
-        // shader
-        // variable set
+        natus::math::mat4f_t _view ;
+        natus::math::mat4f_t _proj ;
 
+        // the meaning of location here is the location
+        // in the arrays.
         struct tile_location
         {
             natus_this_typedefs( tile_location ) ;
@@ -62,6 +66,9 @@ namespace proto
         natus::ntd::vector< tile_location_t > _tile_locations ;
         natus::ntd::vector< natus::graphics::framebuffer_object_res_t > _fbs ;
 
+        // the tile data stores 
+        // - where to render the tile into the framebuffer
+        // - where to sample from the framebuffer texture
         struct tile_data
         {
             // viewport in framebuffer
@@ -90,6 +97,8 @@ namespace proto
         // init renderer with region width and height
         void_t init( natus::ntd::string_cref_t name, size_t const region_w, size_t const region_h ) noexcept 
         {
+            _name = name ;
+
             size_t const w = region_w * _tile_dims.x() ;
             size_t const h = region_h * _tile_dims.y() ;
 
@@ -161,6 +170,7 @@ namespace proto
                     rss.view_s.do_change = true ;
                     rss.view_s.ss.do_activate = true ;
                     rss.view_s.ss.vp = _tile_datas[ i ].viewport ;
+
                     so.add_render_state_set( rss ) ;
                 }
 
@@ -242,7 +252,7 @@ namespace proto
                         
                             void main()
                             {    
-                                out_color = vec4(1.0, 0.0, 1.0, 1.0) ;
+                                out_color = vec4(var_tx, 0.0, 1.0) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::gl3, std::move( ss ) ) ;
@@ -269,15 +279,10 @@ namespace proto
                             precision mediump float ;
                             in vec2 var_tx ;
                             out vec4 out_color ;
-                            uniform sampler2D u_tex_0 ;
-                            uniform sampler2D u_tex_1 ;
                         
                             void main()
                             {   
-                                vec4 c0 = texture( u_tex_0, var_tx ) ;
-                                vec4 c1 = texture( u_tex_1, var_tx ) ;
-                                
-                                out_color = mix( c0, c1, step( 0.5, var_tx.x ) ) ;
+                                out_color = vec4(var_tx, 0.0, 1.0) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
@@ -304,13 +309,6 @@ namespace proto
                             } )" ) ).
 
                             set_pixel_shader( natus::graphics::shader_t( R"(
-                            // texture and sampler needs to be on the same slot.
-                            
-                            Texture2D u_tex_0 : register( t0 );
-                            SamplerState smp_u_tex_0 : register( s0 );
-
-                            Texture2D u_tex_1 : register( t1 );
-                            SamplerState smp_u_tex_1 : register( s1 );
                             
                             struct VS_OUTPUT
                             {
@@ -320,8 +318,7 @@ namespace proto
 
                             float4 PS( VS_OUTPUT input ) : SV_Target
                             {
-                                return lerp( u_tex_0.Sample( smp_u_tex_0, input.tx ),
-                                   u_tex_1.Sample( smp_u_tex_1, input.tx ), 0.5f ) ;
+                                return float4( input.tx, 0.0f, 1.0f ) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
@@ -373,10 +370,18 @@ namespace proto
             } 
 
             {
+                size_t const num_tiles = _tile_dims.x() * _tile_dims.y() ;
+
                 _quad = natus::gfx::quad_res_t ( natus::gfx::quad_t( name + ".framebuffer_quad" ) ) ;
-                _quad->init( _asyncs ) ;
+                _quad->init( _asyncs, num_tiles ) ;
                 _quad->set_texture( name + ".framebuffer.0.0" ) ;
             }
+        }
+
+        void_t set_view_proj( natus::math::mat4f_cref_t view, natus::math::mat4f_cref_t proj ) noexcept 
+        {
+            _view = view ;
+            _proj = proj ;
         }
 
         class tile
@@ -388,6 +393,8 @@ namespace proto
             natus::concurrent::mutex_t _mtx ;
             size_t _id = size_t( -1 ) ;
             size_t _loc = size_t( -1 ) ;
+            natus::math::vec2f_t _pos = natus::math::vec2f_t( 0.5f ) ;
+            natus::math::vec2f_t _scale = natus::math::vec2f_t( 0.5f ) ;
 
         public:
 
@@ -407,12 +414,23 @@ namespace proto
         public:
 
             tile( void_t ) noexcept {}
+            tile( size_t const id ) noexcept : _id( id ) {}
             tile( this_cref_t rhv ) noexcept = delete ;
-            tile( this_rref_t rhv ) noexcept {}
+            tile( this_rref_t rhv ) noexcept 
+            {
+                *this = std::move( rhv ) ;
+            }
             ~tile( void_t ) noexcept {}
 
-            this_ref_t operator = ( this_rref_t ) noexcept
+            this_ref_t operator = ( this_rref_t rhv ) noexcept
             {
+                _id = rhv._id ;
+                rhv._id = size_t( -1 ) ;
+                _loc = rhv._loc ;
+                rhv._loc = size_t( -1 ) ;
+                _pos = rhv._pos ;
+                _scale = rhv._scale ;
+
                 return *this ;
             }
             
@@ -437,6 +455,16 @@ namespace proto
             size_t get_id( void_t ) const noexcept{ return _id ; }
             size_t id( void_t ) const noexcept{ return _id ; }
 
+            // transform the whole tile
+            void_t transform( natus::math::vec2f_cref_t pos, natus::math::vec2f_cref_t scale ) noexcept
+            {
+                _pos = pos ;
+                _scale = scale ;
+            }
+
+            natus::math::vec2f_cref_t get_pos( void_t ) const noexcept{ return _pos ; }
+            natus::math::vec2f_cref_t get_scale( void_t ) const noexcept{ return _scale ; }
+
         private: // tile_render_2d interface
 
             friend class tile_render_2d ;
@@ -460,39 +488,52 @@ namespace proto
         };
         natus_res_typedef( tile ) ;
 
-        natus::concurrent::mutex_t _tiles_mtx ;
-        natus::ntd::vector< tile_res_t > _tiles ;
+        mutable natus::concurrent::mrsw_t _tiles_mtx ;
+        natus::ntd::map< size_t, natus::ntd::vector< tile_res_t > > _tiles ;
+        // number of tiles in use
+        size_t _num_tiles = 0 ;
 
         // acquire a tile for drawing materials into it
         // creates a new tile or returs an existing one
         // @param id cache id by user
-        tile_res_t acquire_tile( size_t const id ) noexcept
+        tile_res_t acquire_tile( size_t const layer, size_t const id ) noexcept
         {
-            natus::concurrent::lock_guard_t lk( _tiles_mtx ) ;
+            natus::concurrent::mrsw_t::writer_lock_t lk( _tiles_mtx ) ;
 
-            // 1. search for required tile by id
-            auto iter = std::find_if( _tiles.begin(), _tiles.end(), [&]( tile_res_t t )
+            // 1. find layer
+            auto miter = _tiles.find( layer ) ;
+            if( miter == _tiles.end() )
+            {
+                _tiles[ layer ].emplace_back( tile_res_t( tile( id ) ) ) ;
+                miter = _tiles.find( layer ) ;
+                ++_num_tiles ;
+            }
+
+            auto & tiles = miter->second ;
+            
+            // 2. search for required tile by id
+            auto iter = std::find_if( tiles.begin(), tiles.end(), [&]( tile_res_t t )
             {
                 return t->id() == id ;
             } ) ;
 
-            // 2. if not found, search for an empty one
-            if( iter == _tiles.end() )
+            // 3. if not found, search for an empty one
+            if( iter == tiles.end() )
             {
-                iter = std::find_if( _tiles.begin(), _tiles.end(), [&]( tile_res_t t )
+                iter = std::find_if( tiles.begin(), tiles.end(), [&]( tile_res_t t )
                 {
                     return t->id() == size_t( -1 ) ;
                 } ) ;
             }
 
-            // 3. if still not found, create a new on
-            if( iter == _tiles.end() )
+            // 4. if still not found, create a new on
+            if( iter == tiles.end() )
             {
-                iter = _tiles.insert( _tiles.end(), tile_res_t( tile() ) ) ;
+                iter = tiles.insert( tiles.end(), tile_res_t( tile( id ) ) ) ;
+                ++_num_tiles ;
             }
 
-            // at this point, iter is requested, released or new tile
-            // check if the tile has a valid tile_location into a framebuffer
+            // 5. check if the tile has a valid tile_location into a framebuffer
             if( (*iter)->get_location() == size_t(-1) )
             {
                 auto iter2 = std::find_if( _tile_locations.begin(), _tile_locations.end(), [&]( tile_location_ref_t tl )
@@ -514,9 +555,9 @@ namespace proto
             return *iter ;
         }
 
-        void_t release_tile( size_t const id ) noexcept
+        void_t release_tile( size_t const l, size_t const id ) noexcept
         {
-            this_t::release_tile( this_t::acquire_tile( id ) ) ;
+            this_t::release_tile( this_t::acquire_tile( l, id ) ) ;
         }
 
         // releases the tile and its cache
@@ -525,7 +566,7 @@ namespace proto
             // @todo: may not be required to be cleared
             if( t->get_location() < _tile_locations.size() )
             {
-                natus::concurrent::lock_guard_t lk( _tiles_mtx ) ;
+                natus::concurrent::mrsw_t::writer_lock_t lk( _tiles_mtx ) ;
                 _tile_locations[ t->get_location() ].used = false ;
             }
 
@@ -534,42 +575,88 @@ namespace proto
             t->set_change( false ) ;
         }
 
+        bool_t has_tile( size_t const id ) const noexcept
+        {
+            for( auto & i : _tiles )
+            {
+                auto const iter = std::find_if( i.second.begin(), i.second.end(), [&]( this_t::tile_res_t t ){ return t->get_id() == id ; } ) ;
+                if( iter != i.second.end() ) 
+                {
+                    return true ;
+                }
+            }
+
+            return false ;
+        }
+
         // 
         void_t prepare_for_rendering( void_t ) noexcept
         {
+            natus::concurrent::mrsw_t::reader_lock_t lk( _tiles_mtx ) ;
+
             // 1. submit tiles for rendering to framebuffers
             // for all tile in fb
             //  use viewport and render quad or sprites
-            for( auto & t : _tiles )
+            
+            // for all layers
+            for( auto & l : _tiles )
             {
-                if( t->has_changed() )
+                // for all tiles per layer
+                for( auto & t : l.second )
                 {
-                    _asyncs.for_each([&]( natus::graphics::async_view_t a )
+                    if( t->has_changed() )
                     {
-                        a.use( _fbs[ _tile_locations[ t->get_location() ].fid ] ) ;
-                        a.push( _so_tiles, _tile_locations[ t->get_location() ].tid ) ;
-                        a.render( _rc_quad ) ;
-                        a.pop( natus::graphics::backend::pop_type::render_state ) ;
-                        a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
-                    } ) ;
-                    t->set_change( false ) ;
+                        _asyncs.for_each([&]( natus::graphics::async_view_t a )
+                        {
+                            
+                            a.push( _so_tiles, _tile_locations[ t->get_location() ].tid ) ;
+                            a.use( _fbs[ _tile_locations[ t->get_location() ].fid ] ) ;
+                            a.render( _rc_quad ) ;
+                            a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
+                            a.pop( natus::graphics::backend::pop_type::render_state ) ;
+                            
+                        } ) ;
+                        t->set_change( false ) ;
+                    }
                 }
             }
 
             // 2. do tile rendering preparation
+            if( _num_tiles >= _quad->get_num_variable_sets() )
+            {
+                _quad->add_variable_sets( _asyncs, 20 ) ;
+                _quad->set_texture( _name + ".framebuffer.0.0" ) ;
+            }
         }
 
         void_t render( size_t const l ) noexcept
         {
+            natus::concurrent::mrsw_t::reader_lock_t lk( _tiles_mtx ) ;
+
             // 1. render all tiles for layer l
             // for each tile, render a quad by applying the
             // tiles' image in the framebuffer
 
-            if( l == 0 )
-            {
-                _quad->render( _asyncs ) ;
-            }
+            auto liter = _tiles.find( l ) ;
+            if( liter == _tiles.end() ) return ;
             
+            _quad->set_view_proj( _view, _proj ) ;
+
+            size_t i = 0 ;
+            for( auto & t : liter->second )
+            {
+                if( t->get_id() == size_t(-1)  ) continue ;
+
+                //size_t const i = _tile_locations[ t->get_location() ].tid ;
+                size_t const fid = _tile_locations[ t->get_location() ].fid ;
+
+                //_quad->set_texture( _name + ".framebuffer." + std::to_string( fid ) + ".0" ) ;
+                _quad->set_position( i, t->get_pos() ) ;
+                _quad->set_scale( t->get_scale()  ) ;
+                _quad->render( i, _asyncs ) ;
+
+                ++i ;
+            }
         }
     };
     natus_res_typedef( tile_render_2d ) ;
