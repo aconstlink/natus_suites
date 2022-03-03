@@ -12,7 +12,7 @@ namespace proto
     using namespace natus::core::types ;
 
 
-    // 1. render material into region
+    // 1. render material into region (not implemented)
     // 2. render multiple regions per framebuffer
     // 3. render finished regions to screen
     class tile_render_2d
@@ -51,6 +51,9 @@ namespace proto
             // tile data id
             size_t tid = size_t( -1 ) ;
 
+            // variable set id
+            size_t vs_id = size_t( -1 ) ;
+
             bool_t used = false ;
 
             this_ref_t operator = ( this_cref_t rhv ) noexcept
@@ -74,7 +77,7 @@ namespace proto
             // viewport in framebuffer
             natus::math::vec4ui_t viewport ;
             // framebuffer texture coords for rendering
-            natus::math::vec2f_t texcoords ;
+            natus::math::vec4f_t texcoords ;
         };
         natus_typedef( tile_data ) ;
         natus::ntd::vector< tile_data_t > _tile_datas ;
@@ -146,8 +149,8 @@ namespace proto
                             natus::math::vec4ui_t const viewport( p0.x(), p0.y(), region_w, region_h ) ;
                             // where to read from the framebuffer texture
                             natus::math::vec4f_t const tex_coords( 
-                                1.0f/float_t( p0.x() ), 1.0f/float_t(p0.y()),
-                                1.0f/float_t( p1.x() ), 1.0f/float_t(p1.y()) ) ;
+                                float_t( p0.x() )/float_t(w), float_t(p0.y())/float_t(h),
+                                float_t( p1.x() )/float_t(w), float_t(p1.y())/float_t(h) ) ;
                             
                             _tile_datas[ i++ ] = { viewport, tex_coords } ;
                         }
@@ -369,12 +372,26 @@ namespace proto
                 }
             } 
 
+            // preconfig the variable sets with the correct values
+            // the framebuffer texture and its texcoords are known already
+            // relation: _tile_locations <-> variable sets is 1:1
             {
                 size_t const num_tiles = _tile_dims.x() * _tile_dims.y() ;
 
                 _quad = natus::gfx::quad_res_t ( natus::gfx::quad_t( name + ".framebuffer_quad" ) ) ;
-                _quad->init( _asyncs, num_tiles ) ;
-                _quad->set_texture( name + ".framebuffer.0.0" ) ;
+                _quad->init( _asyncs, _tile_locations.size() ) ;
+
+                for( size_t i=0; i<_tile_locations.size(); ++i )
+                {
+                    size_t const tid = _tile_locations[ i ].tid ;
+                    size_t const fid = _tile_locations[ i ].fid ;
+
+                    auto const tx = _tile_datas[ tid ].texcoords ;
+
+                    _quad->set_texture( i, _name + ".framebuffer." + std::to_string( fid ) + ".0" ) ;
+                    _quad->set_texcoord( i, tx ) ;
+                }
+                
             }
         }
 
@@ -608,7 +625,6 @@ namespace proto
                     {
                         _asyncs.for_each([&]( natus::graphics::async_view_t a )
                         {
-                            
                             a.push( _so_tiles, _tile_locations[ t->get_location() ].tid ) ;
                             a.use( _fbs[ _tile_locations[ t->get_location() ].fid ] ) ;
                             a.render( _rc_quad ) ;
@@ -622,11 +638,21 @@ namespace proto
             }
 
             // 2. do tile rendering preparation
-            if( _num_tiles >= _quad->get_num_variable_sets() )
+            #if 0
+            if( _num_tiles > _quad->get_num_variable_sets() )
             {
-                _quad->add_variable_sets( _asyncs, 20 ) ;
-                _quad->set_texture( _name + ".framebuffer.0.0" ) ;
+                size_t const num_tiles = _num_tiles - _quad->get_num_variable_sets() ;
+                _quad->add_variable_sets( _asyncs, num_tiles * 2 ) ;
+
+                size_t i=0; 
+                for( size_t i=0; i<_quad->get_num_variable_sets(); ++i )
+                {
+                    auto & tl = _tile_locations[ i ] ;
+                    _quad->set_texture( i, _name + ".framebuffer." + std::to_string(tl.fid) + ".0" ) ;
+                    tl.vs_id = i ;
+                }
             }
+            #endif
         }
 
         void_t render( size_t const l ) noexcept
@@ -650,10 +676,9 @@ namespace proto
                 //size_t const i = _tile_locations[ t->get_location() ].tid ;
                 size_t const fid = _tile_locations[ t->get_location() ].fid ;
 
-                //_quad->set_texture( _name + ".framebuffer." + std::to_string( fid ) + ".0" ) ;
-                _quad->set_position( i, t->get_pos() ) ;
+                _quad->set_position( t->get_location(), t->get_pos() ) ;
                 _quad->set_scale( t->get_scale()  ) ;
-                _quad->render( i, _asyncs ) ;
+                _quad->render( t->get_location(), _asyncs ) ;
 
                 ++i ;
             }
