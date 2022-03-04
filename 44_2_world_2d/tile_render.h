@@ -252,10 +252,11 @@ namespace proto
                             #version 140
                             in vec2 var_tx ;
                             out vec4 out_color ;
-                        
+                            uniform vec4 u_color ;
+
                             void main()
                             {    
-                                out_color = vec4(var_tx, 0.0, 1.0) ;
+                                out_color = u_color ; //vec4(var_tx, 0.0, 1.0) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::gl3, std::move( ss ) ) ;
@@ -282,10 +283,11 @@ namespace proto
                             precision mediump float ;
                             in vec2 var_tx ;
                             out vec4 out_color ;
-                        
+                            uniform vec4 u_color ;
+
                             void main()
                             {   
-                                out_color = vec4(var_tx, 0.0, 1.0) ;
+                                out_color = vec4( u_color.xyz, 1.0 ) ; //vec4(var_tx, 0.0, 1.0) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
@@ -318,10 +320,12 @@ namespace proto
                                 float4 Pos : SV_POSITION;
                                 float2 tx : TEXCOORD0;
                             };
+                            
+                            float4 u_color ;
 
                             float4 PS( VS_OUTPUT input ) : SV_Target
                             {
-                                return float4( input.tx, 0.0f, 1.0f ) ;
+                                return u_color ; //float4( input.tx, 0.0f, 1.0f ) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
@@ -345,20 +349,16 @@ namespace proto
                     }
 
                     // add variable set 
+                    for( size_t i=0; i<6; ++i )
                     {
                         natus::graphics::variable_set_res_t vars = natus::graphics::variable_set_t() ;
-                        #if 0
                         {
-                            auto* var = vars->texture_variable( "u_tex_0" ) ;
-                            var->set( "the_scene.0" ) ;
-                            //var->set( "checker_board" ) ;
+                            vars->data_variable< natus::math::vec4f_t >( "u_color" )->set( 
+                                natus::math::vec4f_t( 
+                                    //float_t(i)/5.0f, float_t(i)/5.0f , float_t(i)/5.0f , 1.0f 
+                                    float_t(i)/5.0f,float_t(1)/5.0f,float_t(1)/5.0f , 1.0f 
+                                ) ) ; ;
                         }
-                        {
-                            auto* var = vars->texture_variable( "u_tex_1" ) ;
-                            var->set( "the_scene.1" ) ;
-                            //var->set( "checker_board" ) ;
-                        }
-                        #endif
 
                         rc.add_variable_set( std::move( vars ) ) ;
                     }
@@ -615,6 +615,7 @@ namespace proto
             // for all tile in fb
             //  use viewport and render quad or sprites
             
+            size_t i=0; 
             // for all layers
             for( auto & l : _tiles )
             {
@@ -628,7 +629,11 @@ namespace proto
                             
                             a.use( _fbs[ _tile_locations[ t->get_location() ].fid ] ) ;
                             a.push( _so_tiles, _tile_locations[ t->get_location() ].tid ) ;
-                            a.render( _rc_quad ) ;
+                            {
+                                natus::graphics::backend::render_detail rd ;
+                                rd.varset = i++ % 6 ;
+                                a.render( _rc_quad, rd ) ;
+                            }
                             a.pop( natus::graphics::backend::pop_type::render_state ) ;
                             a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                             
