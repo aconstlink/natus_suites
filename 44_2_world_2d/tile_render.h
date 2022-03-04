@@ -625,11 +625,13 @@ namespace proto
                     {
                         _asyncs.for_each([&]( natus::graphics::async_view_t a )
                         {
-                            a.push( _so_tiles, _tile_locations[ t->get_location() ].tid ) ;
+                            
                             a.use( _fbs[ _tile_locations[ t->get_location() ].fid ] ) ;
+                            a.push( _so_tiles, _tile_locations[ t->get_location() ].tid ) ;
                             a.render( _rc_quad ) ;
-                            a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                             a.pop( natus::graphics::backend::pop_type::render_state ) ;
+                            a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
+                            
                             
                         } ) ;
                         t->set_change( false ) ;
@@ -642,7 +644,7 @@ namespace proto
             if( _num_tiles > _quad->get_num_variable_sets() )
             {
                 size_t const num_tiles = _num_tiles - _quad->get_num_variable_sets() ;
-                _quad->add_variable_sets( _asyncs, num_tiles * 2 ) ;
+                _quad->add_variable_sets( num_tiles * 2 ) ;
 
                 size_t i=0; 
                 for( size_t i=0; i<_quad->get_num_variable_sets(); ++i )

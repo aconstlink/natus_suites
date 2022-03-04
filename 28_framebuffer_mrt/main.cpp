@@ -907,8 +907,9 @@ namespace this_file
             {
                 _wid_async.async().pop( natus::graphics::backend::pop_type::render_state ) ;
                 _wid_async2.async().pop( natus::graphics::backend::pop_type::render_state ) ;
-                _wid_async.async().use( natus::graphics::framebuffer_object_t() ) ;
-                _wid_async2.async().use( natus::graphics::framebuffer_object_t() ) ;
+                
+                _wid_async.async().unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
+                _wid_async2.async().unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
             }
 
             // render the root render state sets render object

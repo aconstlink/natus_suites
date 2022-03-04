@@ -106,6 +106,14 @@ namespace this_file
                     rss.polygon_s.do_change = true ;
                     rss.polygon_s.ss.do_activate = true ;
                     rss.polygon_s.ss.ff = natus::graphics::front_face::counter_clock_wise ;
+                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
+                    rss.clear_s.do_change = true ;
+                    rss.clear_s.ss.do_activate = true ;
+                    rss.clear_s.ss.do_color_clear = true ;
+                    rss.clear_s.ss.do_depth_clear = true ;
+                    rss.view_s.do_change = true ;
+                    rss.view_s.ss.do_activate = true ;
+                    rss.view_s.ss.vp = natus::math::vec4ui_t( 0, 0, 500, 500 ) ;
                     so.add_render_state_set( rss ) ;
                 }
 
@@ -480,13 +488,6 @@ namespace this_file
 
             float_t const dt = float_t ( double_t( std::chrono::duration_cast< std::chrono::milliseconds >( __clock_t::now() - tp ).count() ) / 1000.0 ) ;
             
-            // render the root render state sets render object
-            // this will set the root render states
-            {
-                _wid_async.async().pop( natus::graphics::backend::pop_type::render_state ) ;
-                _wid_async2.async().pop( natus::graphics::backend::pop_type::render_state ) ;
-            }
-
             // per frame update of variables
             for( auto & rc : _render_objects )
             {
@@ -516,7 +517,7 @@ namespace this_file
                         natus::math::m3d::trafof_t trans( var->get() ) ;
 
                         natus::math::m3d::trafof_t rotation ;
-                        rotation.rotate_by_axis_fr( natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), angle ) ;
+                        rotation.rotate_by_axis_fr( natus::math::vec3f_t( 1.0f, 0.0f, 0.0f ), angle ) ;
                         
                         trans.transform_fl( rotation ) ;
 
@@ -527,6 +528,11 @@ namespace this_file
 
             tp = __clock_t::now() ;
 
+            {
+                _wid_async.async().push( _root_render_states ) ;
+                _wid_async2.async().push( _root_render_states ) ;
+            }
+
             for( size_t i=0; i<_render_objects.size(); ++i )
             {
                 natus::graphics::backend_t::render_detail_t detail ;
@@ -536,6 +542,13 @@ namespace this_file
                 //detail.render_states = _render_states ;
                 _wid_async.async().render( _render_objects[i], detail ) ;
                 _wid_async2.async().render( _render_objects[i], detail ) ;
+            }
+
+            // render the root render state sets render object
+            // this will set the root render states
+            {
+                _wid_async.async().pop( natus::graphics::backend::pop_type::render_state ) ;
+                _wid_async2.async().pop( natus::graphics::backend::pop_type::render_state ) ;
             }
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
