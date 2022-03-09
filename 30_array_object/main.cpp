@@ -580,9 +580,9 @@ namespace this_file
             }
 
             {
-                _quad = natus::gfx::quad_res_t( natus::gfx::quad_t("post.quad") ) ;
-                _quad->set_texture("the_scene.0") ;
+                _quad = natus::gfx::quad_res_t( natus::gfx::quad_t("post.quad") ) ;                
                 _quad->init( _graphics ) ;
+                _quad->set_texture("the_scene.0") ;
             }
             
             return natus::application::result::ok ; 
@@ -783,7 +783,7 @@ namespace this_file
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.use( natus::graphics::framebuffer_object_t() ) ;
+                    a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                 } ) ;
             }
 
