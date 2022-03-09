@@ -327,9 +327,8 @@ namespace this_file
             // prepare quad
             {
                 _quad = natus::gfx::quad_res_t( natus::gfx::quad_t("post_map") ) ;
-                _quad->set_texture("the_scene.0") ;
                 _quad->init( _graphics ) ;
-                
+                _quad->set_texture("the_scene.0") ;
             }
             return natus::application::result::ok ; 
         }
