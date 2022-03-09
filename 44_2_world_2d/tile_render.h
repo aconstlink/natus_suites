@@ -12,7 +12,7 @@ namespace proto
     using namespace natus::core::types ;
 
 
-    // 1. render material into region (not implemented)
+    // 1. render rect into tile
     // 2. render multiple regions per framebuffer
     // 3. render finished regions to screen
     class tile_render_2d
@@ -287,7 +287,7 @@ namespace proto
 
                             void main()
                             {   
-                                out_color = vec4( u_color.xyz, 1.0 ) ; //vec4(var_tx, 0.0, 1.0) ;
+                                out_color = u_color ; //vec4(var_tx, 0.0, 1.0) ;
                             } )" ) ) ;
 
                         sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
@@ -626,7 +626,6 @@ namespace proto
                     {
                         _asyncs.for_each([&]( natus::graphics::async_view_t a )
                         {
-                            
                             a.use( _fbs[ _tile_locations[ t->get_location() ].fid ] ) ;
                             a.push( _so_tiles, _tile_locations[ t->get_location() ].tid ) ;
                             {
@@ -637,29 +636,11 @@ namespace proto
                             a.pop( natus::graphics::backend::pop_type::render_state ) ;
                             a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                             
-                            
                         } ) ;
                         t->set_change( false ) ;
                     }
                 }
             }
-
-            // 2. do tile rendering preparation
-            #if 0
-            if( _num_tiles > _quad->get_num_variable_sets() )
-            {
-                size_t const num_tiles = _num_tiles - _quad->get_num_variable_sets() ;
-                _quad->add_variable_sets( num_tiles * 2 ) ;
-
-                size_t i=0; 
-                for( size_t i=0; i<_quad->get_num_variable_sets(); ++i )
-                {
-                    auto & tl = _tile_locations[ i ] ;
-                    _quad->set_texture( i, _name + ".framebuffer." + std::to_string(tl.fid) + ".0" ) ;
-                    tl.vs_id = i ;
-                }
-            }
-            #endif
         }
 
         void_t render( size_t const l ) noexcept
