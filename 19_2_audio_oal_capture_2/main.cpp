@@ -14,6 +14,7 @@ typedef std::chrono::high_resolution_clock clk_t ;
 int main( int argc, char ** argv )
 {
     natus::audio::oal_backend_t backend ;
+    backend.init() ;
 
     natus::audio::capture_object_res_t config = natus::audio::capture_object_t() ;
     

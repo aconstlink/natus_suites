@@ -96,8 +96,6 @@ namespace this_file
             _graphics = std::move( rhv._graphics ) ;
             _sr = std::move( rhv._sr ) ;
             _db = std::move( rhv._db ) ; 
-
-            _sr = std::move( rhv._sr ) ;
             _quad = std::move( rhv._quad ) ;
         }
         virtual ~test_app( void_t ) 
