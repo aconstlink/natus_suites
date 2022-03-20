@@ -1,6 +1,8 @@
 #pragma once
 
 #include <natus/gfx/sprite/sprite_render_2d.h>
+#include <natus/gfx/primitive/primitive_render_2d.h>
+
 #include <natus/gfx/util/quad.h>
 #include <natus/concurrent/mrsw.hpp>
 #include <natus/math/vector/vector4.hpp>
@@ -78,11 +80,11 @@ namespace proto
             natus::math::vec4ui_t viewport ;
             // framebuffer texture coords for rendering
             natus::math::vec4f_t texcoords ;
+
+            natus::gfx::primitive_render_2d_res_t pr ;
         };
         natus_typedef( tile_data ) ;
         natus::ntd::vector< tile_data_t > _tile_datas ;
-
-        
 
         natus::math::vec2ui_t _tile_dims = natus::math::vec2ui_t( 6, 6 ) ;
 
@@ -92,7 +94,10 @@ namespace proto
 
         tile_render_2d( natus::graphics::async_views_t a ) noexcept : _asyncs( a )  {}
         tile_render_2d( this_cref_t ) noexcept = delete ;
-        tile_render_2d( this_rref_t rhv ) noexcept { _asyncs = std::move( rhv._asyncs ) ; }
+        tile_render_2d( this_rref_t rhv ) noexcept 
+        { 
+            _asyncs = std::move( rhv._asyncs ) ; 
+        }
         ~tile_render_2d( void_t ) noexcept {}
 
     public:
@@ -152,7 +157,10 @@ namespace proto
                                 float_t( p0.x() )/float_t(w), float_t(p0.y())/float_t(h),
                                 float_t( p1.x() )/float_t(w), float_t(p1.y())/float_t(h) ) ;
                             
-                            _tile_datas[ i++ ] = { viewport, tex_coords } ;
+                            natus::gfx::primitive_render_2d_t pr ;
+                            pr.init( name + ".prim_render." + std::to_string(i), _asyncs ) ;
+
+                            _tile_datas[ i++ ] = { viewport, tex_coords, std::move( pr ) } ;
                         }
                     }
                 }
@@ -393,6 +401,10 @@ namespace proto
                 }
                 
             }
+
+            {
+
+            }
         }
 
         void_t set_view_proj( natus::math::mat4f_cref_t view, natus::math::mat4f_cref_t proj ) noexcept 
@@ -423,6 +435,7 @@ namespace proto
                 natus::math::vec2f_t scale ; 
                 natus::math::vec4f_t color ;
             };
+            natus_typedef( item ) ;
 
             natus_typedefs( natus::ntd::vector< item > , items) ;
             items_t _items ;
@@ -572,6 +585,15 @@ namespace proto
             return *iter ;
         }
 
+        void_t release_all( void_t ) noexcept
+        {
+            for( auto & l : _tiles )
+            {
+                for( auto & t : l.second )
+                    this_t::release_tile( t ) ;
+            }
+        }
+
         void_t release_tile( size_t const l, size_t const id ) noexcept
         {
             this_t::release_tile( this_t::acquire_tile( l, id ) ) ;
@@ -611,6 +633,27 @@ namespace proto
         {
             natus::concurrent::mrsw_t::reader_lock_t lk( _tiles_mtx ) ;
 
+            for( auto & l : _tiles )
+            {
+                // test draw
+                for( auto & t : l.second )
+                {
+                    if( t->has_changed() )
+                    {
+                        auto pr = _tile_datas[ _tile_locations[ t->get_location() ].tid ].pr ;
+                        pr->draw_circle( l.first, 20, natus::math::vec2f_t(), 0.5f, natus::math::vec4f_t(0.5f), natus::math::vec4f_t(1.0f) ) ;
+                    }
+                }
+                
+            }
+
+            {
+                for( auto & td : _tile_datas )
+                {
+                    td.pr->prepare_for_rendering() ;
+                }
+            }
+
             // 1. submit tiles for rendering to framebuffers
             // for all tile in fb
             //  use viewport and render quad or sprites
@@ -628,11 +671,19 @@ namespace proto
                         {
                             a.use( _fbs[ _tile_locations[ t->get_location() ].fid ] ) ;
                             a.push( _so_tiles, _tile_locations[ t->get_location() ].tid ) ;
+                            #if 0
                             {
                                 natus::graphics::backend::render_detail rd ;
                                 rd.varset = i++ % 6 ;
                                 a.render( _rc_quad, rd ) ;
                             }
+                            #else
+                            {
+                                auto pr = _tile_datas[ _tile_locations[ t->get_location() ].tid ].pr ;
+                                pr->render( l.first ) ;
+                            }
+                            #endif
+
                             a.pop( natus::graphics::backend::pop_type::render_state ) ;
                             a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                             

@@ -6,6 +6,7 @@
 #include <natus/math/vector/vector3.hpp>
 #include <natus/ntd/vector.hpp>
 #include <natus/core/types.hpp>
+#include <functional>
 
 namespace world
 {
@@ -163,7 +164,16 @@ namespace world
         natus::math::vec2i_t transform_to_center( natus::math::vec2ui_cref_t pos ) const noexcept
         {
             auto const dims = pixels_per_cell * cells_per_region * regions_per_grid ;
-            auto const dims_half = dims / natus::math::vec2ui_t( 2 ) ;
+            auto const dims_half = dims >> natus::math::vec2ui_t( 1 ) ;
+
+            return pos - dims_half ;
+        }
+
+        //**************************************************************************
+        natus::math::vec2i_t transform_cell_to_center( natus::math::vec2ui_cref_t pos ) const noexcept
+        {
+            auto const dims = cells_per_region * regions_per_grid ;
+            auto const dims_half = dims >> natus::math::vec2ui_t( 1 ) ;
 
             return pos - dims_half ;
         }
@@ -259,30 +269,53 @@ namespace world
         {
             natus::math::vec2ui_t regions[4] ;
             natus::math::vec2ui_t cells[4] ;
+            natus::math::vec2i_t ocells[4] ;
 
-            natus::math::vec2ui_t cell_dif( void_t ) const 
+            natus::math::vec2ui_t cell_dif( void_t ) const noexcept
             {
                 return cells[ 2 ] - cells[ 0 ] + natus::math::vec2ui_t( 1 ) ;
             }
 
-            natus::math::vec2ui_t cell_min( void_t ) const
+            natus::math::vec2ui_t cell_min( void_t ) const noexcept
             {
                 return cells[ 0 ] ;
             }
 
-            natus::math::vec2ui_t region_dif( void_t ) const
+            natus::math::vec2ui_t region_dif( void_t ) const noexcept
             {
                 return regions[ 2 ] - regions[ 0 ] + natus::math::vec2ui_t( 1 ) ;
             }
 
-            natus::math::vec2ui_t region_min( void_t ) const
+            natus::math::vec2ui_t region_min( void_t ) const noexcept 
             {
                 return regions[ 0 ] ;
             }
 
-            natus::math::vec2ui_t region_max( void_t ) const
+            natus::math::vec2ui_t region_max( void_t ) const noexcept
             {
                 return regions[ 2 ] ;
+            }
+
+            natus::math::vec2i_t ocell_min( void_t ) const noexcept
+            {
+                return ocells[0] ;
+            }
+
+            natus::math::vec2i_t ocell_max( void_t ) const noexcept
+            {
+                return ocells[2] ;
+            }
+
+            typedef std::function< void_t ( natus::math::vec2i_cref_t ) > for_each_ocell_funk_t ;
+            void_t for_each( for_each_ocell_funk_t funk ) const noexcept
+            {
+                for( auto x = ocell_min().x(); x < ocell_max().x(); ++x )
+                {
+                    for( auto y = ocell_min().y(); y < ocell_max().y(); ++y )
+                    {
+                        funk( natus::math::vec2i_t( x, y ) ) ;
+                    }
+                }
             }
 
             bool_t is_region_inside( natus::math::vec2ui_cref_t r ) const noexcept
@@ -323,6 +356,14 @@ namespace world
                 od.regions[1] = natus::math::vec2ui_t( min.x(), max.y() ) / cells_per_region ;
                 od.regions[2] = max / cells_per_region ;
                 od.regions[3] = natus::math::vec2ui_t( max.x(), min.y() ) / cells_per_region ;
+            }
+
+            // offset cells (ocells)
+            {
+                od.ocells[0] = transform_cell_to_center( od.cells[0] ) ;
+                od.ocells[1] = transform_cell_to_center( od.cells[1] ) ;
+                od.ocells[2] = transform_cell_to_center( od.cells[2] ) ;
+                od.ocells[3] = transform_cell_to_center( od.cells[3] ) ;
             }
 
             return od ;
