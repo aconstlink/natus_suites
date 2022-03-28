@@ -487,6 +487,14 @@ namespace this_file
 
                             //items[i++] = item ;
                             
+
+                            for( size_t x = 0 ; x < cpr.x(); ++x )
+                            {
+                                for( size_t y = 0 ; y < cpr.y(); ++y )
+                                {
+
+                                }
+                            }
                         } ) ;
 
                         natus::log::global_t::status("New : " + std::to_string(id.get_id()) ) ;

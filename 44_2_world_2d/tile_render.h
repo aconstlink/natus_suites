@@ -5,6 +5,7 @@
 
 #include <natus/gfx/util/quad.h>
 #include <natus/concurrent/mrsw.hpp>
+#include <natus/math/utility/3d/orthographic_projection.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/vector/vector2.hpp>
 #include <natus/core/types.hpp>
@@ -52,9 +53,6 @@ namespace proto
 
             // tile data id
             size_t tid = size_t( -1 ) ;
-
-            // variable set id
-            size_t vs_id = size_t( -1 ) ;
 
             bool_t used = false ;
 
@@ -159,7 +157,8 @@ namespace proto
                             
                             natus::gfx::primitive_render_2d_t pr ;
                             pr.init( name + ".prim_render." + std::to_string(i), _asyncs ) ;
-
+                            pr.set_view_proj( natus::math::mat4f_t().identity(), 
+                                natus::math::m3d::orthographic<float_t>::create( float_t(w), float_t(h), 0.1f, 100.0f ) ) ;
                             _tile_datas[ i++ ] = { viewport, tex_coords, std::move( pr ) } ;
                         }
                     }
@@ -641,7 +640,7 @@ namespace proto
                     if( t->has_changed() )
                     {
                         auto pr = _tile_datas[ _tile_locations[ t->get_location() ].tid ].pr ;
-                        pr->draw_circle( l.first, 20, natus::math::vec2f_t(), 0.5f, natus::math::vec4f_t(0.5f), natus::math::vec4f_t(1.0f) ) ;
+                        pr->draw_circle( l.first, 20, natus::math::vec2f_t(), 10.0f, natus::math::vec4f_t(0.5f), natus::math::vec4f_t(1.0f) ) ;
                     }
                 }
                 
