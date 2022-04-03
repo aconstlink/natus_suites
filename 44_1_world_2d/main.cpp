@@ -61,7 +61,7 @@ namespace this_file
         natus::math::vec2f_t _cur_mouse ;
 
         bool_t _do_tool = true ;
-        
+
         world::grid_t _grid = world::grid_t( 
             world::dimensions_t( 
                 natus::math::vec2ui_t(1000), // regions_per_grid
@@ -78,6 +78,7 @@ namespace this_file
         natus::gfx::primitive_render_2d_res_t _pr ;
 
         bool_t _draw_debug = false ;
+        bool_t _draw_grid = false ;
 
         natus::gfx::sprite_render_2d_res_t _sr ;
 
@@ -444,8 +445,28 @@ namespace this_file
                 {
                     auto const cur_pos = natus::math::vec2i_t( x, y ) ;
                     natus::math::vec2f_t const p0 = _grid.get_dims().cells_to_pixels( cur_pos ) ;
-                    natus::math::vec2f_t const off = natus::math::vec2f_t( _grid.get_dims().get_pixels_per_cell() >> uint_t(1) ) ;
+                    natus::math::vec2f_t const d = natus::math::vec2f_t( _grid.get_dims().get_pixels_per_cell() ) ;
+                    natus::math::vec2f_t const dh = natus::math::vec2f_t( _grid.get_dims().get_pixels_per_cell() >> uint_t(1) ) ;
 
+                    {
+                        auto const p1 = p0 + natus::math::vec2f_t( 0.0f, d.y() ) ;
+                        auto const p2 = p0 + natus::math::vec2f_t( d.x(), d.y() ) ;
+                        auto const p3 = p0 + natus::math::vec2f_t( d.x(), 0.0f ) ;
+
+                        int_t f = 10.0f * std::sin( x * 100.0f ) - y ;
+
+                        if( f > 0 )
+                        {
+                            _pr->draw_rect( 0, p0, p1, p2, p3, natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f), natus::math::vec4f_t(0.6f) ) ;
+                        }                        
+                        else
+                        {
+                            _pr->draw_rect( 0, p0, p1, p2, p3, natus::math::vec4f_t(0.6f,0.1f,0.3f,1.0f), natus::math::vec4f_t(0.6f) ) ;
+                        }
+
+                    }
+
+                    #if 0
                     if( std::abs( 10.0f * std::sin( cur_pos.x()*100.0f ) - cur_pos.y() ) < 2.0f  ) 
                     {
                         _pr->draw_circle( 0, 10, p0 + off, 2.0f, natus::math::vec4f_t(1.0f), natus::math::vec4f_t(0.6f) ) ;
@@ -456,6 +477,7 @@ namespace this_file
                     {
                         _pr->draw_circle( 1, 10, p0 + off, 2.0f, natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f), natus::math::vec4f_t(0.6f) ) ;
                     }
+                    #endif
                 }
             }
         }
@@ -474,6 +496,7 @@ namespace this_file
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
 
             // grid rendering
+            if( _draw_grid )
             {
                 auto const cpos = _camera_0.get_position().xy() ;
 
@@ -620,6 +643,10 @@ namespace this_file
 
             {
                 ImGui::Checkbox( "Draw Debug", &_draw_debug ) ;
+            }
+
+            {
+                ImGui::Checkbox( "Draw Grid", &_draw_grid ) ;
             }
 
             {
