@@ -184,6 +184,22 @@ int main( int argc, char ** argv )
         natus::format::status_item_res_t r =  item.get() ;
     }
 
+    // import export the same file
+    {
+        natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
+        auto item = mod_reg->import_from( natus::io::location_t( "sprite_sheet.natus" ), db ) ;
+
+        natus::format::natus_item_res_t ni = item.get() ;
+        if( ni.is_valid() )
+        {
+            natus::format::natus_document_t doc = std::move( ni->doc ) ;
+            auto exp_item = mod_reg->export_to( natus::io::location_t( "imported_one.natus" ), db, 
+            natus::format::natus_item_res_t( natus::format::natus_item_t( std::move( doc ) ) ) ) ;
+
+            natus::format::status_item_res_t r =  exp_item.get() ;
+        }
+    }
+
     return 0 ;
 }
  

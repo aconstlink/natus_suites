@@ -154,10 +154,11 @@ namespace this_file
             }
             
             {
-                _se->add_sprite_sheet( "industrial", natus::io::location_t( "images.industrial.industrial.v2.png" ) ) ;
-                _se->add_sprite_sheet( "enemies", natus::io::location_t( "images.Paper-Pixels-8x8.Enemies.png" ) ) ;
-                _se->add_sprite_sheet( "player", natus::io::location_t( "images.Paper-Pixels-8x8.Player.png" ) ) ;
-                _se->add_sprite_sheet( "tiles", natus::io::location_t( "images.Paper-Pixels-8x8.Tiles.png" ) ) ;
+                //_se->add_sprite_sheet( "industrial", natus::io::location_t( "images.industrial.industrial.v2.png" ) ) ;
+                //_se->add_sprite_sheet( "enemies", natus::io::location_t( "images.Paper-Pixels-8x8.Enemies.png" ) ) ;
+                //_se->add_sprite_sheet( "player", natus::io::location_t( "images.Player.png" ) ) ;
+                //_se->add_sprite_sheet( "tiles", natus::io::location_t( "images.Tiles.png" ) ) ;
+                _se->add_sprite_sheet( "sprite_sheets", natus::io::location_t( "sprite_sheets.natus" ) ) ;
                 
             }
             return natus::application::result::ok ; 
