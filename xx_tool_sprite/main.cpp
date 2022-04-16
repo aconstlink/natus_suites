@@ -73,6 +73,7 @@ namespace this_file
             _graphics = natus::graphics::async_views_t( { _wid_async.async(), _wid_async2.async() } ) ;
             #else
             _wid_async = this_t::create_window( "A Render Window", wi ) ;
+            _wid_async.window().resize( 1000, 1000 ) ;
             #endif
 
             _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;

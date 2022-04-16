@@ -1,243 +1,268 @@
-
 <natus>
-    <project>
-    </project>
-
-    <sprite_sheets ref="" />
     <sprite_sheets>
-
         <sprite_sheet name="industrial">
-
-            <image src="images/industrial.v2.png" />
+            <image src="images.industrial.v2.png"/>
             <sprites>
                 <sprite name="idle_0">
-                    <animation rect="1 240 13 253" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="1 240 13 253" pivot="7 246"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="idle_1">
-                    <animation rect="17 240 29 252" pivot="0 -1" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="17 240 29 252" pivot="23 246"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="idle_2">
-                    <animation rect="33 240 45 252" pivot="0 -1" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="33 240 45 252" pivot="39 246"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="idle_3">
-                    <animation rect="49 240 61 251" pivot="0 -2" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="49 240 61 251" pivot="55 245"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="idle_4">
-                    <animation rect="64 240 78 250" pivot="0 -3" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="64 240 78 250" pivot="71 245"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="idle_5">
-                    <animation rect="80 240 94 248" pivot="0 -5" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="80 240 94 248" pivot="87 244"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="idle_6">
-                    <animation rect="96 240 110 250" pivot="0 -3" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="96 240 110 250" pivot="103 245"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="idle_7">
-                    <animation rect="113 240 125 251" pivot="0 -2" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="113 240 125 251" pivot="119 245"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
-
+                <sprite name="8">
+                    <animation rect="3 144 14 157" pivot="8 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="9">
+                    <animation rect="19 144 30 157" pivot="24 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="10">
+                    <animation rect="34 144 45 157" pivot="39 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="11">
+                    <animation rect="67 144 78 157" pivot="72 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="12">
+                    <animation rect="83 144 94 157" pivot="88 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="13">
+                    <animation rect="99 144 110 157" pivot="104 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="14">
+                    <animation rect="115 144 126 157" pivot="120 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="15">
+                    <animation rect="131 144 142 157" pivot="136 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="16">
+                    <animation rect="147 144 158 157" pivot="152 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="17">
+                    <animation rect="163 144 174 157" pivot="168 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="18">
+                    <animation rect="179 144 190 157" pivot="184 150"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="19">
+                    <animation rect="1 128 13 143" pivot="7 135"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="20">
+                    <animation rect="17 127 29 143" pivot="23 135"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="21">
+                    <animation rect="33 128 45 142" pivot="39 135"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="22">
+                    <animation rect="49 128 61 142" pivot="55 135"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="23">
+                    <animation rect="65 128 78 143" pivot="71 135"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="24">
+                    <animation rect="81 128 93 143" pivot="87 135"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="25">
+                    <animation rect="1 80 14 92" pivot="7 86"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="26">
+                    <animation rect="16 80 31 92" pivot="23 86"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="27">
+                    <animation rect="32 80 47 91" pivot="39 85"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="28">
+                    <animation rect="48 80 63 90" pivot="55 85"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="29">
+                    <animation rect="64 80 79 91" pivot="71 85"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="30">
+                    <animation rect="81 80 94 92" pivot="87 86"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="31">
+                    <animation rect="97 80 110 93" pivot="103 86"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
             </sprites>
-
             <animations>
-                <!-- default animation type is "step" others "cross, envelop" -->
                 <animation name="idle">
-                    <frame sprite="idle_0" duration="50" />
-                    <frame sprite="idle_1" duration="50" />
-                    <frame sprite="idle_2" duration="50" />
-                    <frame sprite="idle_3" duration="50" />
-                    <frame sprite="idle_4" duration="50" />
-                    <frame sprite="idle_5" duration="50" />
-                    <frame sprite="idle_6" duration="50" />
-                    <frame sprite="idle_7" duration="50" />
+                    <frame sprite="idle_0" duration="50"/>
+                    <frame sprite="idle_1" duration="50"/>
+                    <frame sprite="idle_2" duration="50"/>
+                    <frame sprite="idle_3" duration="50"/>
+                    <frame sprite="idle_4" duration="50"/>
+                    <frame sprite="idle_5" duration="50"/>
+                    <frame sprite="idle_6" duration="50"/>
+                    <frame sprite="idle_7" duration="50"/>
                 </animation>
-                <animation name="run">
-                    <frame sprite="run_0" duration="10" />
-                    <frame sprite="run_1" duration="12" />
-                    <frame sprite="run_2" duration="9" />
-                    <frame sprite="run_3" duration="6" />
-                </animation>
-
+                <animation name="run"/>
             </animations>
-
         </sprite_sheet>
-
         <sprite_sheet name="enemies">
-
-            <image src="images/Enemies.png" />
+            <image src="images.Enemies.png"/>
             <sprites>
                 <sprite name="move_0">
-                    <animation rect="32 48 38 51" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="32 48 38 51" pivot="105 147"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="move_1">
-                    <animation rect="40 48 46 53" pivot="0 2" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="40 48 46 53" pivot="129 152"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="move_2">
-                    <animation rect="49 48 53 55" pivot="0 4" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="49 48 53 55" pivot="153 157"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="move_3">
-                    <animation rect="57 48 61 55" pivot="0 4" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="57 48 61 55" pivot="177 157"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="move_4">
-                    <animation rect="64 48 70 51" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="64 48 70 51" pivot="201 147"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
-                <!-- animal 1 -->
-
                 <sprite name="move_animal_1_0">
-                    <animation rect="32 8 39 14" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="32 8 39 14" pivot="105 33"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
                 <sprite name="move_animal_1_1">
-                    <animation rect="40 8 47 15" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="40 8 47 15" pivot="129 33"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
                 <sprite name="move_animal_1_2">
-                    <animation rect="48 8 55 15" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="48 8 55 15" pivot="153 33"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
                 <sprite name="move_animal_1_3">
-                    <animation rect="56 8 63 14" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="56 8 63 14" pivot="177 33"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
-                <!-- animal 2 -->
-
                 <sprite name="move_animal_2_0">
-                    <animation rect="33 0 39 6" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="33 0 39 6" pivot="108 9"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="move_animal_2_1">
-                    <animation rect="41 0 47 7" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="41 0 47 7" pivot="132 9"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
                 <sprite name="move_animal_2_2">
-                    <animation rect="49 0 55 7" pivot="0 0" />
-                    <collision rect="0 0 10 10" />
-                    <hits>
-                        <hit name="head" rect="0 0 10 10" />
-                    </hits>
+                    <animation rect="49 0 55 7" pivot="156 9"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
                 </sprite>
-
             </sprites>
-
             <animations>
                 <animation name="move">
-                    <frame sprite="move_0" duration="60" />
-                    <frame sprite="move_1" duration="60" />
-                    <frame sprite="move_2" duration="60" />
-                    <frame sprite="move_3" duration="60" />
-                    <frame sprite="move_4" duration="60" />
+                    <frame sprite="move_0" duration="60"/>
+                    <frame sprite="move_1" duration="60"/>
+                    <frame sprite="move_2" duration="60"/>
+                    <frame sprite="move_3" duration="60"/>
+                    <frame sprite="move_4" duration="60"/>
                 </animation>
                 <animation name="move_animal_1">
-                    <frame sprite="move_animal_1_0" duration="50" />
-                    <frame sprite="move_animal_1_1" duration="50" />
-                    <frame sprite="move_animal_1_2" duration="50" />
-                    <frame sprite="move_animal_1_3" duration="50" />
+                    <frame sprite="move_animal_1_0" duration="50"/>
+                    <frame sprite="move_animal_1_1" duration="50"/>
+                    <frame sprite="move_animal_1_2" duration="50"/>
+                    <frame sprite="move_animal_1_3" duration="50"/>
                 </animation>
                 <animation name="move_animal_2">
-                    <frame sprite="move_animal_2_0" duration="50" />
-                    <frame sprite="move_animal_2_1" duration="50" />
-                    <frame sprite="move_animal_2_2" duration="50" />
+                    <frame sprite="move_animal_2_0" duration="50"/>
+                    <frame sprite="move_animal_2_1" duration="50"/>
+                    <frame sprite="move_animal_2_2" duration="50"/>
                 </animation>
-                
-
             </animations>
-
         </sprite_sheet>
     </sprite_sheets>
-
-    <!-- allow to compose different sprite animatoins
-         from different sprite sheets -->
-    <sprite_compositions>
-        <composition>
-            <animation sprite_sheet="" name="">
-                <origin value="" />
-                <!-- transformations animation -->
-            </animation>
-        </composition>
-    </sprite_compositions>
-
 </natus>
+
