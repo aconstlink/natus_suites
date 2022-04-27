@@ -1,5 +1,50 @@
 <natus>
     <sprite_sheets>
+        <sprite_sheet name="megaman">
+            <image src="images.megaman.png"/>
+            <sprites>
+                <sprite name="0">
+                    <animation rect="5 263 19 286" pivot="10 274"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="1">
+                    <animation rect="29 264 48 285" pivot="37 274"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="2">
+                    <animation rect="54 264 78 287" pivot="66 275"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="3">
+                    <animation rect="87 264 115 287" pivot="101 275"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="4">
+                    <animation rect="120 264 146 286" pivot="133 275"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="5">
+                    <animation rect="155 264 180 284" pivot="174 277"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+            </sprites>
+            <animations>
+                <animation name="some_animation">
+                    <frame sprite="0" duration="50"/>
+                    <frame sprite="1" duration="50"/>
+                    <frame sprite="2" duration="50"/>
+                    <frame sprite="3" duration="50"/>
+                    <frame sprite="4" duration="50"/>
+                    <frame sprite="5" duration="50"/>
+                </animation>
+            </animations>
+        </sprite_sheet>
         <sprite_sheet name="industrial">
             <image src="images.industrial.v2.png"/>
             <sprites>
