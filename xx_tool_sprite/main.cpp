@@ -231,7 +231,7 @@ namespace this_file
                 ImGui::ShowDemoWindow( &show_demo ) ;
             }
 
-            _se->render( imgui ) ;
+            _se->do_tool( imgui ) ;
 
             return natus::application::result::ok ;
         }

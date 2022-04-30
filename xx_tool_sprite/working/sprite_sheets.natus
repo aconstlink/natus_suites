@@ -33,15 +33,37 @@
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
+                <sprite name="6">
+                    <animation rect="354 295 377 316" pivot="365 306"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="7">
+                    <animation rect="267 296 287 319" pivot="277 307"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="8">
+                    <animation rect="295 296 314 319" pivot="304 307"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
             </sprites>
             <animations>
                 <animation name="some_animation">
-                    <frame sprite="0" duration="50"/>
-                    <frame sprite="1" duration="50"/>
-                    <frame sprite="2" duration="50"/>
-                    <frame sprite="3" duration="50"/>
-                    <frame sprite="4" duration="50"/>
-                    <frame sprite="5" duration="50"/>
+                    <frame sprite="6" duration="100"/>
+                    <frame sprite="0" duration="100"/>
+                    <frame sprite="1" duration="100"/>
+                </animation>
+                <animation name="my new animation">
+                    <frame sprite="2" duration="100"/>
+                    <frame sprite="3" duration="100"/>
+                    <frame sprite="4" duration="100"/>
+                    <frame sprite="5" duration="100"/>
+                </animation>
+                <animation name="blink">
+                    <frame sprite="7" duration="100"/>
+                    <frame sprite="8" duration="100"/>
                 </animation>
             </animations>
         </sprite_sheet>
