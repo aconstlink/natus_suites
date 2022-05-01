@@ -4,12 +4,12 @@
             <image src="images.megaman.png"/>
             <sprites>
                 <sprite name="0">
-                    <animation rect="5 263 19 286" pivot="10 274"/>
+                    <animation rect="5 263 19 286" pivot="12 271"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="1">
-                    <animation rect="29 264 48 285" pivot="37 274"/>
+                    <animation rect="29 264 48 285" pivot="36 273"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
@@ -19,22 +19,22 @@
                     <hits/>
                 </sprite>
                 <sprite name="3">
-                    <animation rect="87 264 115 287" pivot="101 275"/>
+                    <animation rect="87 264 115 287" pivot="100 275"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="4">
-                    <animation rect="120 264 146 286" pivot="133 275"/>
+                    <animation rect="120 264 146 286" pivot="132 275"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="5">
-                    <animation rect="155 264 180 284" pivot="174 277"/>
+                    <animation rect="155 264 180 284" pivot="168 273"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="6">
-                    <animation rect="354 295 377 316" pivot="365 306"/>
+                    <animation rect="354 295 377 316" pivot="366 304"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
@@ -44,7 +44,67 @@
                     <hits/>
                 </sprite>
                 <sprite name="8">
-                    <animation rect="295 296 314 319" pivot="304 307"/>
+                    <animation rect="295 296 314 319" pivot="303 307"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="rotate_0">
+                    <animation rect="12 123 31 146" pivot="21 134"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="10">
+                    <animation rect="38 123 58 146" pivot="45 134"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="11">
+                    <animation rect="65 123 81 145" pivot="70 133"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="12">
+                    <animation rect="90 123 101 146" pivot="93 134"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="13">
+                    <animation rect="112 123 128 146" pivot="119 134"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="14">
+                    <animation rect="136 123 156 146" pivot="145 134"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="15">
+                    <animation rect="164 123 182 147" pivot="172 135"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="16">
+                    <animation rect="191 123 211 146" pivot="199 133"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="17">
+                    <animation rect="219 123 235 146" pivot="226 133"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="18">
+                    <animation rect="246 124 257 146" pivot="251 133"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="19">
+                    <animation rect="266 123 281 146" pivot="273 133"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="20">
+                    <animation rect="289 123 309 146" pivot="299 133"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
@@ -64,6 +124,20 @@
                 <animation name="blink">
                     <frame sprite="7" duration="100"/>
                     <frame sprite="8" duration="100"/>
+                </animation>
+                <animation name="rotation">
+                    <frame sprite="rotate_0" duration="100"/>
+                    <frame sprite="10" duration="100"/>
+                    <frame sprite="11" duration="100"/>
+                    <frame sprite="12" duration="100"/>
+                    <frame sprite="13" duration="100"/>
+                    <frame sprite="14" duration="100"/>
+                    <frame sprite="15" duration="100"/>
+                    <frame sprite="16" duration="100"/>
+                    <frame sprite="17" duration="100"/>
+                    <frame sprite="18" duration="100"/>
+                    <frame sprite="19" duration="100"/>
+                    <frame sprite="20" duration="50"/>
                 </animation>
             </animations>
         </sprite_sheet>
