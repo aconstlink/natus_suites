@@ -1,5 +1,6 @@
 <natus>
     <sprite_sheets>
+        
         <sprite_sheet name="megaman">
             <image src="images.megaman.png"/>
             <sprites>
@@ -138,6 +139,61 @@
                     <frame sprite="18" duration="100"/>
                     <frame sprite="19" duration="100"/>
                     <frame sprite="20" duration="50"/>
+                </animation>
+            </animations>
+        </sprite_sheet>
+        <sprite_sheet name="mario">
+            <image src="images.mario.png"/>
+            <sprites>
+                <sprite name="run0">
+                    <animation rect="14 341 27 359" pivot="19 351"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="run1">
+                    <animation rect="31 342 44 359" pivot="36 353"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="run_hold_0">
+                    <animation rect="48 341 62 359" pivot="54 350"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="run_hold_1">
+                    <animation rect="65 341 79 359" pivot="71 350"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="swim0">
+                    <animation rect="13 315 27 332" pivot="20 323"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="swim1">
+                    <animation rect="30 315 43 332" pivot="36 323"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+                <sprite name="swim2">
+                    <animation rect="46 314 59 332" pivot="52 321"/>
+                    <collision rect="0 0 0 0"/>
+                    <hits/>
+                </sprite>
+            </sprites>
+            <animations>
+                <animation name="run">
+                    <frame sprite="run0" duration="50"/>
+                    <frame sprite="run1" duration="50"/>
+                </animation>
+                <animation name="run_hold">
+                    <frame sprite="run_hold_0" duration="50"/>
+                    <frame sprite="run_hold_1" duration="50"/>
+                </animation>
+                <animation name="swim">
+                    <frame sprite="swim0" duration="100"/>
+                    <frame sprite="swim1" duration="100"/>
+                    <frame sprite="swim2" duration="100"/>
                 </animation>
             </animations>
         </sprite_sheet>

@@ -61,9 +61,9 @@ namespace this_file
         {
             natus::application::app::window_info_t wi ;
             #if 0
-            _wid_async = this_t::create_window( "A Render Window", wi ) ;
-            _wid_async2 = this_t::create_window( "A Render Window", wi,
-                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11}) ;
+            _wid_async = this_t::create_window( "A Render Window", wi,
+                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11} ) ;
+            _wid_async2 = this_t::create_window( "A Render Window", wi) ;
 
             _wid_async.window().position( 50, 50 ) ;
             _wid_async.window().resize( 800, 800 ) ;
