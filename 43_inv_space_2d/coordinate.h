@@ -129,7 +129,7 @@ namespace world
             return *this = this_t( f ) ;
         }
 
-        this_cref_t operator += ( natus::math::vec2f_cref_t f ) const noexcept
+        this_cref_t operator += ( natus::math::vec2f_cref_t f ) noexcept
         {
             _vec += f ;
             return this_t::evaluate() ;
