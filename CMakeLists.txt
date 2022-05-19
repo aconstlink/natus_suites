@@ -68,6 +68,7 @@ set( subdirs
     "xx_1_tile_render"
     "xx_2_tile_render"
     "xx_tool_sprite"
+    "xx_tool_player_timeline"
     )
 
 if( WIN32 )

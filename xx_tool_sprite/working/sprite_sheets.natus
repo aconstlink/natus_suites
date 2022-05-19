@@ -1,16 +1,15 @@
 <natus>
     <sprite_sheets>
-        
         <sprite_sheet name="megaman">
             <image src="images.megaman.png"/>
             <sprites>
                 <sprite name="0">
-                    <animation rect="5 263 19 286" pivot="12 271"/>
+                    <animation rect="4 263 19 286" pivot="11 271"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="1">
-                    <animation rect="29 264 48 285" pivot="36 273"/>
+                    <animation rect="28 264 48 285" pivot="35 273"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
@@ -20,17 +19,17 @@
                     <hits/>
                 </sprite>
                 <sprite name="3">
-                    <animation rect="87 264 115 287" pivot="100 275"/>
+                    <animation rect="86 264 115 287" pivot="99 275"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="4">
-                    <animation rect="120 264 146 286" pivot="132 275"/>
+                    <animation rect="119 264 147 287" pivot="132 276"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="5">
-                    <animation rect="155 264 180 284" pivot="168 273"/>
+                    <animation rect="154 264 181 285" pivot="168 274"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
@@ -206,37 +205,37 @@
                     <hits/>
                 </sprite>
                 <sprite name="idle_1">
-                    <animation rect="17 240 29 252" pivot="23 246"/>
+                    <animation rect="17 240 29 252" pivot="23 244"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="idle_2">
-                    <animation rect="33 240 45 252" pivot="39 246"/>
+                    <animation rect="33 240 45 252" pivot="39 244"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="idle_3">
-                    <animation rect="49 240 61 251" pivot="55 245"/>
+                    <animation rect="49 240 61 251" pivot="55 243"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="idle_4">
-                    <animation rect="64 240 78 250" pivot="71 245"/>
+                    <animation rect="64 240 78 250" pivot="71 241"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="idle_5">
-                    <animation rect="80 240 94 248" pivot="87 244"/>
+                    <animation rect="80 240 94 248" pivot="87 238"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="idle_6">
-                    <animation rect="96 240 110 250" pivot="103 245"/>
+                    <animation rect="96 240 110 250" pivot="103 241"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
                 <sprite name="idle_7">
-                    <animation rect="113 240 125 251" pivot="119 245"/>
+                    <animation rect="113 240 125 251" pivot="119 243"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
@@ -363,14 +362,14 @@
             </sprites>
             <animations>
                 <animation name="idle">
-                    <frame sprite="idle_0" duration="46"/>
-                    <frame sprite="idle_1" duration="150"/>
-                    <frame sprite="idle_2" duration="54"/>
-                    <frame sprite="idle_3" duration="50"/>
-                    <frame sprite="idle_4" duration="50"/>
-                    <frame sprite="idle_5" duration="50"/>
-                    <frame sprite="idle_6" duration="50"/>
-                    <frame sprite="idle_7" duration="50"/>
+                    <frame sprite="idle_0" duration="100"/>
+                    <frame sprite="idle_1" duration="100"/>
+                    <frame sprite="idle_2" duration="100"/>
+                    <frame sprite="idle_3" duration="100"/>
+                    <frame sprite="idle_4" duration="100"/>
+                    <frame sprite="idle_5" duration="100"/>
+                    <frame sprite="idle_6" duration="100"/>
+                    <frame sprite="idle_7" duration="100"/>
                 </animation>
                 <animation name="run">
                     <frame sprite="idle_0" duration="50"/>
