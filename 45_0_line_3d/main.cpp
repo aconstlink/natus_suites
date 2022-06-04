@@ -113,10 +113,7 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
-
-
-            _window_dims = window ;
+            _window_dims = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
 
             return natus::application::result::ok ;
         }        

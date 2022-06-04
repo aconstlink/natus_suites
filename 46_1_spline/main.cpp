@@ -32,6 +32,7 @@
 #include <natus/math/utility/angle.hpp>
 #include <natus/math/utility/3d/transformation.hpp>
 #include <natus/math/utility/constants.hpp>
+#include <natus/math/utility/degree.hpp>
 
 #include <random>
 #include <thread>
@@ -73,10 +74,7 @@ namespace this_file
 
     private:
 
-        natus::math::vec2f_t _target = natus::math::vec2f_t( 800, 600.0f ) ;
         natus::math::vec2f_t _window_dims = natus::math::vec2f_t( 1.0f ) ;
-        natus::math::vec2f_t _aspect_scale = natus::math::vec2f_t( 1.0f ) ;
-        natus::math::vec2f_t _extend = natus::math::vec2f_t( 100, 100 ) ;
 
     public:
 
@@ -115,26 +113,13 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            natus::math::vec2f_t const target = _target ; 
             natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
 
-            natus::math::vec2f_t const ratio = window / target ;
 
             _window_dims = window ;
-            _aspect_scale = ratio ;
-
-            this_t::update_extend() ;
 
             return natus::application::result::ok ;
-        }
-
-        // some side-effects: updates internal variables.
-        void_t update_extend( void_t ) noexcept
-        {
-            auto const ratio = _aspect_scale ;
-            _extend = _target * (ratio.x() < ratio.y() ? ratio.xx() : ratio.yy()) ;
-        }
-        
+        }        
 
     private:
 
@@ -163,7 +148,7 @@ namespace this_file
             }
 
             {
-                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 0.0f, -10.0f ),
+                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 0.0f, -500.0f ),
                         natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
             }
 
@@ -242,33 +227,6 @@ namespace this_file
                     _tr->init( std::move( *ii->obj ) ) ;
                 }
             }
-            
-            {
-                // taking all slices
-                natus::graphics::image_t imgs ;
-
-                natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                auto item = mod_reg->import_from( natus::io::location_t( "images.tileset_64x64.png" ), _db ) ;
-
-                natus::format::image_item_res_t ii = item.get() ;
-                if( ii.is_valid() )
-                {
-                    imgs.append( *ii->img ) ;
-                }
-
-                natus::graphics::image_object_res_t ires = natus::graphics::image_object_t( 
-                    "tile_sets", std::move( imgs ) )
-                    .set_type( natus::graphics::texture_type::texture_2d_array )
-                    .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
-                    .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
-                    .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
-                    .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
-
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.configure( ires ) ;
-                } ) ;
-            }
 
             // prepare line render
             {
@@ -336,27 +294,13 @@ namespace this_file
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
         {
-            _camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+            //_camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+            _camera_0.perspective_fov( natus::math::degree<float_t>::val_to_radian(30.0f),
+                _window_dims.x() / _window_dims.y(), 1.0f, 1000.0f ) ;
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _lr3->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
-
-            // draw extend of aspect
-            if( _draw_debug )
-            {
-                auto const cpos = _camera_0.get_position().xy() ;
-
-                natus::math::vec2f_t p0 = cpos + _extend * natus::math::vec2f_t(-0.5f,-0.5f) ;
-                natus::math::vec2f_t p1 = cpos + _extend * natus::math::vec2f_t(-0.5f,+0.5f) ;
-                natus::math::vec2f_t p2 = cpos + _extend * natus::math::vec2f_t(+0.5f,+0.5f) ;
-                natus::math::vec2f_t p3 = cpos + _extend * natus::math::vec2f_t(+0.5f,-0.5f) ;
-
-                natus::math::vec4f_t color0( 1.0f, 1.0f, 1.0f, 0.0f ) ;
-                natus::math::vec4f_t color1( 1.0f, 0.0f, 0.0f, 1.0f ) ;
-
-                _pr->draw_rect( 50, p0, p1, p2, p3, color0, color1 ) ;
-            }
 
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
@@ -372,7 +316,9 @@ namespace this_file
                 {
                     float_t const fac = (float_t( i ) / float_t( ns-1 )) ;
                     float_t const part =  fac * 2.0f * natus::math::constants<float_t>::pi()  ;
-                    _lr3->draw( natus::math::vec3f_t(0.0f), natus::math::vec3f_t( 100.0f * std::cos(part), 100.0f * std::sin(part), 10.0f ), natus::math::vec4f_t( 1.0f )  ) ;
+                    _lr3->draw( natus::math::vec3f_t(0.0f), 
+                        natus::math::vec3f_t( 100.0f * std::cos(part), 100.0f * std::sin(part), 10.0f ), 
+                        natus::math::vec4f_t( 1.0f )  ) ;
                 }
                 
             }
@@ -390,7 +336,6 @@ namespace this_file
                 }
 
                 _lr3->render() ;
-                
             }
             
             {
@@ -410,29 +355,7 @@ namespace this_file
             if( !_do_tool ) return natus::application::result::no_imgui ;
 
             ImGui::Begin( "Control and Info" ) ;
-            {
-                int_t data[2] = { int_t( _extend.x() ), int_t( _extend.y() ) } ;
-                ImGui::SliderInt2( "Extend", data, 0, 1000, "%i", 0 ) ;
-                _extend.x( float_t( data[0] ) ) ; _extend.y( float_t( data[1] ) ) ;
-            }
-
-            {
-            }
-
-            {
-                ImGui::Checkbox( "Draw Debug", &_draw_debug ) ;
-            }
-
-            {
-            }
-
-            {
-                float_t data[2] = {_camera_0.get_position().x(), _camera_0.get_position().y() } ;
-                ImGui::SliderFloat2( "Cam Pos", data, -1000.0f, 1000.0f, "%f" ) ;
-                _camera_0.translate_to( natus::math::vec3f_t( data[0], data[1], _camera_0.get_position().z() ) ) ;
-                
-            }
-
+            
             {
                 ImGui::Text( "mx: %f, my: %f", _cur_mouse.x(), _cur_mouse.y() ) ;
                 //_cur_mouse
