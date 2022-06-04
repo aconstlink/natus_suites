@@ -33,6 +33,8 @@
 #include <natus/math/utility/3d/transformation.hpp>
 #include <natus/math/utility/constants.hpp>
 #include <natus/math/utility/degree.hpp>
+#include <natus/math/spline/linear_spline.hpp>
+#include <natus/math/spline/quadratic_spline.hpp>
 
 #include <random>
 #include <thread>
@@ -309,18 +311,51 @@ namespace this_file
                 } ) ;
             }
 
-            // draw some 3d lines
+            // draw linear splines
             {
-                size_t const ns = 10 ;
-                for( size_t i=0; i<ns; ++i )
+                natus::math::linear_spline<natus::math::vec3f_t> ls = 
                 {
-                    float_t const fac = (float_t( i ) / float_t( ns-1 )) ;
-                    float_t const part =  fac * 2.0f * natus::math::constants<float_t>::pi()  ;
-                    _lr3->draw( natus::math::vec3f_t(0.0f), 
-                        natus::math::vec3f_t( 100.0f * std::cos(part), 100.0f * std::sin(part), 10.0f ), 
-                        natus::math::vec4f_t( 1.0f )  ) ;
+                    natus::math::vec3f_t(-100.0f, -100.0f, 100.0f),
+                    natus::math::vec3f_t(-50.0f, 100.0f, 0.0f),
+                    natus::math::vec3f_t(50.0f, -100.0f, -50.0f),
+                    natus::math::vec3f_t(100.0f, 100.0f, 0.0f)
+                } ;
+
+                size_t const samples = 100 ;
+                for( size_t i=0; i<(samples>>1); ++i )
+                {
+                    float_t const frac0 = float_t((i<<1)+0) / float_t(samples-1) ;
+                    float_t const frac1 = float_t((i<<1)+1) / float_t(samples-1) ;
+
+                    auto const p0 = ls( frac0 ) ;
+                    auto const p1 = ls( frac1 ) ;
+
+                    _lr3->draw( p0, p1, natus::math::vec4f_t( 1.0f )  ) ;
                 }
-                
+            }
+
+            // draw linear splines
+            {
+                natus::math::quadratic_spline<natus::math::vec3f_t> s = 
+                {
+                    natus::math::vec3f_t(-100.0f, -100.0f, 100.0f),
+                    natus::math::vec3f_t(-50.0f, 100.0f, 0.0f),
+                    natus::math::vec3f_t(-0.0f, 0.0f, 0.0f),
+                    natus::math::vec3f_t(50.0f, -100.0f, -50.0f),
+                    natus::math::vec3f_t(100.0f, 100.0f, 0.0f)
+                } ;
+
+                size_t const samples = 100 ;
+                for( size_t i=0; i<(samples>>1); ++i )
+                {
+                    float_t const frac0 = float_t((i<<1)+0) / float_t(samples-1) ;
+                    float_t const frac1 = float_t((i<<1)+1) / float_t(samples-1) ;
+
+                    auto const p0 = s( frac0 ) ;
+                    auto const p1 = s( frac1 ) ;
+
+                    _lr3->draw( p0, p1, natus::math::vec4f_t( 1.0f )  ) ;
+                }
             }
 
             // render all
