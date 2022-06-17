@@ -186,12 +186,6 @@ namespace this_file
                     a.configure( _root_render_states ) ;
                 } ) ;
             }
-            
-            // prepare primitive
-            {
-                _pr = natus::gfx::primitive_render_2d_res_t( natus::gfx::primitive_render_2d_t() ) ;
-                _pr->init( "particle_prim_render", _graphics ) ;
-            }
 
             // import fonts and create text render
             {
@@ -230,6 +224,12 @@ namespace this_file
                 }
             }
 
+            // prepare primitive
+            {
+                _pr = natus::gfx::primitive_render_2d_res_t( natus::gfx::primitive_render_2d_t() ) ;
+                _pr->init( "particle_prim_render", _graphics ) ;
+            }
+
             // prepare line render
             {
                 _lr3 = natus::gfx::line_render_3d_res_t( natus::gfx::line_render_3d_t() ) ;
@@ -239,6 +239,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        //*****************************************************************************
         virtual natus::application::result on_device( device_data_in_t ) noexcept 
         { 
             natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
@@ -262,7 +263,64 @@ namespace this_file
                 _cur_mouse = _cur_mouse * (_window_dims * natus::math::vec2f_t(0.5f) );
             }
 
+            // rotate
+            {
+                natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
+                static natus::math::vec2f_t old = mouse.get_global() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
+                natus::math::vec2f_t const dif = (mouse.get_global()* natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f )) - old ;
+                old = mouse.get_global() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
+
+                if( mouse.is_pressing(natus::device::layouts::three_mouse::button::right ) )
+                {
+                    auto const old_trafo = _camera_0.get_transformation() ;
+                    auto const old_trans = old_trafo.get_translation() ;
+                    auto const old_rot = old_trafo.get_rotation_matrix() ;
+
+                    auto trafo = natus::math::m3d::trafof_t().
+                        rotate_by_angle_fl( natus::math::vec3f_t( -dif.y()*2.0f, dif.x()*2.0f, 0.0f ) ).
+                        rotate_by_matrix_fl( old_rot ).
+                        
+                        translate_fl(old_trans) ; 
+
+                    _camera_0.set_transformation( trafo ) ;
+                }
+            }
+
+            // translate
+            {
+                natus::math::vec3f_t translate ;
+
+                if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::a ) ==
+                    natus::device::components::key_state::pressing )
+                {
+                    translate += natus::math::vec3f_t(-10.0f, 0.0f, 0.0f ) ;
+                }
+
+                if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::s ) ==
+                    natus::device::components::key_state::pressing )
+                {
+                    translate += natus::math::vec3f_t(0.0f, 0.0f, -10.0f) ;
+                }
+
+                if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::d ) ==
+                    natus::device::components::key_state::pressing )
+                {
+                    translate += natus::math::vec3f_t( 10.0f, 0.0f, 0.0f ) ;
+                }
+
+                if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::w ) ==
+                    natus::device::components::key_state::pressing )
+                {
+                    translate += natus::math::vec3f_t(0.0f, 0.0f, 10.0f ) ;
+                }
+
+                auto trafo = _camera_0.get_transformation() ;
+                trafo.translate_fr( translate ) ;
+                _camera_0.set_transformation( trafo ) ;
+            }
+
             // move camera with mouse
+            #if 0
             {
                 natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
                 static auto m_rel_old = natus::math::vec2f_t() ;
@@ -278,27 +336,31 @@ namespace this_file
 
                 m_rel_old = m_rel ;
             }
+            #endif
 
             return natus::application::result::ok ; 
         }
 
+        //*****************************************************************************
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ud ) noexcept 
         { 
             NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
             return natus::application::result::ok ; 
         }
 
+        //*****************************************************************************
         virtual natus::application::result on_physics( natus::application::app_t::physics_data_in_t ud ) noexcept
         {
             NATUS_PROFILING_COUNTER_HERE( "Physics Clock" ) ;
             return natus::application::result::ok ; 
         }
 
+        //*****************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
         {
             //_camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
-            _camera_0.perspective_fov( natus::math::degree<float_t>::val_to_radian(30.0f),
-                _window_dims.x() / _window_dims.y(), 1.0f, 1000.0f ) ;
+            _camera_0.perspective_fov( natus::math::degree<float_t>::val_to_radian(45.0f),
+                _window_dims.y() / _window_dims.x(), 0.1f, 1000.0f ) ;
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
@@ -311,14 +373,16 @@ namespace this_file
                 } ) ;
             }
 
+            natus::math::vec3f_t off(100.0f,100.0f,100.0f) ;
+
             // draw linear splines
             {
                 natus::math::linear_spline<natus::math::vec3f_t> ls = 
                 {
-                    natus::math::vec3f_t(-100.0f, -100.0f, 100.0f),
-                    natus::math::vec3f_t(-50.0f, 100.0f, 0.0f),
-                    natus::math::vec3f_t(50.0f, -100.0f, -50.0f),
-                    natus::math::vec3f_t(100.0f, 100.0f, 0.0f)
+                    natus::math::vec3f_t(-100.0f, -100.0f, 100.0f) + off,
+                    natus::math::vec3f_t(-50.0f, 100.0f, 0.0f) + off,
+                    natus::math::vec3f_t(50.0f, -100.0f, -50.0f) + off,
+                    natus::math::vec3f_t(100.0f, 100.0f, 0.0f) + off
                 } ;
 
                 size_t const samples = 100 ;
@@ -336,14 +400,14 @@ namespace this_file
 
             // draw linear splines
             {
-                natus::math::quadratic_spline<natus::math::vec3f_t> s = 
+                natus::math::quadratic_spline<natus::math::vec3f_t> s(
                 {
-                    natus::math::vec3f_t(-100.0f, -100.0f, 100.0f),
-                    natus::math::vec3f_t(-50.0f, 100.0f, 0.0f),
-                    natus::math::vec3f_t(-0.0f, 0.0f, 0.0f),
-                    natus::math::vec3f_t(50.0f, -100.0f, -50.0f),
-                    natus::math::vec3f_t(100.0f, 100.0f, 0.0f)
-                } ;
+                    natus::math::vec3f_t(-100.0f, -100.0f, 100.0f) + off,
+                    natus::math::vec3f_t(-50.0f, 100.0f, 0.0f) + off,
+                    natus::math::vec3f_t(-0.0f, 0.0f, 0.0f) + off,
+                    natus::math::vec3f_t(50.0f, -100.0f, -50.0f) + off,
+                    natus::math::vec3f_t(100.0f, 100.0f, 0.0f) + off
+                }, natus::math::quadratic_spline<natus::math::vec3f_t>::init_type::construct_c1 );
 
                 size_t const samples = 100 ;
                 for( size_t i=0; i<(samples>>1); ++i )
@@ -357,6 +421,48 @@ namespace this_file
                     _lr3->draw( p0, p1, natus::math::vec4f_t( 1.0f )  ) ;
                 }
             }
+
+            // draw linear splines #2
+            {
+                off += natus::math::vec3f_t( 100.0f, -100.0f, -200.0f ) ;
+
+                natus::math::quadratic_spline<natus::math::vec3f_t> s ;
+                
+                natus::ntd::vector<natus::math::vec3f_t> points = 
+                {
+                    natus::math::vec3f_t(-100.0f, -100.0f, 100.0f) + off,
+                    natus::math::vec3f_t(-50.0f, 100.0f, 0.0f) + off,
+                    natus::math::vec3f_t(-0.0f, 0.0f, 0.0f) + off,
+                    natus::math::vec3f_t(50.0f, -100.0f, -50.0f) + off,
+                    natus::math::vec3f_t(100.0f, 100.0f, 0.0f) + off
+                } ;
+
+                for( auto const & cp : points )
+                {
+                    s.append( cp ) ;
+                }
+
+                size_t const samples = 100 ;
+                for( size_t i=0; i<(samples>>1); ++i )
+                {
+                    float_t const frac0 = float_t((i<<1)+0) / float_t(samples-1) ;
+                    float_t const frac1 = float_t((i<<1)+1) / float_t(samples-1) ;
+
+                    auto const p0 = s( frac0 ) ;
+                    auto const p1 = s( frac1 ) ;
+
+                    _lr3->draw( p0, p1, natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f )  ) ;
+                }
+            }
+
+            #if 0
+            {
+                auto const p0 = natus::math::vec3f_t() ;
+                auto const p1 = _camera_0.get_position() ;
+
+                _lr3->draw( p0, p1, natus::math::vec4f_t( 1.0f )  ) ;
+            }
+            #endif
 
             // render all
             {
