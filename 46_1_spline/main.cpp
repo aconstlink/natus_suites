@@ -9,6 +9,7 @@
 #include <natus/gfx/primitive/primitive_render_2d.h> 
 #include <natus/gfx/font/text_render_2d.h>
 #include <natus/gfx/primitive/line_render_3d.h>
+#include <natus/gfx/primitive/primitive_render_3d.h>
 
 #include <natus/format/global.h>
 #include <natus/format/nsl/nsl_module.h>
@@ -35,6 +36,7 @@
 #include <natus/math/utility/degree.hpp>
 #include <natus/math/spline/linear_spline.hpp>
 #include <natus/math/spline/quadratic_spline.hpp>
+#include <natus/math/spline/cubic_spline.hpp>
 
 #include <random>
 #include <thread>
@@ -71,6 +73,7 @@ namespace this_file
         natus::gfx::text_render_2d_res_t _tr ;
         natus::gfx::primitive_render_2d_res_t _pr ;
         natus::gfx::line_render_3d_res_t _lr3 ;
+        natus::gfx::primitive_render_3d_res_t _pr3 ;
 
         bool_t _draw_debug = false ;
 
@@ -151,7 +154,7 @@ namespace this_file
 
             {
                 _camera_0.look_at( natus::math::vec3f_t( 0.0f, 0.0f, -500.0f ),
-                        natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
+                        natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 100.0f, 0.0f, 0.0f )) ;
             }
 
             // root render states
@@ -227,7 +230,13 @@ namespace this_file
             // prepare primitive
             {
                 _pr = natus::gfx::primitive_render_2d_res_t( natus::gfx::primitive_render_2d_t() ) ;
-                _pr->init( "particle_prim_render", _graphics ) ;
+                _pr->init( "prim_render", _graphics ) ;
+            }
+
+            // prepare primitive
+            {
+                _pr3 = natus::gfx::primitive_render_3d_res_t( natus::gfx::primitive_render_3d_t() ) ;
+                _pr3->init( "prim_render_3d", _graphics ) ;
             }
 
             // prepare line render
@@ -365,6 +374,7 @@ namespace this_file
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _lr3->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
+            _pr3->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
 
             {
                 _graphics.for_each( [&]( natus::graphics::async_view_t a )
@@ -422,7 +432,7 @@ namespace this_file
                 }
             }
 
-            // draw linear splines #2
+            // draw splines #2
             {
                 off += natus::math::vec3f_t( 100.0f, -100.0f, -200.0f ) ;
 
@@ -431,10 +441,11 @@ namespace this_file
                 natus::ntd::vector<natus::math::vec3f_t> points = 
                 {
                     natus::math::vec3f_t(-100.0f, -100.0f, 100.0f) + off,
-                    natus::math::vec3f_t(-50.0f, 100.0f, 0.0f) + off,
-                    natus::math::vec3f_t(-0.0f, 0.0f, 0.0f) + off,
+                    natus::math::vec3f_t(-100.0f, 100.0f, 0.0f) + off,
+                    natus::math::vec3f_t(-0.0f, 100.0f, 0.0f) + off,
                     natus::math::vec3f_t(50.0f, -100.0f, -50.0f) + off,
-                    natus::math::vec3f_t(100.0f, 100.0f, 0.0f) + off
+                    //natus::math::vec3f_t(100.0f, 100.0f, 0.0f) + off,
+                    //natus::math::vec3f_t(200.0f, 100.0f, 0.0f) + off
                 } ;
 
                 for( auto const & cp : points )
@@ -453,6 +464,64 @@ namespace this_file
 
                     _lr3->draw( p0, p1, natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f )  ) ;
                 }
+
+                {
+                    s.for_each_control_point( [&]( natus::math::vec3f_cref_t p )
+                    {
+                        auto const r = natus::math::m3d::trafof_t::rotation_by_axis( natus::math::vec3f_t(1.0f,0.0f,0.0f), 
+                                natus::math::angle<float_t>::degree_to_radian(90.0f) ) ;
+
+                        _pr3->draw_circle( 
+                            ( _camera_0.get_transformation()  ).get_rotation_matrix(), p, 
+                            2.0f, natus::math::vec4f_t(1.0f), natus::math::vec4f_t(1.0f), 20 ) ;
+                    } ) ;
+                }
+            }
+
+            // draw splines #3
+            {
+                off += natus::math::vec3f_t( 100.0f, 100.0f, 400.0f ) ;
+
+                natus::math::cubic_spline<natus::math::vec3f_t> s ;
+                
+                natus::ntd::vector<natus::math::vec3f_t> points = 
+                {
+                    natus::math::vec3f_t(-100.0f, -100.0f, 100.0f) + off,
+                    natus::math::vec3f_t(-100.0f, 100.0f, 0.0f) + off,
+                    natus::math::vec3f_t(-0.0f, 100.0f, 0.0f) + off,
+                    natus::math::vec3f_t(50.0f, -100.0f, -50.0f) + off,
+                    //natus::math::vec3f_t(100.0f, 100.0f, 0.0f) + off,
+                    //natus::math::vec3f_t(200.0f, 100.0f, 0.0f) + off
+                } ;
+
+                for( auto const & cp : points )
+                {
+                    s.append( cp ) ;
+                }
+
+                size_t const samples = 100 ;
+                for( size_t i=0; i<(samples>>1); ++i )
+                {
+                    float_t const frac0 = float_t((i<<1)+0) / float_t(samples-1) ;
+                    float_t const frac1 = float_t((i<<1)+1) / float_t(samples-1) ;
+
+                    auto const p0 = s( frac0 ) ;
+                    auto const p1 = s( frac1 ) ;
+
+                    _lr3->draw( p0, p1, natus::math::vec4f_t( 0.0f, 1.0f, 1.0f, 1.0f )  ) ;
+                }
+
+                {
+                    s.for_each_control_point( [&]( natus::math::vec3f_cref_t p )
+                    {
+                        auto const r = natus::math::m3d::trafof_t::rotation_by_axis( natus::math::vec3f_t(1.0f,0.0f,0.0f), 
+                                natus::math::angle<float_t>::degree_to_radian(90.0f) ) ;
+
+                        _pr3->draw_circle( 
+                            ( _camera_0.get_transformation()  ).get_rotation_matrix(), p, 
+                            2.0f, natus::math::vec4f_t(1.0f), natus::math::vec4f_t(1.0f), 20 ) ;
+                    } ) ;
+                }
             }
 
             #if 0
@@ -469,6 +538,7 @@ namespace this_file
                 _pr->prepare_for_rendering() ;
                 _tr->prepare_for_rendering() ;
                 _lr3->prepare_for_rendering() ;
+                _pr3->prepare_for_rendering() ;
 
                 for( size_t i=0; i<100+1; ++i )
                 {
@@ -476,6 +546,7 @@ namespace this_file
                     _tr->render( i ) ;
                 }
 
+                _pr3->render() ;
                 _lr3->render() ;
             }
             
