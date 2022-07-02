@@ -68,6 +68,7 @@ set( subdirs
     "45_0_line_3d"
     "46_0_spline"
     "46_1_spline"
+    "46_2_spline"
     "47_0_keyframe"
     "xx_1_tile_render"
     "xx_2_tile_render"
