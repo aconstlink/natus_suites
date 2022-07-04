@@ -497,13 +497,27 @@ namespace this_file
                     }
 
                     float_t f = t * natus::math::constants<float_t>::pix2() ;
-                    natus::math::vec3f_t dif( 
+                    natus::math::vec3f_t dif = natus::math::vec3f_t( 
                         natus::math::fn<float_t>::cos( f ), 
-                        natus::math::fn<float_t>::sin( f ) * natus::math::fn<float_t>::cos( f ), 
-                        natus::math::fn<float_t>::sin( f ) ) ;
+                        natus::math::fn<float_t>::sin( f ), 
+                        natus::math::fn<float_t>::cos( f ) ).abs() ;
                     
-                    auto const cp = s.get_control_point( change_idx ).p + dif * 30.0f ;
-                    s.change_point( change_idx, cp ) ;
+                    auto cp = s.get_control_point( change_idx );
+                    
+
+                    if( change_idx % 2 == 0 )
+                    {
+                        auto const p = cp.p + dif * 30.0f ;
+                        cp.p = p ;
+                    }
+                    else 
+                    {
+                        cp.lt = cp.lt + dif * 50.0f ;
+                        cp.rt = cp.lt ;
+                    }
+
+                    s.change_control_point( change_idx, cp ) ;
+                    
                 }
 
                 natus::math::linear_bezier_spline<natus::math::vec3f_t> ls = s.control_points() ;
@@ -532,133 +546,35 @@ namespace this_file
                 {
                     s.for_each_control_point( [&]( size_t const i, spline_t::control_point_cref_t p )
                     {
-                        auto const r = natus::math::m3d::trafof_t::rotation_by_axis( natus::math::vec3f_t(1.0f,0.0f,0.0f), 
-                                natus::math::angle<float_t>::degree_to_radian(90.0f) ) ;
-
                         natus::math::vec4f_t color( 1.0f ) ;
                         if( i == change_idx ) color = natus::math::vec4f_t( 1.0f, 0.0f, 0.0f, 1.0f ) ;
 
                         _pr3->draw_circle( 
                             ( _camera_0.get_transformation()  ).get_rotation_matrix(), p.p, 
                             2.0f, color, color, 20 ) ;
+
+                        {
+                            auto const p0 = p.p ;
+                            auto const p1 = p.p - p.lt.normalized() * 10.0f ;
+                            _lr3->draw( p0, p1, natus::math::vec4f_t( 1.0f, 0.5f, 0.4f, 1.0f )  ) ;
+                            _pr3->draw_circle( 
+                                ( _camera_0.get_transformation()  ).get_rotation_matrix(), p1, 
+                                1.0f, color, color, 20 ) ;
+                        }
+
+                        {
+                            auto const p0 = p.p ;
+                            auto const p1 = p.p + p.rt.normalized() * 10.0f ;
+                            _lr3->draw( p0, p1 , natus::math::vec4f_t( 1.0f, 0.5f, 0.4f, 1.0f )  ) ;
+                            _pr3->draw_circle( 
+                                ( _camera_0.get_transformation()  ).get_rotation_matrix(), p1, 
+                                1.0f, color, color, 20 ) ;
+                        }
+
+                        
                     } ) ;
                 }
             }
-
-            #if 0
-
-            // draw splines #3
-            {
-                off += natus::math::vec3f_t( 100.0f, 100.0f, 400.0f ) ;
-
-                natus::math::cubic_spline<natus::math::vec3f_t> s ;
-                
-                natus::ntd::vector<natus::math::vec3f_t> points = 
-                {
-                    natus::math::vec3f_t(-100.0f, -100.0f, 100.0f) + off,
-                    natus::math::vec3f_t(-100.0f, 100.0f, 0.0f) + off,
-                    natus::math::vec3f_t(-0.0f, 100.0f, 0.0f) + off,
-                    natus::math::vec3f_t(50.0f, -100.0f, -50.0f) + off,
-                    natus::math::vec3f_t(100.0f, 100.0f, 0.0f) + off,
-                    natus::math::vec3f_t(200.0f, 100.0f, 0.0f) + off
-                } ;
-
-                for( auto const & cp : points )
-                {
-                    s.append( cp ) ;
-                }
-
-                natus::math::linear_spline<natus::math::vec3f_t> ls = s.control_points() ;
-
-                size_t const samples = 100 ;
-                for( size_t i=0; i<(samples>>1); ++i )
-                {
-                    float_t const frac0 = float_t((i<<1)+0) / float_t(samples-1) ;
-                    float_t const frac1 = float_t((i<<1)+1) / float_t(samples-1) ;
-
-                    {
-                        auto const p0 = s( frac0 ) ;
-                        auto const p1 = s( frac1 ) ;
-
-                        _lr3->draw( p0, p1, natus::math::vec4f_t( 0.0f, 1.0f, 1.0f, 1.0f )  ) ;
-                    }
-
-                    {
-                        auto const p0 = ls( frac0 ) ;
-                        auto const p1 = ls( frac1 ) ;
-
-                        _lr3->draw( p0, p1, natus::math::vec4f_t( 0.0f, 1.0f, 1.0f, 1.0f )  ) ;
-                    }
-
-                }
-
-                {
-                    s.for_each_control_point( [&]( natus::math::vec3f_cref_t p )
-                    {
-                        auto const r = natus::math::m3d::trafof_t::rotation_by_axis( natus::math::vec3f_t(1.0f,0.0f,0.0f), 
-                                natus::math::angle<float_t>::degree_to_radian(90.0f) ) ;
-
-                        _pr3->draw_circle( 
-                            ( _camera_0.get_transformation()  ).get_rotation_matrix(), p, 
-                            2.0f, natus::math::vec4f_t(1.0f), natus::math::vec4f_t(1.0f), 20 ) ;
-                    } ) ;
-                }
-            }
-
-            // draw splines #4 - using 2d
-            {
-                off = natus::math::vec3f_t( -300.0f, 100.0f, 0.0f ) ;
-
-                natus::ntd::vector<natus::math::vec2f_t> points = 
-                {
-                    natus::math::vec2f_t(-100.0f, -100.0f ) + off.xy(),
-                    natus::math::vec2f_t(-100.0f, 100.0f ) + off.xy(),
-                    natus::math::vec2f_t(-0.0f, 100.0f ) + off.xy(),
-                    natus::math::vec2f_t(50.0f, -100.0f) + off.xy(),
-                    natus::math::vec2f_t(100.0f, 100.0f ) + off.xy(),
-                    natus::math::vec2f_t(200.0f, 100.0f ) + off.xy(),
-                    natus::math::vec2f_t(250.0f, 100.0f ) + off.xy()
-                } ;
-
-                typedef natus::math::cubic_spline<natus::math::vec2f_t> spline_t ;
-                spline_t s( points, spline_t::init_type::construct ) ;
-                natus::math::linear_spline<natus::math::vec2f_t> ls = s.control_points() ;
-
-                size_t const samples = 100 ;
-                for( size_t i=0; i<(samples>>1); ++i )
-                {
-                    float_t const frac0 = float_t((i<<1)+0) / float_t(samples-1) ;
-                    float_t const frac1 = float_t((i<<1)+1) / float_t(samples-1) ;
-
-                    {
-                        natus::math::vec3f_t const p0( s( frac0 ), off.z() ) ;
-                        natus::math::vec3f_t const p1( s( frac1 ), off.z() ) ;
-
-                        _lr3->draw( p0, p1, natus::math::vec4f_t( 0.0f, 1.0f, 1.0f, 1.0f )  ) ;
-                    }
-
-                    {
-                        natus::math::vec3f_t const p0( ls( frac0 ), off.z() ) ;
-                        natus::math::vec3f_t const p1( ls( frac1 ), off.z() ) ;
-
-                        _lr3->draw( p0, p1, natus::math::vec4f_t( 0.0f, 1.0f, 1.0f, 1.0f )  ) ;
-                    }
-
-                }
-
-                {
-                    s.for_each_control_point( [&]( natus::math::vec2f_cref_t p )
-                    {
-                        _pr3->draw_circle( 
-                            ( _camera_0.get_transformation()  ).get_rotation_matrix(), natus::math::vec3f_t( p, off.z() ), 
-                            2.0f, natus::math::vec4f_t(1.0f), natus::math::vec4f_t(1.0f), 20 ) ;
-                    } ) ;
-                }
-            }
-
-            
-            
-            #endif
 
             // render all
             {
