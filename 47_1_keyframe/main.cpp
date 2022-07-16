@@ -416,12 +416,15 @@ namespace this_file
                 typedef natus::math::cubic_hermit_spline< natus::math::vec3f_t > spline_t ;
                 typedef natus::math::keyframe_sequence< spline_t > keyframe_sequence_t ;
 
+                typedef natus::math::linear_bezier_spline< float_t > splinef_t ;
+                typedef natus::math::keyframe_sequence< splinef_t > keyframe_sequencef_t ;
+
                 keyframe_sequence_t kf ;
 
-                natus::math::vec3f_t const p0 = natus::math::vec3f_t( 0.0f, 0.0f, 0.0f ) + df * natus::math::vec3f_t( -1.0f,-1.0f,0.0f) ;
-                natus::math::vec3f_t const p1 = natus::math::vec3f_t( 0.0f, 0.0f, 0.0f ) + df * natus::math::vec3f_t( -1.0f,1.0f,0.0f) ;
-                natus::math::vec3f_t const p2 = natus::math::vec3f_t( 0.0f, 0.0f, 0.0f ) + df * natus::math::vec3f_t( 1.0f,1.0f,0.0f) ;
-                natus::math::vec3f_t const p3 = natus::math::vec3f_t( 0.0f, 0.0f, 0.0f ) + df * natus::math::vec3f_t( 1.0f,-1.0f,0.0f) ;
+                natus::math::vec3f_t const p0 = natus::math::vec3f_t( 0.0f, 0.0f, 0.0f ) + df * natus::math::vec3f_t( -1.0f,-1.0f, 1.0f) ;
+                natus::math::vec3f_t const p1 = natus::math::vec3f_t( 0.0f, 0.0f, 0.0f ) + df * natus::math::vec3f_t( -1.0f,1.0f, -1.0f) ;
+                natus::math::vec3f_t const p2 = natus::math::vec3f_t( 0.0f, 0.0f, 0.0f ) + df * natus::math::vec3f_t( 1.0f,1.0f, 1.0f) ;
+                natus::math::vec3f_t const p3 = natus::math::vec3f_t( 0.0f, 0.0f, 0.0f ) + df * natus::math::vec3f_t( 1.0f,-1.0f, -1.0f) ;
 
                 kf.insert( keyframe_sequence_t::keyframe_t( 0, p0 ) ) ;
                 kf.insert( keyframe_sequence_t::keyframe_t( 1000, p1 ) ) ;
@@ -429,12 +432,23 @@ namespace this_file
                 kf.insert( keyframe_sequence_t::keyframe_t( 3000, p3 ) ) ;
                 kf.insert( keyframe_sequence_t::keyframe_t( 4000, p0 ) ) ;
 
+
+                keyframe_sequencef_t kf2 ;
+                kf2.insert( keyframe_sequencef_t::keyframe_t( 0, 30.0f ) ) ;
+                kf2.insert( keyframe_sequencef_t::keyframe_t( 1000, 50.0f ) ) ;
+                kf2.insert( keyframe_sequencef_t::keyframe_t( 2000, 20.0f ) ) ;
+                kf2.insert( keyframe_sequencef_t::keyframe_t( 3000, 60.0f ) ) ;
+                kf2.insert( keyframe_sequencef_t::keyframe_t( 10000, 10.0f ) ) ;
+                kf2.insert( keyframe_sequencef_t::keyframe_t( 11000, 30.0f ) ) ;
+
+
                 size_t const ltime = time % kf.back().get_time() ;
+                size_t const ltime2 = time % kf2.back().get_time() ;
 
                 natus::math::vec4f_t color = natus::math::vec4f_t(1.0f) ;
 
                 _pr3->draw_circle( 
-                    ( _camera_0.get_transformation()  ).get_rotation_matrix(), kf( ltime ), 30.0f, color, color, 10 ) ;
+                    ( _camera_0.get_transformation()  ).get_rotation_matrix(), kf( ltime ), kf2( ltime2 ), color, color, 10 ) ;
             }
 
             // render all

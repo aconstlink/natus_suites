@@ -71,6 +71,7 @@ set( subdirs
     "46_2_spline"
     "47_0_keyframe"
     "47_1_keyframe"
+    "48_bold_branch_spline"
     "xx_1_tile_render"
     "xx_2_tile_render"
     "xx_tool_sprite"
