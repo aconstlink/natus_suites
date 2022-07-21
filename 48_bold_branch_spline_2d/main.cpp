@@ -29,6 +29,7 @@
 #include <natus/math/utility/fn.hpp>
 #include <natus/math/vector/vector3.hpp>
 #include <natus/math/vector/vector4.hpp>
+#include <natus/math/matrix/matrix2.hpp>
 #include <natus/math/matrix/matrix4.hpp>
 #include <natus/math/utility/angle.hpp>
 #include <natus/math/utility/3d/transformation.hpp>
@@ -39,6 +40,7 @@
 #include <natus/math/spline/cubic_bezier_spline.hpp>
 #include <natus/math/spline/cubic_hermit_spline.hpp>
 #include <natus/math/animation/keyframe_sequence.hpp>
+#include <natus/math/quaternion/quaternion4.hpp>
 
 #include <random>
 #include <thread>
@@ -65,6 +67,7 @@ namespace this_file
         natus::device::ascii_device_res_t _dev_ascii ;
 
         natus::math::vec2f_t _cur_mouse ;
+        bool_t _left_down = false ;
 
         bool_t _do_tool = true ;
 
@@ -330,6 +333,10 @@ namespace this_file
                 _camera_0.set_transformation( trafo ) ;
             }
 
+            {
+                natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
+                _left_down = mouse.is_pressing( natus::device::layouts::three_mouse::button::left );
+            }
             // move camera with mouse
             #if 0
             {
@@ -385,7 +392,169 @@ namespace this_file
                 } ) ;
             }
 
+            // one entry per point
+            typedef natus::ntd::vector< natus::math::vec2f_t > points_t ;
             
+            // one entry per point and
+            // num neighbors of point per point
+            typedef natus::ntd::vector< size_t > neighbors_t ;
+
+            // num neighbors of point per point
+            typedef natus::ntd::vector< natus::math::vec2f_t > extended_t ;
+
+            // one entry per point
+            // where to look for the first exteded for a point
+            typedef natus::ntd::vector< size_t > offsets_t ;
+
+            // two entries per segment
+            typedef natus::ntd::vector< size_t > indices_t ;
+
+            points_t pts( {
+                natus::math::vec2f_t( -100.0f, -50.0f ),
+                natus::math::vec2f_t( 100.0f, 50.0f ),
+                natus::math::vec2f_t( 50.0f, 100.0f ),
+                natus::math::vec2f_t( 200.0f, -50.0f ),
+                natus::math::vec2f_t( 50.0f, 200.0f ),
+                natus::math::vec2f_t( 200.0f, 100.0f ),
+                } ) ;
+
+            indices_t inds( { 0, 1, 1, 2, 1, 3,  1,5 } ) ;
+            //indices_t inds( { 0, 1, 1, 2, 2, 0 } ) ;
+            
+            neighbors_t nnhs( pts.size() ) ; // number of neighbors
+            neighbors_t nhs( pts.size() ) ; // actual neighbor indices
+            offsets_t offs( pts.size() ) ;
+            extended_t exts ;
+
+            float_t thickness = 10.0f ;
+
+            // find number of neighbors
+            {
+                for( size_t i=0; i<pts.size(); ++i )
+                {
+                    size_t count = 0 ;
+                    for( size_t j=0; j<inds.size(); ++j )
+                    {
+                        count += (inds[j] == i) ? 1 : 0 ;
+                    }
+                    nnhs[i] = count ;
+                }
+            }
+
+            // compute exteded point size and offsets
+            {
+                size_t accum = 0 ;
+                for( size_t i=0; i<nnhs.size(); ++i )
+                {
+                    offs[i] = accum ;
+                    accum += nnhs[i] ;
+                }
+                exts.resize( accum ) ;
+                nhs.resize( accum ) ;
+            }
+
+            // make neighbor list for each point
+            {
+                size_t offset = 0 ;
+                for( size_t i=0; i<pts.size(); ++i )
+                {
+                    nhs[offset] = 0 ;
+                    for( size_t j=0; j<inds.size(); ++j )
+                    {
+                        if( i == inds[j] )
+                        {
+                            size_t const idx = j >> 1 ;
+
+                            nhs[offset] = inds[(idx*2)+((j+1)%2)] ;
+                            ++offset ;
+                        }
+                    }
+                }
+            }
+
+            
+            
+            // compute exteded
+            {
+                float_t const a90 = natus::math::angle<float_t>::degree_to_radian(90.0f) ;
+                natus::math::mat2f_t const rotl = natus::math::mat2f_t::make_rotation_matrix( +a90 ) ;
+                natus::math::mat2f_t const rotr = natus::math::mat2f_t::make_rotation_matrix( -a90 ) ;
+
+                for( size_t i=0; i<pts.size(); ++i )
+                {
+                    size_t const o = offs[i] ;
+                    size_t const nh = nnhs[i] ;
+
+                    for( size_t j = 0; j<nh; ++j )
+                    {
+                        size_t const idx = o + j ;
+                        size_t const nidx = o + ((j+1)%nh) ;
+
+                        auto const dir0 = pts[ nhs[idx] ] - pts[i] ;
+                        auto const dir1 = pts[ nhs[nidx] ] - pts[i] ;
+
+                        if( nh == 1 )
+                        {
+                            exts[idx] = pts[i] - dir0.normalized() * thickness ;
+                        }
+                        else
+                        {
+                            auto const n0 = (rotr * dir0) ;
+                            auto const n1 = (rotl * dir1) ; 
+
+                            auto const n2 = (n0 + n1) * 0.5f ;
+
+                            
+                            exts[idx] = pts[i] + n2.normalized() * thickness ;
+                        }
+                    }
+                }
+            }
+
+            // draw segments
+            {
+                float_t const radius = 5.0f ;
+
+                natus::math::vec4f_t color0( 1.0f,1.0f,1.0f,1.0f) ;
+                size_t const num_segs = inds.size() >> 1 ;
+                for( size_t i=0; i<num_segs; ++i )
+                {
+                    size_t const idx = i << 1 ;
+                    
+                    size_t const id0 = inds[ idx+0 ] ;
+                    size_t const id1 = inds[ idx+1 ] ;
+
+                    _pr->draw_circle( 1,10, pts[id0], radius, color0, color0 ) ;
+                    _pr->draw_line( 0, pts[id0], pts[id1], color0 ) ;
+                    _pr->draw_circle( 1,10, pts[id1], radius, color0, color0 ) ;
+                }
+            }
+
+            // draw neighbor dirs
+            {
+                natus::math::vec4f_t color0( 1.0f,1.0f,1.0f,1.0f) ;
+                
+                for( size_t i=0; i<pts.size(); ++i )
+                {
+                    size_t const o = offs[ i ] ;
+                    size_t const nh = nnhs[i] ;
+                    for( size_t j=0; j<nh; ++j )
+                    {
+                        natus::math::vec2f_t const dir = (pts[ nhs[o+j] ] - pts[i]).normalize() * 30.0f ;
+
+                        _pr->draw_line( 2 , pts[i], pts[i]+dir  , natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f) ) ;
+                    }
+                }
+            }
+
+            // draw extended
+            {
+                natus::math::vec4f_t color0( 0.0f,1.0f,0.0f,1.0f) ;
+                for( size_t i=0; i<exts.size(); ++i )
+                {
+                    _pr->draw_circle( 1,10, exts[i], 2.0f, color0, color0 ) ;
+                }
+            }
 
             // render all
             {
