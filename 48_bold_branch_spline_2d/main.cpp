@@ -42,6 +42,8 @@
 #include <natus/math/animation/keyframe_sequence.hpp>
 #include <natus/math/quaternion/quaternion4.hpp>
 
+#include <natus/ntd/insertion_sort.hpp>
+
 #include <random>
 #include <thread>
 
@@ -409,6 +411,9 @@ namespace this_file
             // two entries per segment
             typedef natus::ntd::vector< size_t > indices_t ;
 
+            // nnh - 1 per point
+            typedef natus::ntd::vector< float_t > angles_t ;
+
             points_t pts( {
                 natus::math::vec2f_t( -100.0f, -50.0f ),
                 natus::math::vec2f_t( 100.0f, 50.0f ),
@@ -421,10 +426,12 @@ namespace this_file
             indices_t inds( { 0, 1, 1, 2, 1, 3,  1,5 } ) ;
             //indices_t inds( { 0, 1, 1, 2, 2, 0 } ) ;
             
-            neighbors_t nnhs( pts.size() ) ; // number of neighbors
-            neighbors_t nhs( pts.size() ) ; // actual neighbor indices
-            offsets_t offs( pts.size() ) ;
-            extended_t exts ;
+            neighbors_t nnhs( pts.size() ) ; // num_neighbors : number of neighbors
+            neighbors_t nhs( pts.size() ) ; // neighbors : actual neighbor indices
+            offsets_t offs( pts.size() ) ; // offsets : where to start looking for the first neighbor
+            angles_t fas ; // full_angles : required for sorting the neighbors
+            offsets_t fa_offs( pts.size() ) ; // full_angles_offsets : the entry of a point with one neighbor is invalid.
+            extended_t exts ; // extended : extended points per point
 
             float_t thickness = 10.0f ;
 
@@ -441,16 +448,30 @@ namespace this_file
                 }
             }
 
-            // compute exteded point size and offsets
+            // compute exteded point size 
+            // compute offsets ( where to look for the first neighbor of point )
             {
                 size_t accum = 0 ;
+                
                 for( size_t i=0; i<nnhs.size(); ++i )
                 {
-                    offs[i] = accum ;
+                    offs[i] = nnhs[i] != 0 ? accum : size_t( -1 ) ;
                     accum += nnhs[i] ;
                 }
                 exts.resize( accum ) ;
                 nhs.resize( accum ) ;
+            }
+
+            // compute full angles size and offsets
+            {
+                size_t accum = 0 ;
+                for( size_t i=0; i<nnhs.size(); ++i )
+                {
+                    size_t const na = nnhs[i] - 1 ;
+                    fa_offs[i] = nnhs[i] != 0 && na != 0 ? accum : size_t(-1) ;
+                    accum += nnhs[i] != 0 ? na : 0 ;
+                }
+                fas.resize( accum ) ;
             }
 
             // make neighbor list for each point
@@ -459,6 +480,7 @@ namespace this_file
                 for( size_t i=0; i<pts.size(); ++i )
                 {
                     nhs[offset] = 0 ;
+
                     for( size_t j=0; j<inds.size(); ++j )
                     {
                         if( i == inds[j] )
@@ -472,7 +494,62 @@ namespace this_file
                 }
             }
 
-            
+            // compute full angles
+            {
+                for( size_t i=0; i<pts.size(); ++i )
+                {
+                    size_t const o = offs[i] ;
+                    size_t const fao = fa_offs[i] ;
+                    size_t const nh = nnhs[i] ;
+                    size_t const na = nh - 1 ;
+
+                    if( nh == 0 || na == 0 ) continue ;
+                    
+                    auto const dir0 = (pts[ nhs[o] ] - pts[i]).normalize() ;
+
+                    for( size_t j=1; j<nh; ++j )
+                    {
+                        size_t const idx = o + j ;
+                        
+                        auto const dir1 = (pts[ nhs[idx] ] - pts[i]).normalize() ;
+
+                        float_t const fa = natus::math::vec2fe_t::full_angle( dir0, dir1 ) ;
+                        float_t const a = natus::math::angle<float_t>::radian_to_degree( fa ) ;
+                        fas[ fao + j - 1 ] = fa ;
+
+                        
+                    }
+                }
+            }
+
+            // inplace sort neighbor list based on full angles
+            // @note the first neighbor in the nh list is the base,
+            // so this one is staying in place
+            {
+                for( size_t i=0; i<pts.size(); ++i )
+                {
+                    size_t const o = offs[i] ;
+                    size_t const fao = fa_offs[i] ;
+                    size_t const nh = nnhs[i] ;
+                    size_t const na = nh - 1 ;
+
+                    // no sort required
+                    if( nh < 3 ) continue ;
+
+                    {
+                        natus::ntd::insertion_sort<angles_t::value_type>::in_range(
+                            fao, fao+na, fas, [&]( size_t const a, size_t const b )
+                        {
+                            size_t const idx0 = o + a + 1 ;
+                            size_t const idx1 = o + b + 1 ;
+
+                            auto const tmp = nhs[ idx0 ] ;
+                            nhs[ idx0 ] = nhs[ idx1 ] ;
+                            nhs[ idx1 ] = tmp ;
+                        } ) ;
+                    }
+                }
+            }
             
             // compute exteded
             {
@@ -499,8 +576,8 @@ namespace this_file
                         }
                         else
                         {
-                            auto const n0 = (rotr * dir0) ;
-                            auto const n1 = (rotl * dir1) ; 
+                            auto const n0 = (rotl * dir0).normalize() ;
+                            auto const n1 = (rotr * dir1).normalize() ; 
 
                             auto const n2 = (n0 + n1) * 0.5f ;
 

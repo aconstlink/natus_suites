@@ -31,7 +31,7 @@ int main( int argc, char ** argv )
         int bp = 0 ;
     }
 
-    // little test scope here
+    // little test scope here with determining full angle between two vectors
     {
         auto z_comp_of_cross3= [=]( natus::math::vec2f_cref_t a, natus::math::vec2f_cref_t b )
         {

@@ -77,6 +77,7 @@ set( subdirs
     "xx_tool_sprite"
     "xx_tool_player_timeline"
     "xx_some_math_tests"
+    "xx_insertion_sort"
     )
 
 if( WIN32 )
