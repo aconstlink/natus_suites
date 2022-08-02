@@ -160,8 +160,8 @@ namespace this_file
             }
 
             {
-                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 0.0f, -1000.0f ),
-                        natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 100.0f, 0.0f, 0.0f )) ;
+                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 100.0f, -1000.0f ),
+                        natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 100.0f, 0.0f )) ;
             }
 
             // root render states
@@ -375,6 +375,17 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        float_t thickness = 10.0f ;
+        float_t split_angle = natus::math::angle<float_t>::degree_to_radian( 180.0f ) ;
+        float_t sex_offset = thickness * 0.5f ;
+
+        bool_t draw_normal = false ;
+        bool_t draw_tangent = false ;
+        bool_t draw_extended = false ;
+        bool_t draw_sex = false ;
+        bool_t draw_split_points = false ;
+        bool_t draw_outlines = true ;
+
         //*****************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rd ) noexcept 
         {
@@ -396,6 +407,7 @@ namespace this_file
 
             // one entry per point
             typedef natus::ntd::vector< natus::math::vec2f_t > points_t ;
+            typedef natus::ntd::vector< natus::math::vec2f_t > normals_t ;
             
             // one entry per point and
             // num neighbors of point per point
@@ -403,6 +415,7 @@ namespace this_file
 
             // num neighbors of point per point
             typedef natus::ntd::vector< natus::math::vec2f_t > extended_t ;
+            typedef natus::ntd::vector< uint8_t > counts_t ;
 
             // one entry per point
             // where to look for the first exteded for a point
@@ -421,10 +434,13 @@ namespace this_file
                 natus::math::vec2f_t( 200.0f, -50.0f ),
                 natus::math::vec2f_t( 50.0f, 200.0f ),
                 natus::math::vec2f_t( 200.0f, 100.0f ),
+                natus::math::vec2f_t( 100.0f, 250.0f ),
                 } ) ;
 
-            indices_t inds( { 0, 1, 1, 2, 1, 3,  1,5 } ) ;
+            //indices_t inds( { 0, 1, 1, 2 } ) ;
+            indices_t inds( { 0, 1, 1, 2, 1, 3, 1,5, 0, 3 , 2,4, 4,6, 6, 1 } ) ;
             //indices_t inds( { 0, 1, 1, 2, 2, 0 } ) ;
+            //indices_t inds( { 0, 1, 1, 3, 1,2 } ) ;
             
             neighbors_t nnhs( pts.size() ) ; // num_neighbors : number of neighbors
             neighbors_t nhs( pts.size() ) ; // neighbors : actual neighbor indices
@@ -432,8 +448,17 @@ namespace this_file
             angles_t fas ; // full_angles : required for sorting the neighbors
             offsets_t fa_offs( pts.size() ) ; // full_angles_offsets : the entry of a point with one neighbor is invalid.
             extended_t exts ; // extended : extended points per point
+            counts_t num_sexts ; // number super extended per extended
+            normals_t norms ; // normals : num_neighbor normals per point
+            points_t split_points ; 
 
-            float_t thickness = 10.0f ;
+            // make even
+            {
+                if( inds.size() % 2 != 0 )
+                {
+                    inds.emplace_back( 0 ) ; 
+                }
+            }
 
             // find number of neighbors
             {
@@ -460,6 +485,9 @@ namespace this_file
                 }
                 exts.resize( accum ) ;
                 nhs.resize( accum ) ;
+                norms.resize( accum ) ;
+                num_sexts.resize( accum ) ;
+                split_points.resize( accum << 1 ) ;
             }
 
             // compute full angles size and offsets
@@ -479,15 +507,18 @@ namespace this_file
                 size_t offset = 0 ;
                 for( size_t i=0; i<pts.size(); ++i )
                 {
-                    nhs[offset] = 0 ;
+                    if( nnhs[i] == 0 ) continue ;
+
+                    nhs[offset] = size_t(-1) ;
 
                     for( size_t j=0; j<inds.size(); ++j )
                     {
                         if( i == inds[j] )
                         {
-                            size_t const idx = j >> 1 ;
-
-                            nhs[offset] = inds[(idx*2)+((j+1)%2)] ;
+                            // j&size_t(-2) <=> (j>>1)<<1 : need the first point of segment
+                            size_t const idx = j & size_t(-2) ;
+                            size_t const off = (j + 1) % 2 ;
+                            nhs[offset] = inds[ idx + off ] ;
                             ++offset ;
                         }
                     }
@@ -513,11 +544,7 @@ namespace this_file
                         
                         auto const dir1 = (pts[ nhs[idx] ] - pts[i]).normalize() ;
 
-                        float_t const fa = natus::math::vec2fe_t::full_angle( dir0, dir1 ) ;
-                        float_t const a = natus::math::angle<float_t>::radian_to_degree( fa ) ;
-                        fas[ fao + j - 1 ] = fa ;
-
-                        
+                        fas[ fao + j - 1 ] = natus::math::vec2fe_t::full_angle( dir0, dir1 ) ;
                     }
                 }
             }
@@ -536,6 +563,8 @@ namespace this_file
                     // no sort required
                     if( nh < 3 ) continue ;
 
+                    // based on the swap of insertion_sort, 
+                    // the neighbors need to be swapped too.
                     {
                         natus::ntd::insertion_sort<angles_t::value_type>::in_range(
                             fao, fao+na, fas, [&]( size_t const a, size_t const b )
@@ -551,7 +580,7 @@ namespace this_file
                 }
             }
             
-            // compute exteded
+            // compute extended and normal
             {
                 float_t const a90 = natus::math::angle<float_t>::degree_to_radian(90.0f) ;
                 natus::math::mat2f_t const rotl = natus::math::mat2f_t::make_rotation_matrix( +a90 ) ;
@@ -567,23 +596,57 @@ namespace this_file
                         size_t const idx = o + j ;
                         size_t const nidx = o + ((j+1)%nh) ;
 
-                        auto const dir0 = pts[ nhs[idx] ] - pts[i] ;
-                        auto const dir1 = pts[ nhs[nidx] ] - pts[i] ;
+                        auto const dir0 = (pts[ nhs[idx] ] - pts[i]).normalize() ;
+                        auto const dir1 = (pts[ nhs[nidx] ] - pts[i]).normalize() ;
+
+                        // super extended
+                        {
+                            auto const fa = natus::math::vec2fe_t::full_angle( dir0, dir1 ) ;
+                            num_sexts[idx] = fa > split_angle ? 2 : 1 ;
+                        }
 
                         if( nh == 1 )
                         {
-                            exts[idx] = pts[i] - dir0.normalized() * thickness ;
+                            norms[idx] = -dir0 ;
+                            exts[idx] = pts[i] + norms[idx] * thickness ;
+                            num_sexts[idx] = 2 ;
                         }
                         else
                         {
-                            auto const n0 = (rotl * dir0).normalize() ;
-                            auto const n1 = (rotr * dir1).normalize() ; 
+                            auto const n0 = rotl * dir0 ;
+                            auto const n1 = rotr * dir1 ; 
 
                             auto const n2 = (n0 + n1) * 0.5f ;
 
-                            
-                            exts[idx] = pts[i] + n2.normalized() * thickness ;
+                            norms[idx] = n2.normalized() ;
+                            exts[idx] = pts[i] + norms[idx] * thickness ;
                         }
+                    }
+                }
+            }
+
+            // compute split points
+            {
+                for( size_t i=0; i<pts.size(); ++i )
+                {
+                    size_t const o = offs[i] ;
+                    size_t const fao = fa_offs[i] ;
+                    size_t const nh = nnhs[i] ;
+
+                    if( nh <=0 ) continue ;
+
+                    for( size_t j=0; j<nh; ++j )
+                    {
+                        size_t const idx = o + j ;
+
+                        auto const seg = pts[ nhs[idx] ] - pts[i] ;
+                        auto const nrm = seg.normalized() ;
+                        auto const tan = natus::math::vec2f_t( nrm.y(), -nrm.x() ) ;
+
+                        size_t const idx2 = idx << 1 ;
+
+                        split_points[idx2 + 0] = pts[i] + seg * 0.5f + tan * thickness ; // one side 
+                        split_points[idx2 + 1] = pts[i] + seg * 0.5f - tan * thickness ; // other side
                     }
                 }
             }
@@ -607,6 +670,7 @@ namespace this_file
                 }
             }
 
+            #if 0
             // draw neighbor dirs
             {
                 natus::math::vec4f_t color0( 1.0f,1.0f,1.0f,1.0f) ;
@@ -623,13 +687,146 @@ namespace this_file
                     }
                 }
             }
+            #endif
 
             // draw extended
+            if( draw_extended )
+            {
+                natus::math::vec4f_t color0( 0.0f,1.0f,0.0f,1.0f) ;
+                natus::math::vec4f_t color1( 1.0f,0.0f,0.0f,1.0f) ;
+
+                for( size_t i=0; i<exts.size(); ++i )
+                {
+                    auto const color = num_sexts[i] > 1 ? color1 : color0 ;
+                    _pr->draw_circle( 1,10, exts[i], 2.0f, color, color ) ;
+                }
+            }
+            
+            // draw normals
+            if( draw_normal )
             {
                 natus::math::vec4f_t color0( 0.0f,1.0f,0.0f,1.0f) ;
                 for( size_t i=0; i<exts.size(); ++i )
                 {
-                    _pr->draw_circle( 1,10, exts[i], 2.0f, color0, color0 ) ;
+                    auto const p0 = exts[i] ;
+                    auto const p1 = p0 + norms[i] * thickness ;
+                    _pr->draw_line( 2 , p0, p1 , color0 ) ;
+                }
+            }
+
+            // Quick TEST : draw tangent to normal
+            if( draw_tangent )
+            {
+                natus::math::vec4f_t color0( 0.0f,1.0f,0.0f,1.0f) ;
+                for( size_t i=0; i<exts.size(); ++i )
+                {
+                    auto const p0 = exts[i] ;
+                    auto const p1 = p0 + natus::math::vec2f_t( norms[i].y(), -norms[i].x() ) * thickness ;
+                    _pr->draw_line( 2 , p0, p1 , color0 ) ;
+                }
+            }
+
+            // Quick TEST 2 : draw super extended
+            if( draw_sex )
+            {
+                natus::math::vec4f_t color0( 0.0f,1.0f,0.0f,1.0f) ;
+                for( size_t i=0; i<exts.size(); ++i )
+                {
+                    if( num_sexts[i] <= 1 ) continue ;
+
+                    auto const tang = natus::math::vec2f_t( norms[i].y(), -norms[i].x() ) ;
+
+                    auto const p0 = exts[i] ;
+                    auto const p1 = p0 + tang * thickness - norms[i] * sex_offset ;
+                    auto const p2 = p0 - tang * thickness - norms[i] * sex_offset ;
+
+                    _pr->draw_circle( 1, 10, p1, 2.0f, color0, color0 ) ;
+                    _pr->draw_circle( 1, 10, p2, 2.0f, color0, color0 ) ;
+                }
+            }
+            
+            // Quick TEST 3 : draw split points 
+            if( draw_split_points )
+            {
+                natus::math::vec4f_t color0( 0.0f,1.0f,0.0f,1.0f) ;
+                for( size_t i=0; i<split_points.size(); ++i )
+                {
+                    auto const p0 = split_points[i] ;
+                    _pr->draw_circle( 1, 10, p0, 2.0f, color0, color0 ) ;
+                }
+            }
+
+            // Quick TEST 4 : draw outlines
+            if( draw_outlines )
+            {
+                natus::math::vec2f_t points[4] ;
+
+                natus::math::vec4f_t color0( 0.0f,1.0f,0.0f,1.0f) ;
+                for( size_t i=0; i<pts.size(); ++i )
+                {
+                    size_t const o = offs[ i ] ;
+                    size_t const nh = nnhs[i] ;
+
+                    if( nh == 0 ) continue ;
+
+                    if( nh == 1 )
+                    {
+                        for( size_t j=0; j<nh; ++j )
+                        {
+                            size_t const idx = o + j ;
+
+                            auto const tang = natus::math::vec2f_t( norms[idx].y(), -norms[idx].x() ) ;
+
+                            auto const p0 = exts[ idx  ] ;
+                            points[0] = p0 + tang * thickness - norms[idx] * sex_offset ;
+                            points[1] = p0 - tang * thickness - norms[idx] * sex_offset ;
+                            points[2] = split_points[ (idx << 1) + 0 ] ;
+                            points[3] = split_points[ (idx << 1) + 1 ] ;
+                        }
+
+                        for( size_t i=0; i<4; ++i )
+                        {
+                            auto const p0 = points[i] ;
+                            auto const p1 = points[(i+1)%4] ;
+                            _pr->draw_line( 2 , p0, p1 , color0 ) ;
+                        }
+                    }
+                    else
+                    {
+                        for( size_t j=0; j<nh; ++j )
+                        {
+                            size_t const idx0 = (o + ((j + 0)%nh)) ;
+                            size_t const idx1 = (o + ((j + nh-1)%nh)) ; // means (j - 1)%nh
+
+                            //if( num_sexts[idx0] == 1 )
+                            {
+                                points[0] = exts[ idx0 ] ;
+                                points[1] = exts[ idx1 ] ;
+                                points[2] = split_points[ (idx0 << 1) + 0 ] ;
+                                points[3] = split_points[ (idx0 << 1) + 1 ] ;
+                            }
+                            #if 0
+                            else
+                            {
+                                auto const tang = natus::math::vec2f_t( norms[idx0].y(), -norms[idx0].x() ) ;
+
+                                auto const p0 = exts[ idx0  ] ;
+                                points[0] = p0 + tang * thickness - norms[idx0] * sex_offset ;
+                                points[1] = p0 - tang * thickness - norms[idx0] * sex_offset ;
+                                points[2] = split_points[ (idx0 << 1) + 0 ] ;
+                                points[3] = split_points[ (idx0 << 1) + 1 ] ;
+                            }
+                            #endif
+                            
+
+                            for( size_t i=0; i<4; ++i )
+                            {
+                                auto const p0 = points[i] ;
+                                auto const p1 = points[(i+1)%4] ;
+                                _pr->draw_line( 2 , p0, p1 , color0 ) ;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -673,6 +870,24 @@ namespace this_file
                 //_cur_mouse
             }
 
+            {
+                ImGui::SliderFloat( "thickness", &thickness, 1.0f, 30.0f ) ;
+            }
+            {
+                split_angle = natus::math::angle<float_t>::radian_to_degree( split_angle ) ;
+                ImGui::SliderFloat( "split angle", &split_angle, 0.0f, 360.0f ) ;
+                split_angle = natus::math::angle<float_t>::degree_to_radian( split_angle ) ;
+            }
+            {
+                ImGui::SliderFloat( "super extended offset", &sex_offset, 0.0f, thickness ) ;
+            }
+            {
+                ImGui::Checkbox( "draw extended", &draw_extended ) ;
+                ImGui::Checkbox( "draw outline", &draw_outlines ) ;
+                ImGui::Checkbox( "draw super ext", &draw_sex ) ;
+                ImGui::Checkbox( "draw normals", &draw_normal ) ;
+                ImGui::Checkbox( "draw tangent", &draw_tangent ) ;
+            }
             ImGui::End() ;
 
             return natus::application::result::ok ;
