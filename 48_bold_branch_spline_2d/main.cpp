@@ -330,6 +330,18 @@ namespace this_file
                     translate += natus::math::vec3f_t(0.0f, 0.0f, 10.0f ) ;
                 }
 
+                if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::q ) ==
+                    natus::device::components::key_state::pressing )
+                {
+                    translate += natus::math::vec3f_t(0.0f, -10.0f, 0.0f ) ;
+                }
+
+                if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::e ) ==
+                    natus::device::components::key_state::pressing )
+                {
+                    translate += natus::math::vec3f_t(0.0f, 10.0f, 0.0f ) ;
+                }
+
                 auto trafo = _camera_0.get_transformation() ;
                 trafo.translate_fr( translate ) ;
                 _camera_0.set_transformation( trafo ) ;
@@ -381,8 +393,8 @@ namespace this_file
 
         bool_t draw_normal = false ;
         bool_t draw_tangent = false ;
-        bool_t draw_extended = false ;
-        bool_t draw_sex = false ;
+        bool_t draw_extended = true ;
+        bool_t draw_sex = true ;
         bool_t draw_split_points = false ;
         bool_t draw_outlines = true ;
 
@@ -641,7 +653,7 @@ namespace this_file
 
                         auto const seg = pts[ nhs[idx] ] - pts[i] ;
                         auto const nrm = seg.normalized() ;
-                        auto const tan = natus::math::vec2f_t( nrm.y(), -nrm.x() ) ;
+                        auto const tan = natus::math::vec2f_t( nrm.y(), -nrm.x() ).normalize() ;
 
                         size_t const idx2 = idx << 1 ;
 
@@ -798,26 +810,25 @@ namespace this_file
                             size_t const idx0 = (o + ((j + 0)%nh)) ;
                             size_t const idx1 = (o + ((j + nh-1)%nh)) ; // means (j - 1)%nh
 
-                            //if( num_sexts[idx0] == 1 )
-                            {
-                                points[0] = exts[ idx0 ] ;
-                                points[1] = exts[ idx1 ] ;
-                                points[2] = split_points[ (idx0 << 1) + 0 ] ;
-                                points[3] = split_points[ (idx0 << 1) + 1 ] ;
-                            }
-                            #if 0
-                            else
-                            {
-                                auto const tang = natus::math::vec2f_t( norms[idx0].y(), -norms[idx0].x() ) ;
+                            auto const tang0 = natus::math::vec2f_t( norms[idx0].y(), -norms[idx0].x() ) ;
+                            auto const tang1 = natus::math::vec2f_t( norms[idx1].y(), -norms[idx1].x() ) ;
+                                
+                            auto const p0 = exts[ idx0 ] ;
+                            auto const p1 = exts[ idx1 ] ;
 
-                                auto const p0 = exts[ idx0  ] ;
-                                points[0] = p0 + tang * thickness - norms[idx0] * sex_offset ;
-                                points[1] = p0 - tang * thickness - norms[idx0] * sex_offset ;
+                            auto const sex0 = p0 + tang0 * thickness - norms[idx0] * sex_offset ;
+                            auto const sex1 = p0 - tang0 * thickness - norms[idx0] * sex_offset ;
+
+                            auto const sex2 = p1 + tang1 * thickness - norms[idx1] * sex_offset ;
+                            auto const sex3 = p1 - tang1 * thickness - norms[idx1] * sex_offset ;
+
+                            //if( num_sexts[idx0] == 1 && num_sexts[idx1] == 1 )
+                            {
+                                points[0] = num_sexts[idx0] == 1 ? exts[ idx0 ] : sex0 ;
+                                points[1] = num_sexts[idx1] == 1 ? exts[ idx1 ] : sex3 ;
                                 points[2] = split_points[ (idx0 << 1) + 0 ] ;
                                 points[3] = split_points[ (idx0 << 1) + 1 ] ;
                             }
-                            #endif
-                            
 
                             for( size_t i=0; i<4; ++i )
                             {
