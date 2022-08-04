@@ -822,12 +822,27 @@ namespace this_file
                             auto const sex2 = p1 + tang1 * thickness - norms[idx1] * sex_offset ;
                             auto const sex3 = p1 - tang1 * thickness - norms[idx1] * sex_offset ;
 
-                            //if( num_sexts[idx0] == 1 && num_sexts[idx1] == 1 )
+                            // do the quad
                             {
                                 points[0] = num_sexts[idx0] == 1 ? exts[ idx0 ] : sex0 ;
                                 points[1] = num_sexts[idx1] == 1 ? exts[ idx1 ] : sex3 ;
                                 points[2] = split_points[ (idx0 << 1) + 0 ] ;
                                 points[3] = split_points[ (idx0 << 1) + 1 ] ;
+                            }
+
+                            for( size_t i=0; i<4; ++i )
+                            {
+                                auto const p0 = points[i] ;
+                                auto const p1 = points[(i+1)%4] ;
+                                _pr->draw_line( 2 , p0, p1 , color0 ) ;
+                            }
+
+                            // connect hole between super extended and extended
+                            {
+                                points[0] = num_sexts[idx0] == 1 ? exts[ idx0 ] : sex0 ;
+                                points[1] = num_sexts[idx0] == 1 ? exts[ idx0 ] : sex1 ;
+                                points[2] = num_sexts[idx1] == 1 ? exts[ idx1 ] : sex2 ;
+                                points[3] = num_sexts[idx1] == 1 ? exts[ idx1 ] : sex3 ;
                             }
 
                             for( size_t i=0; i<4; ++i )
