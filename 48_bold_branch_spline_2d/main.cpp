@@ -447,10 +447,12 @@ namespace this_file
                 natus::math::vec2f_t( 50.0f, 200.0f ),
                 natus::math::vec2f_t( 200.0f, 100.0f ),
                 natus::math::vec2f_t( 100.0f, 250.0f ),
+                natus::math::vec2f_t( 200.0f, 250.0f ),
+                natus::math::vec2f_t( 150.0f, 75.0f ),
                 } ) ;
 
             //indices_t inds( { 0, 1, 1, 2 } ) ;
-            indices_t inds( { 0, 1, 1, 2, 1, 3, 1,5, 0, 3 , 2,4, 4,6, 6, 1 } ) ;
+            indices_t inds( { 0, 1, 1, 2, 1, 3,0, 3 , 2,4, 4,6, 8, 1, 6, 8, 8,5 } ) ;
             //indices_t inds( { 0, 1, 1, 2, 2, 0 } ) ;
             //indices_t inds( { 0, 1, 1, 3, 1,2 } ) ;
             
@@ -807,7 +809,10 @@ namespace this_file
                     {
                         for( size_t j=0; j<nh; ++j )
                         {
-                            size_t const idx0 = (o + ((j + 0)%nh)) ;
+                            // the index computation is based on how the extended points are computed 
+                            // using the full angles. So one neighbor and the last(not the next) neighbor
+                            // are sharing a face.
+                            size_t const idx0 = (o + ((j + 0)%nh)) ; // can be written: o+j
                             size_t const idx1 = (o + ((j + nh-1)%nh)) ; // means (j - 1)%nh
 
                             auto const tang0 = natus::math::vec2f_t( norms[idx0].y(), -norms[idx0].x() ) ;
