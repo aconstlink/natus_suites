@@ -17,6 +17,10 @@ namespace this_file
 {
     using namespace natus::core::types ;
 
+    // this test shows how to use the framebuffer
+    // it uses a framebuffer with two outputs.
+    // fb0 : checkerboard with texture color * user color
+    // fb1 : checkerboard with texture color filtered red
     class test_app : public natus::application::app
     {
         natus_this_typedefs( test_app ) ;
@@ -24,7 +28,6 @@ namespace this_file
     private:
 
         app::window_async_t _wid_async ;
-        
         
         natus::graphics::render_object_res_t _rc = natus::graphics::render_object_t() ;
         natus::graphics::geometry_object_res_t _gconfig = natus::graphics::geometry_object_t() ;
@@ -43,6 +46,9 @@ namespace this_file
         natus::math::vec4ui_t _fb_dims = natus::math::vec4ui_t(0, 0, 800, 800) ;
 
         natus::gfx::quad_res_t _quad ;
+
+        natus::math::vec2f_t _window_dims = natus::math::vec2f_t( 1.0f ) ;
+
     public:
 
         test_app( void_t ) 
@@ -67,19 +73,21 @@ namespace this_file
         virtual ~test_app( void_t ) 
         {}
 
+        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
+        {
+            _window_dims = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
+            return natus::application::result::ok ;
+        }
+
     private:
 
+        //********************************************************************
         virtual natus::application::result on_init( void_t ) noexcept
         { 
-            {
-                _camera_0.orthographic( 4.0f, 4.0f, 1.0f, 1000.0f ) ;
-            }
-
             // root render states
             {
                 natus::graphics::state_object_t so = natus::graphics::state_object_t(
                     "root_render_states" ) ;
-
 
                 {
                     natus::graphics::render_state_sets_t rss ;
@@ -90,6 +98,7 @@ namespace this_file
                     rss.view_s.do_change = true ;
                     rss.view_s.ss.do_activate = true ;
                     rss.view_s.ss.vp = _fb_dims ;
+
                     so.add_render_state_set( rss ) ;
                 }
 
@@ -163,7 +172,7 @@ namespace this_file
                     .set_wrap( natus::graphics::texture_wrap_mode::wrap_s, natus::graphics::texture_wrap_type::repeat )
                     .set_wrap( natus::graphics::texture_wrap_mode::wrap_t, natus::graphics::texture_wrap_type::repeat )
                     .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
-                    .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
+                    .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest ) ;
 
                 _wid_async.async().configure( _imgconfig ) ;
             }
@@ -375,40 +384,19 @@ namespace this_file
 
         float value = 0.0f ;
 
+        //********************************************************************
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) noexcept 
         { 
-            auto const dif = std::chrono::duration_cast< ::std::chrono::microseconds >( __clock_t::now() - _tp ) ;
-            _tp = __clock_t::now() ;
-
-            float_t const dt = float_t( double_t( dif.count() ) / ::std::chrono::microseconds::period().den ) ;
-            
-            if( value > 1.0f ) value = 0.0f ;
-            value += natus::math::fn<float_t>::fract( dt ) ;
-
-            {
-                static float_t t = 0.0f ;
-                t += dt * 0.1f ;
-
-                if( t > 1.0f ) t = 0.0f ;
-                
-                static natus::math::vec3f_t tr ;
-                tr.x( 1.0f * natus::math::fn<float_t>::sin( t * 2.0f * 3.14f ) ) ;
-
-                _camera_0.translate_by( tr ) ;
-            }
-
             NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
-
             return natus::application::result::ok ; 
         }
 
+        //********************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t ) noexcept 
         { 
             static float_t v = 0.0f ;
             v += 0.01f ;
             if( v > 1.0f ) v = 0.0f ;
-
-            
 
             // per frame update of variables
             _rc->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
@@ -438,9 +426,7 @@ namespace this_file
             {
                 natus::graphics::backend_t::render_detail_t detail ;
                 detail.start = 0 ;
-                //detail.num_elems = 3 ;
                 detail.varset = 0 ;
-                //detail.render_states = _render_states ;
                 _wid_async.async().render( _rc, detail ) ;
             }
 
@@ -450,15 +436,18 @@ namespace this_file
                 _wid_async.async().unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
             }
 
-            natus::graphics::async_views_t graphics = natus::graphics::async_views_t( {
-            _wid_async.async()}) ;
-            _quad->render( graphics ) ;
+            {
+                natus::graphics::async_views_t graphics = natus::graphics::async_views_t( {
+                    _wid_async.async()}) ;
+                _quad->render( graphics ) ;
+            }
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
             return natus::application::result::ok ; 
         }
 
+        //********************************************************************
         bool_t _do_tool = true ;
         virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
