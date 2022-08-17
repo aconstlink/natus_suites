@@ -5,7 +5,7 @@
 
 #include <natus/gfx/util/quad.h>
 #include <natus/concurrent/mrsw.hpp>
-#include <natus/math/utility/3d/orthographic_projection.hpp>
+#include <natus/math/camera/3d/orthographic_projection.hpp>
 #include <natus/math/vector/vector4.hpp>
 #include <natus/math/vector/vector2.hpp>
 #include <natus/core/types.hpp>
