@@ -59,6 +59,8 @@ namespace this_file
 
     private:
 
+        struct vertex { natus::math::vec3f_t pos ; natus::math::vec3f_t nrm ; natus::math::vec2f_t tx ; } ;
+
         natus::graphics::async_views_t _graphics ;
 
         natus::graphics::state_object_res_t _root_render_states ;
@@ -75,6 +77,8 @@ namespace this_file
 
         natus::io::database_res_t _db ;
 
+        natus::graphics::render_object_res_t _rc ;
+
     private: //
 
         natus::gfx::text_render_2d_res_t _tr ;
@@ -83,6 +87,13 @@ namespace this_file
         natus::gfx::primitive_render_3d_res_t _pr3 ;
 
         bool_t _draw_debug = false ;
+
+        float_t _fov = natus::math::angle<float_t>::degree_to_radian( 45.0f ) ;
+        float_t _far = 1000.0f ;
+        float_t _near = 0.1f ;
+        float_t _aspect = 1.0f ;
+
+        bool_t _update_camera = true ;
 
     private:
 
@@ -120,21 +131,21 @@ namespace this_file
             _db = std::move( rhv._db ) ;
             _lr3 = std::move( rhv._lr3 ) ;
         }
+
         virtual ~test_app( void_t ) 
         {}
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
-
-
-            _window_dims = window ;
-
+            _window_dims = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
+            _aspect = float_t(wei.h) / float_t(wei.w) ;
+            _update_camera = true ;
             return natus::application::result::ok ;
         }        
 
     private:
 
+        //**********************************************************************************************
         virtual natus::application::result on_init( void_t ) noexcept
         { 
             natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
@@ -173,18 +184,19 @@ namespace this_file
                     natus::graphics::render_state_sets_t rss ;
 
                     rss.depth_s.do_change = true ;
-                    rss.depth_s.ss.do_activate = false ;
-                    rss.depth_s.ss.do_depth_write = false ;
+                    rss.depth_s.ss.do_activate = true ;
+                    rss.depth_s.ss.do_depth_write = true ;
 
                     rss.polygon_s.do_change = true ;
                     rss.polygon_s.ss.do_activate = true ;
-                    rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
+                    rss.polygon_s.ss.ff = natus::graphics::front_face::counter_clock_wise ;
                     rss.polygon_s.ss.cm = natus::graphics::cull_mode::back;
                     rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
 
                     rss.clear_s.do_change = true ;
                     rss.clear_s.ss.do_activate = true ;
                     rss.clear_s.ss.do_color_clear = true ;
+                    rss.clear_s.ss.do_depth_clear = true ;
                     rss.clear_s.ss.clear_color = natus::math::vec4f_t( 0.5f, 0.5f, 0.5f, 1.0f ) ;
                    
                     so.add_render_state_set( rss ) ;
@@ -234,6 +246,236 @@ namespace this_file
                 }
             }
 
+            // cube
+            {
+                natus::geometry::cube_t::input_params ip ;
+                ip.scale = natus::math::vec3f_t( 1.0f ) ;
+                ip.tess = 100 ;
+
+                natus::geometry::tri_mesh_t tm ;
+                natus::geometry::cube_t::make( &tm, ip ) ;
+                
+                natus::geometry::flat_tri_mesh_t ftm ;
+                tm.flatten( ftm ) ;
+
+                auto vb = natus::graphics::vertex_buffer_t()
+                    .add_layout_element( natus::graphics::vertex_attribute::position, natus::graphics::type::tfloat, natus::graphics::type_struct::vec3 )
+                    .add_layout_element( natus::graphics::vertex_attribute::normal, natus::graphics::type::tfloat, natus::graphics::type_struct::vec3 )
+                    .add_layout_element( natus::graphics::vertex_attribute::texcoord0, natus::graphics::type::tfloat, natus::graphics::type_struct::vec2 )
+                    .resize( ftm.get_num_vertices() ).update<vertex>( [&] ( vertex* array, size_t const ne )
+                {
+                    for( size_t i=0; i<ne; ++i )
+                    {
+                        array[ i ].pos = ftm.get_vertex_position_3d( i ) ;
+                        array[ i ].nrm = ftm.get_vertex_normal_3d( i ) ;
+                        array[ i ].tx = ftm.get_vertex_texcoord( 0, i ) ;
+                    }
+                } );
+
+                auto ib = natus::graphics::index_buffer_t().
+                    set_layout_element( natus::graphics::type::tuint ).resize( ftm.indices.size() ).
+                    update<uint_t>( [&] ( uint_t* array, size_t const ne )
+                {
+                    for( size_t i = 0; i < ne; ++i ) array[ i ] = ftm.indices[ i ] ;
+                } ) ;
+
+                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "cube",
+                    natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
+
+                _graphics.for_each( [&]( natus::graphics::async_view_t a ){ a.configure( geo ) ; } ) ;
+            }
+
+            // shader configuration
+            {
+                natus::graphics::shader_object_t sc( "just_render" ) ;
+
+                // shaders : ogl 3.0
+                {
+                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
+
+                        set_vertex_shader( natus::graphics::shader_t( R"(
+                            #version 140
+                            in vec3 in_pos ;
+                            in vec3 in_nrm ;
+                            in vec2 in_tx ;
+                            out vec3 var_nrm ;
+                            out vec2 var_tx0 ;
+                            uniform mat4 u_proj ;
+                            uniform mat4 u_view ;
+                            uniform mat4 u_world ;
+
+                            void main()
+                            {
+                                vec3 pos = in_pos ;
+                                var_tx0 = in_tx ;
+                                gl_Position = u_proj * u_view * u_world * vec4( pos, 1.0 ) ;
+                                var_nrm = normalize( u_world * vec4( in_nrm, 0.0 ) ).xyz ;
+                            } )" ) ).
+
+                        set_pixel_shader( natus::graphics::shader_t( R"(
+                            #version 140
+                            #extension GL_ARB_separate_shader_objects : enable
+                            #extension GL_ARB_explicit_attrib_location : enable
+                            in vec2 var_tx0 ;
+                            in vec3 var_nrm ;
+                            layout(location = 0 ) out vec4 out_color ;
+                        
+                            void main()
+                            {    
+                                out_color = vec4( 
+                                    vec3( dot( normalize( var_nrm ), normalize( vec3( 1.0, 1.0, 1.0) ) ) ), 
+                                    1.0 ) ;
+                            } )" ) ) ;
+
+                    sc.insert( natus::graphics::backend_type::gl3, std::move( ss ) ) ;
+                }
+
+                // shaders : es 3.0
+                {
+                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
+
+                        set_vertex_shader( natus::graphics::shader_t( R"(
+                            #version 300 es
+                            in vec3 in_pos ;
+                            in vec3 in_nrm ;
+                            in vec2 in_tx ;
+                            out vec3 var_nrm ;
+                            out vec2 var_tx0 ;
+                            uniform mat4 u_proj ;
+                            uniform mat4 u_view ;
+                            uniform mat4 u_world ;
+
+                            void main()
+                            {
+                                var_tx0 = in_tx ;
+                                vec3 pos = in_pos ;
+                                gl_Position = u_proj * u_view * u_world * vec4( pos, 1.0 ) ;
+                                var_nrm = normalize( u_world * vec4( in_nrm, 0.0 ) ).xyz ;
+                            } )" ) ).
+
+                        set_pixel_shader( natus::graphics::shader_t( R"(
+                            #version 300 es
+                            precision mediump float ;
+                            in vec2 var_tx0 ;
+                            in vec3 var_nrm ;
+                            layout(location = 0 ) out vec4 out_color ;
+                        
+                            void main()
+                            {    
+                                out_color = vec4( 
+                                    vec3( dot( normalize( var_nrm ), normalize( vec3( 1.0, 1.0, 1.0) ) ) ), 
+                                    1.0 ) ;
+                            })" ) ) ;
+
+                    sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
+                }
+
+                // shaders : hlsl 11(5.0)
+                {
+                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
+
+                        set_vertex_shader( natus::graphics::shader_t( R"(
+                            cbuffer ConstantBuffer : register( b0 ) 
+                            {
+                                float4x4 u_proj ;
+                                float4x4 u_view ;
+                                float4x4 u_world ;
+                            }
+
+                            struct VS_INPUT
+                            {
+                                float4 in_pos : POSITION ; 
+                                float3 in_nrm : NORMAL ;
+                                float2 in_tx : TEXCOORD0 ;
+                            } ;
+                            struct VS_OUTPUT
+                            {
+                                float4 pos : SV_POSITION;
+                                float3 nrm : NORMAL;
+                                float2 tx : TEXCOORD0;
+                            };
+
+                            VS_OUTPUT VS( VS_INPUT input )
+                            {
+                                VS_OUTPUT output = (VS_OUTPUT)0;
+                                float4 pos = input.in_pos ;
+                                output.pos = mul( pos, u_world );
+                                output.pos = mul( output.pos, u_view );
+                                output.pos = mul( output.pos, u_proj );
+                                output.tx = input.in_tx ;
+                                output.nrm = mul( float4( input.in_nrm, 0.0 ), u_world ) ;
+                                return output;
+                            } )" ) ).
+
+                        set_pixel_shader( natus::graphics::shader_t( R"(
+                            
+                            struct VS_OUTPUT
+                            {
+                                float4 Pos : SV_POSITION;
+                                float3 nrm : NORMAL;
+                                float2 tx : TEXCOORD0;
+                            };
+
+                            float4 PS( VS_OUTPUT input ) : SV_TARGET0
+                            {
+                                return dot( normalize( input.nrm ), normalize( float3( 1.0f, 1.0f, 1.0f ) ) ) ;
+                                
+                            } )" ) ) ;
+
+                    sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
+                }
+
+                // configure more details
+                {
+                    sc
+                        .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
+                        .add_vertex_input_binding( natus::graphics::vertex_attribute::normal, "in_nrm" )
+                        .add_vertex_input_binding( natus::graphics::vertex_attribute::texcoord0, "in_tx" )
+                        .add_input_binding( natus::graphics::binding_point::view_matrix, "u_view" )
+                        .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
+                }
+
+                _graphics.for_each( [&]( natus::graphics::async_view_t a ){ a.configure( sc ) ; } ) ;
+            }
+
+            {
+                natus::graphics::render_object_t rc = natus::graphics::render_object_t( "cube" ) ;
+
+                {
+                    rc.link_geometry( "cube" ) ;
+                    rc.link_shader( "just_render" ) ;
+                }
+
+                // add variable set 
+                {
+                    natus::graphics::variable_set_res_t vars = natus::graphics::variable_set_t() ;
+                    {
+                        auto* var = vars->data_variable< natus::math::vec4f_t >( "u_color" ) ;
+                        var->set( natus::math::vec4f_t( 1.0f, 0.0f, 0.0f, 1.0f ) ) ;
+                    }
+
+                    {
+                        auto* var = vars->data_variable< natus::math::mat4f_t >( "u_world" ) ;
+                        var->set( natus::math::mat4f_t().identity() ) ;
+                    }
+
+                    {
+                        
+                        auto* var = vars->data_variable< natus::math::mat4f_t >( "u_world" ) ;
+                        natus::math::m3d::trafof_t trans ;
+
+                        trans.scale_fl( 100.0f ) ;
+
+                        var->set( trans.get_transformation() ) ;
+                    }
+
+                    rc.add_variable_set( std::move( vars ) ) ;
+                }
+                
+                _graphics.for_each( [&]( natus::graphics::async_view_t a ){ a.configure( rc ) ; } ) ;
+                _rc = std::move( rc ) ;
+            }
+
             // prepare primitive
             {
                 _pr = natus::gfx::primitive_render_2d_res_t( natus::gfx::primitive_render_2d_t() ) ;
@@ -252,10 +494,15 @@ namespace this_file
                 _lr3->init( "line_render", _graphics ) ;
             }
 
+            _camera_0.perspective_fov( _fov, _aspect, _near, _far ) ;
+            _camera_0.set_transformation( natus::math::m3d::trafof_t( 1.0f, 
+                natus::math::vec3f_t(0.0f,0.0f,0.0f), 
+                natus::math::vec3f_t(0.0f,0.0f,-1000.0f) ) ) ;
+
             return natus::application::result::ok ; 
         }
 
-        //*****************************************************************************
+        //**********************************************************************************************
         virtual natus::application::result on_device( device_data_in_t ) noexcept 
         { 
             natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
@@ -288,16 +535,8 @@ namespace this_file
 
                 if( mouse.is_pressing(natus::device::layouts::three_mouse::button::right ) )
                 {
-                    auto const old_trafo = _camera_0.get_transformation() ;
-                    auto const old_trans = old_trafo.get_translation() ;
-                    auto const old_rot = old_trafo.get_rotation_matrix() ;
-
-                    auto trafo = natus::math::m3d::trafof_t().
-                        rotate_by_angle_fl( natus::math::vec3f_t( -dif.y()*2.0f, dif.x()*2.0f, 0.0f ) ).
-                        rotate_by_matrix_fl( old_rot ).
-                        
-                        translate_fl(old_trans) ; 
-
+                    auto old = _camera_0.get_transformation() ;
+                    auto trafo = old.rotate_by_angle_fr( natus::math::vec3f_t( -dif.y()*2.0f, dif.x()*2.0f, 0.0f ) ) ;
                     _camera_0.set_transformation( trafo ) ;
                 }
             }
@@ -373,27 +612,23 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        //*****************************************************************************
+        //**********************************************************************************************
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ud ) noexcept 
         { 
             NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
             return natus::application::result::ok ; 
         }
 
-        //*****************************************************************************
+        //**********************************************************************************************
         virtual natus::application::result on_physics( natus::application::app_t::physics_data_in_t ud ) noexcept
         {
             NATUS_PROFILING_COUNTER_HERE( "Physics Clock" ) ;
             return natus::application::result::ok ; 
         }
 
-        //*****************************************************************************
+        //**********************************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rd ) noexcept 
         {
-            //_camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
-            _camera_0.perspective_fov( natus::math::degree<float_t>::val_to_radian(45.0f),
-                _window_dims.y() / _window_dims.x(), 0.1f, 10000.0f ) ;
-
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _lr3->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
@@ -404,6 +639,36 @@ namespace this_file
                 {
                     a.push( _root_render_states ) ;
                 } ) ;
+            }
+
+            {
+                _rc->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
+                {
+                    {
+                        auto* var = vs->data_variable< natus::math::mat4f_t >( "u_view" ) ;
+                        var->set( _camera_0.mat_view() ) ;
+                    }
+
+                    {
+                        auto* var = vs->data_variable< natus::math::mat4f_t >( "u_proj" ) ;
+                        var->set( _camera_0.mat_proj() ) ;
+                    }
+
+                    
+
+                } ) ;
+            }
+
+            {
+                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                { 
+                    natus::graphics::backend_t::render_detail_t detail ;
+                    detail.start = 0 ;
+                    detail.varset = 0 ;
+                    a.render( _rc, detail ) ;
+                } ) ;
+
+                
             }
 
             // render all
@@ -435,39 +700,62 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        //**********************************************************************************************
         virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
 
-            ImGui::Begin( "Info" ) ;
+            ImGui::Begin( "Control" ) ;
             
-            #if 0
             {
-                ImGui::TextWrapped(
-                    "This test does picking with a 3d camera in a 2d world. By this opportinity, "
-                    "the camera class mess up need to be fixed. At the moment, the perspective camera has "
-                "many functions designed for constructing picking information like generating a picking ray. "
-                    "For this demo, the picking will be implemented in the generic_camera class with the "
-                "concept of having lenses attached to a generic camera. ") ;
-                
-                ImGui::NewLine() ;
+                {
+                    bool_t b = _camera_0.is_perspective() ;
+                    if( ImGui::Checkbox( "Perspective", &b ) && !_camera_0.is_perspective() )
+                    {
+                        _camera_0.perspective_fov( _fov, _aspect, _near, _far ) ;
+                    }
+                }
 
-                ImGui::TextWrapped(
-                    "This demo uses the perspective and the orthographic pinhole lens until other lenses are required.") ;
+                {
+                    bool_t b = _camera_0.is_orthographic() ;
+                    if( ImGui::Checkbox( "Orthographic", &b ) && !_camera_0.is_orthographic() )
+                    {
+                        _camera_0.orthographic( _window_dims.x(), _window_dims.y(), _near, _far ) ;
+                    }
+                }
 
-                ImGui::NewLine() ;
+                if( _camera_0.is_perspective() )
+                {
+                    float_t tmp = _aspect ;
+                    ImGui::SliderFloat( "Aspect", &tmp, 0.0f, 5.0f ) ;
+                    ImGui::SliderFloat( "Field of View", &_fov, 0.0f, natus::math::constants<float_t>::pi() ) ;
+                    ImGui::SliderFloat( "Near", &_near, 0.0f, _far ) ;
+                    ImGui::SliderFloat( "Far", &_far, _near, 10000.0f ) ;
+                }
+                else if( _camera_0.is_orthographic() )
+                {
+                    ImGui::SliderFloat( "Near", &_near, 0.0f, _far ) ;
+                    ImGui::SliderFloat( "Far", &_far, _near, 10000.0f ) ;
+                }
 
-                ImGui::TextWrapped(
-                    "In this concept, the generic camera is the carrier of the lens, so all the picking code should go into the lens. "
-                    "By picking code, we mean ray generation based on some imput parameters like the mouse position." ) ;
+                if( _camera_0.is_perspective() )
+                {
+                    _camera_0.perspective_fov( _fov, _aspect, _near, _far ) ;
+                }
+                else if( _camera_0.is_orthographic() )
+                {
+                    _camera_0.orthographic( _window_dims.x(), _window_dims.y(), _near, _far ) ;
+                }
+
+                _update_camera = false ;
             }
-            #endif
 
             ImGui::End() ;
 
             return natus::application::result::ok ;
         }
 
+        //**********************************************************************************************
         virtual natus::application::result on_shutdown( void_t ) noexcept 
         { return natus::application::result::ok ; }
     };

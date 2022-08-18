@@ -282,16 +282,8 @@ namespace this_file
 
                 if( mouse.is_pressing(natus::device::layouts::three_mouse::button::right ) )
                 {
-                    auto const old_trafo = _camera_0.get_transformation() ;
-                    auto const old_trans = old_trafo.get_translation() ;
-                    auto const old_rot = old_trafo.get_rotation_matrix() ;
-
-                    auto trafo = natus::math::m3d::trafof_t().
-                        rotate_by_angle_fl( natus::math::vec3f_t( -dif.y()*2.0f, dif.x()*2.0f, 0.0f ) ).
-                        rotate_by_matrix_fl( old_rot ).
-                        
-                        translate_fl(old_trans) ; 
-
+                    auto old = _camera_0.get_transformation() ;
+                    auto trafo = old.rotate_by_angle_fr( natus::math::vec3f_t( -dif.y()*2.0f, dif.x()*2.0f, 0.0f ) ) ;
                     _camera_0.set_transformation( trafo ) ;
                 }
             }
