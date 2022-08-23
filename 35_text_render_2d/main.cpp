@@ -102,8 +102,8 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ),
-                float_t(wei.w) / float_t(wei.h), 1.0f, 1000.0f ) ;
+            _camera_0.set_dims( float_t(wei.w), float_t(wei.h), 1.0f, 1000.0f ) ;
+            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ) ) ;
 
             return natus::application::result::ok ;
         }

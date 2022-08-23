@@ -1154,15 +1154,15 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ),
-                float_t(wei.w) / float_t(wei.h), 1.0f, 1000.0f ) ;
+            _camera_0.set_dims( float_t(wei.w), float_t(wei.h), 1.0f, 1000.0f ) ;
+            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ) ) ;
 
             natus::math::vec2f_t const target = natus::math::vec2f_t(800, 600) ; 
             natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
 
             natus::math::vec2f_t const ratio = window / target ;
 
-            _camera_0.orthographic( wei.w, wei.h, 0.1f, 1000.0f ) ;
+            _camera_0.orthographic() ;
 
             _extend = target * (ratio.x() < ratio.y() ? ratio.xx() : ratio.yy()) ;
 

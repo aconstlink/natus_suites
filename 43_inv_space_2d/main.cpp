@@ -420,7 +420,8 @@ namespace this_file
         //***********************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
         {
-            _camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+            _camera_0.set_dims( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+            _camera_0.orthographic() ;
             
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
@@ -488,7 +489,7 @@ namespace this_file
             {
                 {
                     int_t data[2] = { int_t( _extend.x() ), int_t( _extend.y() ) } ;
-                    ImGui::SliderInt2( "Extend", data, 0.0f, 1000, "%i", 1.0f ) ;
+                    ImGui::SliderInt2( "Extend", data, 0.0f, 1000, "%i" ) ;
                     _extend.x( float_t( data[0] ) ) ; _extend.y( float_t( data[1] ) ) ;
                 
                 }

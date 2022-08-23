@@ -53,7 +53,7 @@ namespace this_file
 
     public:
 
-        test_app( void_t ) 
+        test_app( void_t ) noexcept
         {
             natus::application::app::window_info_t wi ;
             #if 1
@@ -71,7 +71,7 @@ namespace this_file
             #endif
         }
         test_app( this_cref_t ) = delete ;
-        test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
+        test_app( this_rref_t rhv ) noexcept : app( ::std::move( rhv ) ) 
         {
             _wid_async = std::move( rhv._wid_async ) ;
             _wid_async2 = std::move( rhv._wid_async2 ) ;
@@ -81,13 +81,13 @@ namespace this_file
             _fb = std::move( rhv._fb ) ;
             _rc_map = std::move( rhv._rc_map ) ;
         }
-        virtual ~test_app( void_t ) 
+        virtual ~test_app( void_t ) noexcept
         {}
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ),
-                float_t(wei.w) / float_t(wei.h), 1.0f, 1000.0f ) ;
+            _camera_0.set_dims( float_t(wei.w) , float_t(wei.h), 1.0f, 1000.0f ) ;
+            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ) ) ;
 
             return natus::application::result::ok ;
         }

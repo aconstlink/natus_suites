@@ -224,15 +224,15 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ),
-                float_t(wei.w) / float_t(wei.h), 1.0f, 1000.0f ) ;
+            _camera_0.set_dims( float_t(wei.w), float_t(wei.h), 0.1f, 1000.0f ) ;
+            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ) ) ;
 
             natus::math::vec2f_t const target = natus::math::vec2f_t(800, 600) ; 
             natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
 
             natus::math::vec2f_t const ratio = window / target ;
 
-            _camera_0.orthographic( wei.w, wei.h, 0.1f, 1000.0f ) ;
+            _camera_0.orthographic() ;
 
             _extend = target * (ratio.x() < ratio.y() ? ratio.xx() : ratio.yy()) ;
 
@@ -438,7 +438,7 @@ namespace this_file
             ImGui::Begin( "View Control" ) ;
             {
                 float_t data[2] = {_extend.x(), _extend.y() } ;
-                ImGui::SliderFloat2( "Extend", data, 0.0f, 1000.0f, "%f", 1.0f ) ;
+                ImGui::SliderFloat2( "Extend", data, 0.0f, 1000.0f, "%f" ) ;
                 _extend.x( data[0] ) ; _extend.y( data[1] ) ;
             }
             ImGui::End() ;
@@ -562,7 +562,7 @@ namespace this_file
                 }
                 ImGui::SameLine() ;
                 {
-                    int_t v = _spe.current_emitter->get_amount() ;
+                    int_t v = int_t( _spe.current_emitter->get_amount() ) ;
                     if( ImGui::VSliderInt("Amount", ImVec2(50,100), &v, 1, 100 ) )
                     {
                         _spe.current_emitter->set_amount( v ) ;

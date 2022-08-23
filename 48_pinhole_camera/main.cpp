@@ -140,6 +140,9 @@ namespace this_file
             _window_dims = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
             _aspect = float_t(wei.h) / float_t(wei.w) ;
             _update_camera = true ;
+
+            _camera_0.set_dims( float_t(wei.h), float_t(wei.w), _near, _far ) ;
+
             return natus::application::result::ok ;
         }        
 
@@ -494,7 +497,6 @@ namespace this_file
                 _lr3->init( "line_render", _graphics ) ;
             }
 
-            _camera_0.perspective_fov( _fov, _aspect, _near, _far ) ;
             _camera_0.set_transformation( natus::math::m3d::trafof_t( 1.0f, 
                 natus::math::vec3f_t(0.0f,0.0f,0.0f), 
                 natus::math::vec3f_t(0.0f,0.0f,-1000.0f) ) ) ;
@@ -712,7 +714,7 @@ namespace this_file
                     bool_t b = _camera_0.is_perspective() ;
                     if( ImGui::Checkbox( "Perspective", &b ) && !_camera_0.is_perspective() )
                     {
-                        _camera_0.perspective_fov( _fov, _aspect, _near, _far ) ;
+                        _camera_0.perspective_fov( _fov ) ;
                     }
                 }
 
@@ -720,7 +722,7 @@ namespace this_file
                     bool_t b = _camera_0.is_orthographic() ;
                     if( ImGui::Checkbox( "Orthographic", &b ) && !_camera_0.is_orthographic() )
                     {
-                        _camera_0.orthographic( _window_dims.x(), _window_dims.y(), _near, _far ) ;
+                        _camera_0.orthographic() ;
                     }
                 }
 
@@ -731,6 +733,8 @@ namespace this_file
                     ImGui::SliderFloat( "Field of View", &_fov, 0.0f, natus::math::constants<float_t>::pi() ) ;
                     ImGui::SliderFloat( "Near", &_near, 0.0f, _far ) ;
                     ImGui::SliderFloat( "Far", &_far, _near, 10000.0f ) ;
+
+                    _camera_0.set_near_far( _near, _far ) ;
                 }
                 else if( _camera_0.is_orthographic() )
                 {
@@ -740,11 +744,11 @@ namespace this_file
 
                 if( _camera_0.is_perspective() )
                 {
-                    _camera_0.perspective_fov( _fov, _aspect, _near, _far ) ;
+                    _camera_0.perspective_fov( _fov ) ;
                 }
                 else if( _camera_0.is_orthographic() )
                 {
-                    _camera_0.orthographic( _window_dims.x(), _window_dims.y(), _near, _far ) ;
+                    _camera_0.orthographic() ;
                 }
 
                 _update_camera = false ;

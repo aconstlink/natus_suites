@@ -65,7 +65,8 @@ namespace this_file
         virtual natus::application::result on_init( void_t ) noexcept
         { 
             {
-                _camera_0.orthographic( 2.0f, 2.0f, 1.0f, 1000.0f ) ;
+                _camera_0.set_dims( 2.0f, 2.0f, 1.0f, 1000.0f ) ;
+                _camera_0.orthographic() ;
             }
 
             // geometry configuration

@@ -69,6 +69,7 @@ namespace this_file
         natus::device::ascii_device_res_t _dev_ascii ;
 
         natus::math::vec2f_t _cur_mouse ;
+        natus::math::vec2f_t _cur_mouse_nrm ;
         bool_t _left_down = false ;
 
         bool_t _do_tool = true ;
@@ -83,6 +84,8 @@ namespace this_file
         natus::gfx::primitive_render_3d_res_t _pr3 ;
 
         bool_t _draw_debug = false ;
+
+        natus::ntd::vector< natus::math::vec2f_t > _points ;
 
     private:
 
@@ -252,6 +255,17 @@ namespace this_file
                 _lr3->init( "line_render", _graphics ) ;
             }
 
+            {
+                srand( time(NULL) ) ;
+                for( size_t i=0; i<100; ++i )
+                {
+                    float_t const x = float_t((rand() % 100)-50)/50.0f ;
+                    float_t const y = float_t((rand() % 100)-50)/50.0f ;
+
+                    _points.emplace_back( natus::math::vec2f_t( x, y ) ) ;
+                }
+            }
+
             return natus::application::result::ok ; 
         }
 
@@ -276,7 +290,13 @@ namespace this_file
             {
                 natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
                 _cur_mouse = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
+                
                 _cur_mouse = _cur_mouse * (_window_dims * natus::math::vec2f_t(0.5f) );
+            }
+
+            {
+                natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
+                _cur_mouse_nrm = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
             }
 
             // rotate
@@ -390,9 +410,8 @@ namespace this_file
         //*****************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rd ) noexcept 
         {
-            //_camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
-            _camera_0.perspective_fov( natus::math::degree<float_t>::val_to_radian(45.0f),
-                _window_dims.y() / _window_dims.x(), 0.1f, 10000.0f ) ;
+            _camera_0.set_dims( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 45.0f ) ) ;
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
@@ -406,7 +425,81 @@ namespace this_file
                 } ) ;
             }
 
+            float_t const radius = 3.0f ;
+
+            // draw points
+            {
+                for( size_t i=0; i<_points.size(); ++i )
+                {
+                    auto const p = _points[i] * _window_dims ;
+                    _pr->draw_circle( 3, 10, p, radius, 
+                        natus::math::vec4f_t(1.0f), natus::math::vec4f_t(1.0f) ) ;
+                }
+            }
+
+            // test pick points
+            {
+                auto const ray = _camera_0.get_camera()->create_ray_norm( _cur_mouse_nrm ) ;
+                auto const plane = natus::math::vec3f_t(0.0f,0.0f,-1.0f) ;
+                float_t const lambda = - ray.get_origin().dot( plane ) / ray.get_direction().dot( plane ) ;
+
+                // point on plane
+                natus::math::vec2f_t const pop = ray.point_at( lambda ).xy() ;
+                //_pr->draw_circle( 4, 10, pop, radius, 
+                 //           natus::math::vec4f_t(1.0f,1.0f,0.0f,1.0f), natus::math::vec4f_t(1.0f) ) ;
+
+                for( size_t i=0; i<_points.size(); ++i )
+                {
+                    auto const p = _points[i] * _window_dims ;
+                    auto const b = (p - pop).length() < radius*1.0f ;  
+                    if( b )
+                    {
+                        _pr->draw_circle( 4, 10, p, radius, 
+                            natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f), natus::math::vec4f_t(1.0f) ) ;
+                    }
+                }
+            }
+
+            #if 0
+
+            // test ray generation
+            {
+                auto const ray = _camera_0.get_camera()->create_ray_norm( natus::math::vec2f_t() ) ;
+
+                _pr3->draw_circle( 
+                    _camera_0.get_transformation().get_transformation(), 
+                    ray.get_origin() + ray.get_direction() * 200.0f, 3.0f, 
+                    natus::math::vec4f_t(1), natus::math::vec4f_t(1), 10 ) ;
+            }
+
+            {
+                auto const ray = _camera_0.get_camera()->create_ray_norm( natus::math::vec2f_t(-1.0f) ) ;
+
+                _pr3->draw_circle( 
+                    _camera_0.get_transformation().get_transformation(), 
+                    ray.get_origin() + ray.get_direction() * 200.0f, 3.0f, 
+                    natus::math::vec4f_t(1.0f,0.0f,0.0f,1.0f), natus::math::vec4f_t(1), 10 ) ;
+            }
+
+            {
+                auto const ray = _camera_0.get_camera()->create_ray_norm( natus::math::vec2f_t(1.0f) ) ;
+
+                _pr3->draw_circle( 
+                    _camera_0.get_transformation().get_transformation(), 
+                    ray.get_origin() + ray.get_direction() * 200.0f, 3.0f, 
+                    natus::math::vec4f_t(0.0f,1.0f,0.0f,1.0f), natus::math::vec4f_t(1), 10 ) ;
+            }
             
+            {
+                auto const ray = _camera_0.get_camera()->create_ray_norm( _cur_mouse_nrm ) ;
+
+                _pr3->draw_circle( 
+                    _camera_0.get_transformation().get_transformation(), 
+                    ray.get_origin() + ray.get_direction() * 200.0f, 3.0f, 
+                    natus::math::vec4f_t(0.0f,1.0f,0.0f,1.0f), natus::math::vec4f_t(1), 10 ) ;
+            }
+
+            #endif
 
             // render all
             {
@@ -440,30 +533,6 @@ namespace this_file
         virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
-
-            ImGui::Begin( "Info" ) ;
-            
-            {
-                ImGui::TextWrapped(
-                    "This test does picking with a 3d camera in a 2d world. By this opportinity, "
-                    "the camera class mess up need to be fixed. At the moment, the perspective camera has "
-                "many functions designed for constructing picking information like generating a picking ray. "
-                    "For this demo, the picking will be implemented in the generic_camera class with the "
-                "concept of having lenses attached to a generic camera. ") ;
-                
-                ImGui::NewLine() ;
-
-                ImGui::TextWrapped(
-                    "This demo uses the perspective and the orthographic pinhole lens until other lenses are required.") ;
-
-                ImGui::NewLine() ;
-
-                ImGui::TextWrapped(
-                    "In this concept, the generic camera is the carrier of the lens, so all the picking code should go into the lens. "
-                    "By picking code, we mean ray generation based on some imput parameters like the mouse position." ) ;
-            }
-            
-            ImGui::End() ;
 
             return natus::application::result::ok ;
         }

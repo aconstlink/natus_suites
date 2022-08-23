@@ -360,9 +360,8 @@ namespace this_file
         //*****************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rd ) noexcept 
         {
-            //_camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
-            _camera_0.perspective_fov( natus::math::degree<float_t>::val_to_radian(45.0f),
-                _window_dims.y() / _window_dims.x(), 0.1f, 10000.0f ) ;
+            _camera_0.set_dims( _window_dims.x(), _window_dims.y(), 1.0f, 10000.0f ) ;
+            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 40.0f ) ) ;
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;

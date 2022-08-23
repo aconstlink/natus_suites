@@ -487,10 +487,12 @@ namespace this_file
             if( !_use_window_for_camera )
             {
                 this_t::update_extend() ;
-                _camera_0.orthographic( _extend.x(), _extend.y(), 1.0f, 1000.0f ) ;
+                _camera_0.set_dims( _extend.x(), _extend.y(), 1.0f, 1000.0f ) ;
             }
             else
-                _camera_0.orthographic( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+                _camera_0.set_dims( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+
+            _camera_0.orthographic() ;
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
