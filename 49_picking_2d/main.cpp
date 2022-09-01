@@ -47,8 +47,8 @@
 #include <random>
 #include <thread>
 
-// this tests uses(copy) what has been done in the last test
-// and adds textured quads to each region.
+// this test uses the mouse, generates a ray from it and does object 
+// picking with about 100 2d objects in a 3d scene.
 namespace this_file
 {
     using namespace natus::core::types ;
