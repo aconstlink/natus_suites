@@ -89,6 +89,13 @@ namespace this_file
 
     private:
 
+        float_t _fov = natus::math::angle<float_t>::degree_to_radian( 45.0f ) ;
+        float_t _far = 1000.0f ;
+        float_t _near = 0.1f ;
+        float_t _aspect = 1.0f ;
+
+        bool_t _update_camera = true ;
+
         natus::math::vec2f_t _window_dims = natus::math::vec2f_t( 1.0f ) ;
 
     public:
@@ -128,10 +135,11 @@ namespace this_file
 
         virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
         {
-            natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
+            _window_dims = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
+            _aspect = float_t(wei.h) / float_t(wei.w) ;
+            _update_camera = true ;
 
-
-            _window_dims = window ;
+            _camera_0.set_dims( float_t(wei.h), float_t(wei.w), _near, _far ) ;
 
             return natus::application::result::ok ;
         }        
@@ -265,6 +273,10 @@ namespace this_file
                     _points.emplace_back( natus::math::vec2f_t( x, y ) ) ;
                 }
             }
+
+            _camera_0.set_transformation( natus::math::m3d::trafof_t( 1.0f, 
+                natus::math::vec3f_t(0.0f,0.0f,0.0f), 
+                natus::math::vec3f_t(0.0f,0.0f,-1000.0f) ) ) ;
 
             return natus::application::result::ok ; 
         }
@@ -410,8 +422,8 @@ namespace this_file
         //*****************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rd ) noexcept 
         {
-            _camera_0.set_dims( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
-            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 45.0f ) ) ;
+            //_camera_0.set_dims( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+            //_camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 45.0f ) ) ;
 
             _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
             _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
@@ -533,6 +545,55 @@ namespace this_file
         virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
+
+            ImGui::Begin( "Control" ) ;
+            
+            {
+                {
+                    bool_t b = _camera_0.is_perspective() ;
+                    if( ImGui::Checkbox( "Perspective", &b ) && !_camera_0.is_perspective() )
+                    {
+                        _camera_0.perspective_fov( _fov ) ;
+                    }
+                }
+
+                {
+                    bool_t b = _camera_0.is_orthographic() ;
+                    if( ImGui::Checkbox( "Orthographic", &b ) && !_camera_0.is_orthographic() )
+                    {
+                        _camera_0.orthographic() ;
+                    }
+                }
+
+                if( _camera_0.is_perspective() )
+                {
+                    float_t tmp = _aspect ;
+                    ImGui::SliderFloat( "Aspect", &tmp, 0.0f, 5.0f ) ;
+                    ImGui::SliderFloat( "Field of View", &_fov, 0.0f, natus::math::constants<float_t>::pi() ) ;
+                    ImGui::SliderFloat( "Near", &_near, 0.0f, _far ) ;
+                    ImGui::SliderFloat( "Far", &_far, _near, 10000.0f ) ;
+
+                    _camera_0.set_near_far( _near, _far ) ;
+                }
+                else if( _camera_0.is_orthographic() )
+                {
+                    ImGui::SliderFloat( "Near", &_near, 0.0f, _far ) ;
+                    ImGui::SliderFloat( "Far", &_far, _near, 10000.0f ) ;
+                }
+
+                if( _camera_0.is_perspective() )
+                {
+                    _camera_0.perspective_fov( _fov ) ;
+                }
+                else if( _camera_0.is_orthographic() )
+                {
+                    _camera_0.orthographic() ;
+                }
+
+                _update_camera = false ;
+            }
+
+            ImGui::End() ;
 
             return natus::application::result::ok ;
         }
