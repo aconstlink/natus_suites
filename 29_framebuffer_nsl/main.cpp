@@ -676,7 +676,7 @@ namespace this_file
         }
 
         #if 1
-        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
+        virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t td ) noexcept
         {
             bool_t open = true ;
             //ImGui::SetWindowSize( ImVec2( { _demo_width*0.5f, _demo_height*0.5f } ) ) ;
@@ -687,7 +687,7 @@ namespace this_file
 
             {
                 ImVec2 const dims = ImGui::GetWindowSize() ;
-                ImGui::Image( imgui.texture( "the_scene.0" ), dims ) ;
+                ImGui::Image( td.imgui.texture( "the_scene.0" ), dims ) ;
             }
 
             ImGui::End() ;

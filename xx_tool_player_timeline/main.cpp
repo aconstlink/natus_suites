@@ -233,7 +233,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
+        virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t td ) noexcept
         {
             if( !_do_tool ) return natus::application::result::no_imgui ;
 
@@ -252,7 +252,7 @@ namespace this_file
 
             {
                 ImGui::Begin( "Player Controller" ) ;
-                auto const res = _pc.do_tool( "player", imgui ) ;
+                auto const res = _pc.do_tool( "player", td.imgui ) ;
                 switch( res ) 
                 {
                 case natus::tool::player_controller::player_state::play:
@@ -275,21 +275,21 @@ namespace this_file
                 ti.max_milli = max_milli ;
 
                 ImGui::Begin( "Timeline" ) ;
-                if( _tl0.begin( ti, imgui ) )
+                if( _tl0.begin( ti, td.imgui ) )
                 {
                     // user draw in timeline?
                     //ImGui::Text( "test 1" ) ;
                     _tl0.end() ;
                 }
 
-                if( _tl1.begin( ti, imgui ) )
+                if( _tl1.begin( ti, td.imgui ) )
                 {
                     // user draw in timeline?
                     //ImGui::Text( "test 1" ) ;
                     _tl1.end() ;
                 }
 
-                if( _tl2.begin( ti, imgui ) )
+                if( _tl2.begin( ti, td.imgui ) )
                 {
                     // user draw in timeline?
                     //ImGui::Text( "test 1" ) ;

@@ -484,7 +484,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_tool( natus::tool::imgui_view_t imgui ) noexcept
+        virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t ) noexcept
         {
             ImGui::Begin( "Release" ) ;
             if( ImGui::Button( "Release" ) )
