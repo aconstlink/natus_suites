@@ -73,6 +73,7 @@ set( subdirs
     "47_1_keyframe"
     "48_pinhole_camera"
     "49_picking_2d"
+    "50_simple_essentials"
     "xx_1_tile_render"
     "xx_bold_branch_spline_2d"
     "xx_2_tile_render"
