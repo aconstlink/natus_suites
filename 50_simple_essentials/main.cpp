@@ -51,14 +51,15 @@ namespace this_file
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
             _graphics = natus::graphics::async_views_t( { view1.async() } ) ;
             #endif
-
-            //_db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
         }
+
         test_app( this_cref_t ) = delete ;
+
         test_app( this_rref_t rhv ) noexcept : app( ::std::move( rhv ) ) 
         {
             _ae = std::move( rhv._ae ) ;
         }
+
         virtual ~test_app( void_t ) 
         {}
 
@@ -72,13 +73,18 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t ) noexcept
         { 
+            _ae.init_database( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
+            _ae.init_font() ;
             _ae.init_graphics( "myapp", _graphics ) ;
+            _ae.init_device() ;
+            
             return natus::application::result::ok ; 
         }
 
         //*****************************************************************************
-        virtual natus::application::result on_device( device_data_in_t ) noexcept 
+        virtual natus::application::result on_device( device_data_in_t dd ) noexcept 
         { 
+            _ae.on_device( dd ) ;
             return natus::application::result::ok ; 
         }
 
@@ -107,12 +113,15 @@ namespace this_file
 
         virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t ) noexcept
         {
-            if( false ) return natus::application::result::no_imgui ;
+            if( false ) return natus::application::result::no_tool ;
             return natus::application::result::ok ;
         }
 
         virtual natus::application::result on_shutdown( void_t ) noexcept 
-        { return natus::application::result::ok ; }
+        { 
+            _ae.on_shutdown() ;
+            return natus::application::result::ok ; 
+        }
     };
     natus_res_typedef( test_app ) ;
 }

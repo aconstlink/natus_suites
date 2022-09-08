@@ -451,7 +451,7 @@ namespace this_file
         bool_t _do_tool = true ;
         virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t ) noexcept
         {
-            if( !_do_tool ) return natus::application::result::no_imgui ;
+            if( !_do_tool ) return natus::application::result::no_tool ;
 
             ImGui::Begin( "Control and Info" ) ;
 

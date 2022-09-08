@@ -224,7 +224,7 @@ namespace this_file
 
         virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t td ) noexcept
         {
-            if( !_do_tool ) return natus::application::result::no_imgui ;
+            if( !_do_tool ) return natus::application::result::no_tool ;
 
             {
                 bool_t show_demo = true ;
