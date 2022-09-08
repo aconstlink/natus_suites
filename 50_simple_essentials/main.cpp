@@ -73,10 +73,13 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t ) noexcept
         { 
-            _ae.init_database( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
-            _ae.init_font() ;
-            _ae.init_graphics( "myapp", _graphics ) ;
-            _ae.init_device() ;
+            natus::application::util::simple_app_essentials_t::init_struct is = 
+            {
+                { "myapp", _graphics }, 
+                { natus::io::path_t( DATAPATH ), "./working", "data" }
+            } ;
+
+            _ae.init( is ) ;
             
             return natus::application::result::ok ; 
         }
