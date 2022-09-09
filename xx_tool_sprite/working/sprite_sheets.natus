@@ -44,7 +44,7 @@
                     <hits/>
                 </sprite>
                 <sprite name="8">
-                    <animation rect="295 296 314 319" pivot="303 307"/>
+                    <animation rect="295 296 314 319" pivot="304 307"/>
                     <collision rect="0 0 0 0"/>
                     <hits/>
                 </sprite>
