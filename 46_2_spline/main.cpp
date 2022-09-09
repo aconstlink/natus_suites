@@ -31,8 +31,6 @@ namespace this_file
     private:
 
         natus::graphics::async_views_t _graphics ;
-
-        natus::graphics::state_object_res_t _root_render_states ;
                
         bool_t _draw_debug = false ;
 
@@ -89,39 +87,6 @@ namespace this_file
 
             _ae.init( is ) ;
 
-            // root render states
-            {
-                natus::graphics::state_object_t so = natus::graphics::state_object_t(
-                    "root_render_states" ) ;
-
-                {
-                    natus::graphics::render_state_sets_t rss ;
-
-                    rss.depth_s.do_change = true ;
-                    rss.depth_s.ss.do_activate = false ;
-                    rss.depth_s.ss.do_depth_write = false ;
-
-                    rss.polygon_s.do_change = true ;
-                    rss.polygon_s.ss.do_activate = true ;
-                    rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
-                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back;
-                    rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
-
-                    rss.clear_s.do_change = true ;
-                    rss.clear_s.ss.do_activate = true ;
-                    rss.clear_s.ss.do_color_clear = true ;
-                    rss.clear_s.ss.clear_color = natus::math::vec4f_t( 0.5f, 0.5f, 0.5f, 1.0f ) ;
-                   
-                    so.add_render_state_set( rss ) ;
-                }
-
-                _root_render_states = std::move( so ) ;
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.configure( _root_render_states ) ;
-                } ) ;
-            }
-
             return natus::application::result::ok ; 
         }
 
@@ -153,14 +118,7 @@ namespace this_file
 
             auto pr3 = _ae.get_prim_render_3d() ;
             auto lr3 = _ae.get_line_render_3d() ;
-
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.push( _root_render_states ) ;
-                } ) ;
-            }
-
+            
             natus::math::vec3f_t off( 0.0f, 0.0f, 0.0f) ;
 
             // draw splines #1
@@ -352,13 +310,7 @@ namespace this_file
             }
 
             _ae.on_graphics_end( 100 ) ;
-            
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.pop( natus::graphics::backend::pop_type::render_state ) ;
-                } ) ;
-            }            
+                       
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 

@@ -4,35 +4,14 @@
 
 #include <natus/application/global.h>
 #include <natus/application/app.h>
+#include <natus/application/util/simple_app_essentials.h>
 #include <natus/tool/imgui/custom_widgets.h>
 
-#include <natus/device/global.h>
-#include <natus/gfx/camera/pinhole_camera.h>
-#include <natus/gfx/primitive/primitive_render_2d.h> 
-#include <natus/gfx/font/text_render_2d.h>
+#include <natus/format/global.h>
+#include <natus/format/future_items.hpp>
 #include <natus/gfx/sprite/sprite_render_2d.h>
 
-#include <natus/format/global.h>
-#include <natus/format/nsl/nsl_module.h>
-#include <natus/format/future_items.hpp>
-
-#include <natus/graphics/variable/variable_set.hpp>
 #include <natus/profile/macros.h>
-
-#include <natus/physics/particle_system.h>
-#include <natus/physics/force_fields.hpp>
-
-#include <natus/geometry/mesh/polygon_mesh.h>
-#include <natus/geometry/mesh/tri_mesh.h>
-#include <natus/geometry/mesh/flat_tri_mesh.h>
-#include <natus/geometry/3d/cube.h>
-#include <natus/geometry/3d/tetra.h>
-#include <natus/math/utility/fn.hpp>
-#include <natus/math/vector/vector3.hpp>
-#include <natus/math/vector/vector4.hpp>
-#include <natus/math/matrix/matrix4.hpp>
-#include <natus/math/utility/angle.hpp>
-#include <natus/math/utility/3d/transformation.hpp>
 
 #include <random>
 #include <thread>
@@ -50,17 +29,7 @@ namespace this_file
     private:
 
         natus::graphics::async_views_t _graphics ;
-
-        natus::graphics::state_object_res_t _root_render_states ;
-                
-        natus::gfx::pinhole_camera_t _camera_0 ;
-
-        natus::device::three_device_res_t _dev_mouse ;
-        natus::device::ascii_device_res_t _dev_ascii ;
-
-        natus::math::vec2f_t _cur_mouse ;
-
-        bool_t _do_tool = true ;
+        natus::application::util::simple_app_essentials_t _ae ;
 
         world::grid_t _grid = world::grid_t( 
             world::dimensions_t( 
@@ -70,24 +39,17 @@ namespace this_file
             ) 
         ) ;
 
-        natus::io::database_res_t _db ;
-
     private: //
-
-        natus::gfx::text_render_2d_res_t _tr ;
-        natus::gfx::primitive_render_2d_res_t _pr ;
 
         bool_t _draw_debug = false ;
         bool_t _draw_grid = false ;
 
         natus::gfx::sprite_render_2d_res_t _sr ;
-
         world::dimensions::regions_and_cells_t rac_ ;
 
     private:
 
         natus::math::vec2f_t _target = natus::math::vec2f_t( 800, 600.0f ) ;
-        natus::math::vec2f_t _window_dims = natus::math::vec2f_t( 1.0f ) ;
         natus::math::vec2f_t _aspect_scale = natus::math::vec2f_t( 1.0f ) ;
         natus::math::vec2f_t _extend = natus::math::vec2f_t( 100, 100 ) ;
         natus::math::vec2f_t _preload_extend = natus::math::vec2f_t( 100, 100 ) ;
@@ -120,28 +82,25 @@ namespace this_file
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
             _graphics = natus::graphics::async_views_t( { view1.async() } ) ;
             #endif
-
-            _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) noexcept : app( ::std::move( rhv ) ) 
         {
-            _camera_0 = std::move( rhv._camera_0 ) ;
+            _ae = std::move( rhv._ae ) ;
             _graphics = std::move( rhv._graphics ) ;
-            _db = std::move( rhv._db ) ;
             _sr = std::move( rhv._sr ) ;
         }
         virtual ~test_app( void_t ) 
         {}
 
-        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
+        virtual natus::application::result on_event( window_id_t const wid, this_t::window_event_info_in_t wei ) noexcept
         {
+            _ae.on_event( wid, wei ) ;
             natus::math::vec2f_t const target = _target ; 
-            natus::math::vec2f_t const window = natus::math::vec2f_t( float_t(wei.w), float_t(wei.h) ) ;
+            natus::math::vec2f_t const window = _ae.get_window_dims() ;
 
             natus::math::vec2f_t const ratio = window / target ;
-
-            _window_dims = window ;
+            
             _aspect_scale = ratio ;
 
             this_t::update_extend() ;
@@ -164,121 +123,25 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t ) noexcept
         { 
-            natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
+            natus::application::util::simple_app_essentials_t::init_struct is = 
             {
-                if( natus::device::three_device_res_t::castable( dev_in ) )
-                {
-                    _dev_mouse = dev_in ;
-                }
-                else if( natus::device::ascii_device_res_t::castable( dev_in ) )
-                {
-                    _dev_ascii = dev_in ;
-                }
-            } ) ;
+                { "myapp", _graphics }, 
+                { natus::io::path_t( DATAPATH ), "./working", "data" }
+            } ;
 
-            if( !_dev_mouse.is_valid() )
-            {
-                natus::log::global_t::status( "no three mosue found" ) ;
-            }
-
-            if( !_dev_ascii.is_valid() )
-            {
-                natus::log::global_t::status( "no ascii keyboard found" ) ;
-            }
-
-            {
-                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 0.0f, -10.0f ),
-                        natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
-            }
-
-            // root render states
-            {
-                natus::graphics::state_object_t so = natus::graphics::state_object_t(
-                    "root_render_states" ) ;
-
-                {
-                    natus::graphics::render_state_sets_t rss ;
-
-                    rss.depth_s.do_change = true ;
-                    rss.depth_s.ss.do_activate = false ;
-                    rss.depth_s.ss.do_depth_write = false ;
-
-                    rss.polygon_s.do_change = true ;
-                    rss.polygon_s.ss.do_activate = true ;
-                    rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
-                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back;
-                    rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
-
-                    rss.clear_s.do_change = true ;
-                    rss.clear_s.ss.do_activate = true ;
-                    rss.clear_s.ss.do_color_clear = true ;
-                    rss.clear_s.ss.clear_color = natus::math::vec4f_t( 0.5f, 0.5f, 0.5f, 1.0f ) ;
-                   
-                    so.add_render_state_set( rss ) ;
-                }
-
-                _root_render_states = std::move( so ) ;
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.configure( _root_render_states ) ;
-                } ) ;
-            }
-            
-            // prepare primitive
-            {
-                _pr = natus::gfx::primitive_render_2d_res_t( natus::gfx::primitive_render_2d_t() ) ;
-                _pr->init( "particle_prim_render", _graphics ) ;
-            }
-
-            // import fonts and create text render
-            {
-                natus::property::property_sheet_res_t ps = natus::property::property_sheet_t() ;
-
-                {
-                    natus::font::code_points_t pts ;
-                    for( uint32_t i = 33; i <= 126; ++i ) pts.emplace_back( i ) ;
-                    for( uint32_t i : {uint32_t( 0x00003041 )} ) pts.emplace_back( i ) ;
-                    ps->set_value< natus::font::code_points_t >( "code_points", pts ) ;
-                }
-
-                {
-                    natus::ntd::vector< natus::io::location_t > locations = 
-                    {
-                        natus::io::location_t("fonts.mitimasu.ttf"),
-                        //natus::io::location_t("")
-                    } ;
-                    ps->set_value( "additional_locations", locations ) ;
-                }
-
-                {
-                    ps->set_value<size_t>( "atlas_width", 128 ) ;
-                    ps->set_value<size_t>( "atlas_height", 512 ) ;
-                    ps->set_value<size_t>( "point_size", 90 ) ;
-                }
-
-                natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                auto fitem = mod_reg->import_from( natus::io::location_t( "fonts.LCD_Solid.ttf" ), _db, ps ) ;
-                natus::format::glyph_atlas_item_res_t ii = fitem.get() ;
-                if( ii.is_valid() )
-                {
-                    _tr = natus::gfx::text_render_2d_res_t( natus::gfx::text_render_2d_t( "my_text_render", _graphics ) ) ;
-                    
-                    _tr->init( std::move( *ii->obj ) ) ;
-                }
-            }
+            _ae.init( is ) ;
 
             {
                 world::ij_id_t id = _grid.get_dims().calc_cell_ij_id( natus::math::vec2ui_t( 10, 10 ) ) ;
                 int const bp = 0 ;
             }
-
             
             {
                 // taking all slices
                 natus::graphics::image_t imgs ;
 
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                auto item = mod_reg->import_from( natus::io::location_t( "images.tileset_64x64.png" ), _db ) ;
+                auto item = mod_reg->import_from( natus::io::location_t( "images.tileset_64x64.png" ), _ae.db() ) ;
 
                 natus::format::image_item_res_t ii = item.get() ;
                 if( ii.is_valid() )
@@ -309,46 +172,9 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_device( device_data_in_t ) noexcept 
+        virtual natus::application::result on_device( device_data_in_t dd ) noexcept 
         { 
-            natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
-            if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f8 ) ==
-                natus::device::components::key_state::released )
-            {
-            }
-            else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f9 ) ==
-                natus::device::components::key_state::released )
-            {
-            }
-            else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f2 ) ==
-                natus::device::components::key_state::released )
-            {
-                _do_tool = !_do_tool ;
-            }
-
-            {
-                natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
-                _cur_mouse = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
-                _cur_mouse = _cur_mouse * (_window_dims * natus::math::vec2f_t(0.5f) );
-            }
-
-            // move camera with mouse
-            {
-                natus::device::layouts::three_mouse_t mouse( _dev_mouse ) ;
-                static auto m_rel_old = natus::math::vec2f_t() ;
-                auto const m_rel = mouse.get_local() * natus::math::vec2f_t( 2.0f ) - natus::math::vec2f_t( 1.0f ) ;
-
-                auto const cpos = _camera_0.get_position().xy() ;
-                auto const m = cpos + (m_rel-m_rel_old).negated() * 100.0f ;
-
-                if( mouse.is_pressing( natus::device::layouts::three_mouse::button::left ) )
-                {
-                    _camera_0.translate_to( natus::math::vec3f_t( m.x(), m.y(), _camera_0.get_position().z() ) ) ;
-                }
-
-                m_rel_old = m_rel ;
-            }
-
+            _ae.on_device( dd ) ;
             return natus::application::result::ok ; 
         }
 
@@ -366,6 +192,8 @@ namespace this_file
 
         void_t draw_cells( world::dimensions::regions_and_cells_cref_t rac ) noexcept
         {
+            auto pr = _ae.get_prim_render() ;
+
             auto const num_cells = rac.cell_dif() ;
             auto const pixels_min = _grid.get_dims().cells_to_pixels( rac.cell_min() ) ;
             auto const view_pixels = _grid.get_dims().cells_to_pixels( num_cells ) ;
@@ -378,7 +206,7 @@ namespace this_file
 
                 for( uint_t i = 0 ; i < num_cells.x() +1 ; ++i )
                 {
-                    _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
+                    pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
                     p0 = p0 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_cell().x()), 0.0f ) ;
                     p1 = p1 + natus::math::vec2f_t( float_t(_grid.get_dims().get_pixels_per_cell().x()), 0.0f ) ;
                 }
@@ -392,7 +220,7 @@ namespace this_file
                         
                 for( uint_t i = 0 ; i < num_cells.y() + 1 ; ++i )
                 {
-                    _pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
+                    pr->draw_line( 0, p0, p1, natus::math::vec4f_t(0.6f) ) ;
                     p0 = p0 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_cell().y() ) ) ;
                     p1 = p1 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_cell().y() ) ) ;
                 }
@@ -402,6 +230,8 @@ namespace this_file
         void_t draw_regions( world::dimensions::regions_and_cells_cref_t rac, 
             size_t l, natus::math::vec4f_cref_t border_color = natus::math::vec4f_t(1.0f) ) noexcept
         {
+            auto pr = _ae.get_prim_render() ;
+
             auto const num_region = rac.region_dif() ;
             auto const pixels_min = _grid.get_dims().regions_to_pixels( rac.region_min() ) ;
             auto const view_pixels = _grid.get_dims().regions_to_pixels( num_region ) ;
@@ -414,7 +244,7 @@ namespace this_file
 
                 for( uint_t i = 0 ; i < num_region.x() + 1; ++i )
                 {
-                    _pr->draw_line( l, p0, p1, border_color ) ;
+                    pr->draw_line( l, p0, p1, border_color ) ;
                     p0 = p0 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_region().x() ), 0.0f ) ;
                     p1 = p1 + natus::math::vec2f_t( float_t( _grid.get_dims().get_pixels_per_region().x() ), 0.0f ) ;
                 }
@@ -428,7 +258,7 @@ namespace this_file
                         
                 for( uint_t i = 0 ; i < num_region.y() + 1; ++i )
                 {
-                    _pr->draw_line( l, p0, p1, border_color ) ;
+                    pr->draw_line( l, p0, p1, border_color ) ;
                     p0 = p0 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_region().y() ) ) ;
                     p1 = p1 + natus::math::vec2f_t( 0.0f, float_t( _grid.get_dims().get_pixels_per_region().y() ) ) ;
                 }
@@ -437,6 +267,8 @@ namespace this_file
 
         void_t draw_content( world::dimensions::regions_and_cells_cref_t rac ) noexcept
         {
+            auto pr = _ae.get_prim_render() ;
+
             auto const cells_start = rac.cell_min() ;
 
             for( auto y = rac.ocell_min().y(); y < rac.ocell_max().y(); ++y )
@@ -453,15 +285,15 @@ namespace this_file
                         auto const p2 = p0 + natus::math::vec2f_t( d.x(), d.y() ) ;
                         auto const p3 = p0 + natus::math::vec2f_t( d.x(), 0.0f ) ;
 
-                        int_t f = 10.0f * std::sin( x * 100.0f ) - y ;
+                        int_t f = int_t( 10.0f * std::sin( x * 100.0f ) - y ) ;
 
                         if( f > 0 )
                         {
-                            _pr->draw_rect( 0, p0, p1, p2, p3, natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f), natus::math::vec4f_t(0.6f) ) ;
+                            pr->draw_rect( 0, p0, p1, p2, p3, natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f), natus::math::vec4f_t(0.6f) ) ;
                         }                        
                         else
                         {
-                            _pr->draw_rect( 0, p0, p1, p2, p3, natus::math::vec4f_t(0.6f,0.1f,0.3f,1.0f), natus::math::vec4f_t(0.6f) ) ;
+                            pr->draw_rect( 0, p0, p1, p2, p3, natus::math::vec4f_t(0.6f,0.1f,0.3f,1.0f), natus::math::vec4f_t(0.6f) ) ;
                         }
 
                     }
@@ -469,38 +301,43 @@ namespace this_file
                     #if 0
                     if( std::abs( 10.0f * std::sin( cur_pos.x()*100.0f ) - cur_pos.y() ) < 2.0f  ) 
                     {
-                        _pr->draw_circle( 0, 10, p0 + off, 2.0f, natus::math::vec4f_t(1.0f), natus::math::vec4f_t(0.6f) ) ;
+                        pr->draw_circle( 0, 10, p0 + off, 2.0f, natus::math::vec4f_t(1.0f), natus::math::vec4f_t(0.6f) ) ;
                     }
 
                     
                     if( std::abs( 10.0f * std::cos( cur_pos.x()*100.0f ) - cur_pos.y() ) < 2.0f  ) 
                     {
-                        _pr->draw_circle( 1, 10, p0 + off, 2.0f, natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f), natus::math::vec4f_t(0.6f) ) ;
+                        pr->draw_circle( 1, 10, p0 + off, 2.0f, natus::math::vec4f_t(0.0f,0.0f,1.0f,1.0f), natus::math::vec4f_t(0.6f) ) ;
                     }
                     #endif
                 }
             }
         }
 
-        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  ) noexcept 
+        virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t  rd ) noexcept 
         {
+            auto pr = _ae.get_prim_render() ;
+            auto tr = _ae.get_text_render() ;
+
+            _ae.on_graphics_begin( rd ) ;
+
             if( !_use_window_for_camera )
             {
                 this_t::update_extend() ;
-                _camera_0.set_dims( _extend.x(), _extend.y(), 1.0f, 1000.0f ) ;
+                _ae.get_camera_0()->set_dims( _extend.x(), _extend.y(), 1.0f, 1000.0f ) ;
             }
             else
-                _camera_0.set_dims( float_t(_window_dims.x()), float_t(_window_dims.y()), 1.0f, 1000.0f ) ;
+                _ae.get_camera_0()->set_dims( float_t(_ae.get_window_dims().x()), float_t(_ae.get_window_dims().y()), 1.0f, 1000.0f ) ;
 
-            _camera_0.orthographic() ;
+            _ae.get_camera_0()->orthographic() ;
 
-            _pr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
-            _tr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
+            pr->set_view_proj( _ae.get_camera_0()->mat_view(), _ae.get_camera_0()->mat_proj() ) ;
+            tr->set_view_proj( _ae.get_camera_0()->mat_view(), _ae.get_camera_0()->mat_proj() ) ;
 
             // grid rendering
             if( _draw_grid )
             {
-                auto const cpos = _camera_0.get_position().xy() ;
+                auto const cpos = _ae.get_camera_0()->get_position().xy() ;
 
                 // draw grid for extend
                 {
@@ -527,9 +364,9 @@ namespace this_file
 
                 // draw current cells for mouse pos in grid
                 {
-                    auto const cpos = _camera_0.get_position().xy() ;
+                    auto const cpos = _ae.get_camera_0()->get_position().xy() ;
 
-                    auto const m = _cur_mouse + cpos ;
+                    auto const m = _ae.get_cur_mouse_pos() + cpos ;
                     auto const mouse_global = _grid.get_dims().calc_cell_ij_global( natus::math::vec2i_t( m ) ) ;
                     auto const ij = mouse_global ;
                     
@@ -537,22 +374,22 @@ namespace this_file
                     auto const cdims = _grid.get_dims().get_pixels_per_cell() ;
 
                     natus::math::vec2f_t p0 = start ;
-                    natus::math::vec2f_t p1 = start + natus::math::vec2f_t(0.0f,cdims.y()) ;
+                    natus::math::vec2f_t p1 = start + natus::math::vec2f_t(0.0f, float_t( cdims.y() )) ;
                     natus::math::vec2f_t p2 = start + cdims ;
-                    natus::math::vec2f_t p3 = start + natus::math::vec2f_t(cdims.x(),0.0f) ;
+                    natus::math::vec2f_t p3 = start + natus::math::vec2f_t( float_t(cdims.x()), 0.0f ) ;
 
-                    _pr->draw_rect( 0, p0, p1,p2,p3,
+                    pr->draw_rect( 0, p0, p1,p2,p3,
                         natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f ),
                         natus::math::vec4f_t( 1.0f ) ) ;
 
-                    _tr->draw_text( 1, 0, 13, natus::math::vec2f_t(p0), natus::math::vec4f_t(1.0f), 
+                    tr->draw_text( 1, 0, 13, natus::math::vec2f_t(p0), natus::math::vec4f_t(1.0f), 
                         "(i,j) : (" + std::to_string( ij.x() ) + ", " + std::to_string( ij.y() ) + ")" ) ;
                 }
             }
 
             // content section
             {
-                auto const cpos = _camera_0.get_position().xy() ;
+                auto const cpos = _ae.get_camera_0()->get_position().xy() ;
 
                 world::dimensions::regions_and_cells_t rac = 
                     _grid.get_dims().calc_regions_and_cells( natus::math::vec2i_t( cpos ), 
@@ -566,7 +403,7 @@ namespace this_file
             // draw extend of aspect
             if( _draw_debug )
             {
-                auto const cpos = _camera_0.get_position().xy() ;
+                auto const cpos = _ae.get_camera_0()->get_position().xy() ;
 
                 natus::math::vec2f_t p0 = cpos + _extend * natus::math::vec2f_t(-0.5f,-0.5f) ;
                 natus::math::vec2f_t p1 = cpos + _extend * natus::math::vec2f_t(-0.5f,+0.5f) ;
@@ -576,13 +413,13 @@ namespace this_file
                 natus::math::vec4f_t color0( 1.0f, 1.0f, 1.0f, 0.0f ) ;
                 natus::math::vec4f_t color1( 1.0f, 0.0f, 0.0f, 1.0f ) ;
 
-                _pr->draw_rect( 50, p0, p1, p2, p3, color0, color1 ) ;
+                pr->draw_rect( 50, p0, p1, p2, p3, color0, color1 ) ;
             }
 
             // draw preload extend 
             if( _draw_debug )
             {
-                auto const cpos = _camera_0.get_position().xy() ;
+                auto const cpos = _ae.get_camera_0()->get_position().xy() ;
 
                 natus::math::vec2f_t p0 = cpos + _preload_extend * natus::math::vec2f_t(-0.5f,-0.5f) ;
                 natus::math::vec2f_t p1 = cpos + _preload_extend * natus::math::vec2f_t(-0.5f,+0.5f) ;
@@ -592,35 +429,10 @@ namespace this_file
                 natus::math::vec4f_t color0( 1.0f, 1.0f, 1.0f, 0.0f ) ;
                 natus::math::vec4f_t color1( 0.0f, 0.0f, 1.0f, 1.0f ) ;
 
-                _pr->draw_rect( 50, p0, p1, p2, p3, color0, color1 ) ;
+                pr->draw_rect( 50, p0, p1, p2, p3, color0, color1 ) ;
             }
 
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.push( _root_render_states ) ;
-                } ) ;
-            }
-
-            // render all
-            {
-                _pr->prepare_for_rendering() ;
-                _tr->prepare_for_rendering() ;
-
-                for( size_t i=0; i<100+1; ++i )
-                {
-                    _pr->render( i ) ;
-                    _tr->render( i ) ;
-                }
-                
-            }
-            
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.pop( natus::graphics::backend::pop_type::render_state ) ;
-                } ) ;
-            }            
+            _ae.on_graphics_end( 100 ) ;
 
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
@@ -629,7 +441,7 @@ namespace this_file
 
         virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t ) noexcept
         {
-            if( !_do_tool ) return natus::application::result::no_tool ;
+            if( !_ae.do_tool() ) return natus::application::result::no_tool ;
 
             ImGui::Begin( "Control and Info" ) ;
             {
@@ -652,14 +464,14 @@ namespace this_file
             }
 
             {
-                float_t data[2] = {_camera_0.get_position().x(), _camera_0.get_position().y() } ;
-                ImGui::SliderFloat2( "Cam Pos", data, -1000.0f, 1000.0f, "%f", 1.0f ) ;
-                _camera_0.translate_to( natus::math::vec3f_t( data[0], data[1], _camera_0.get_position().z() ) ) ;
+                float_t data[2] = {_ae.get_camera_0()->get_position().x(), _ae.get_camera_0()->get_position().y() } ;
+                ImGui::SliderFloat2( "Cam Pos", data, -1000.0f, 1000.0f, "%f" ) ;
+                _ae.get_camera_0()->translate_to( natus::math::vec3f_t( data[0], data[1], _ae.get_camera_0()->get_position().z() ) ) ;
                 
             }
 
             {
-                ImGui::Text( "mx: %f, my: %f", _cur_mouse.x(), _cur_mouse.y() ) ;
+                ImGui::Text( "mx: %f, my: %f", _ae.get_cur_mouse_pos().x(), _ae.get_cur_mouse_pos().y() ) ;
                 //_cur_mouse
             }
 
