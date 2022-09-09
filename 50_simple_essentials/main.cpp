@@ -2,9 +2,9 @@
 
 #include <natus/application/global.h>
 #include <natus/application/app.h>
-#include <natus/tool/imgui/custom_widgets.h>
-
 #include <natus/application/util/simple_app_essentials.h>
+
+#include <natus/tool/imgui/custom_widgets.h>
 
 #include <natus/profile/macros.h>
 
