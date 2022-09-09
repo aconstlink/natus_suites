@@ -2,34 +2,22 @@
 
 #include <natus/application/global.h>
 #include <natus/application/app.h>
+#include <natus/application/util/simple_app_essentials.h>
 
 #include <natus/format/global.h>
 #include <natus/format/future_items.hpp>
 #include <natus/format/natus/natus_module.h>
 
-#include <natus/io/database.h>
+#include <natus/tool/imgui/custom_widgets.h>
 
-#include <natus/device/global.h>
-#include <natus/gfx/camera/pinhole_camera.h>
+#include <natus/profile/macros.h>
+
 #include <natus/gfx/sprite/sprite_render_2d.h>
 #include <natus/gfx/util/quad.h>
 
-#include <natus/graphics/variable/variable_set.hpp>
-#include <natus/profile/macros.h>
-
-#include <natus/geometry/mesh/polygon_mesh.h>
-#include <natus/geometry/mesh/tri_mesh.h>
-#include <natus/geometry/mesh/flat_tri_mesh.h>
-#include <natus/geometry/3d/cube.h>
-#include <natus/geometry/3d/tetra.h>
-
 #include <natus/math/interpolation/interpolate.hpp>
-#include <natus/math/vector/vector3.hpp>
-#include <natus/math/vector/vector4.hpp>
-#include <natus/math/matrix/matrix4.hpp>
-#include <natus/math/utility/angle.hpp>
-#include <natus/math/utility/3d/transformation.hpp>
 
+#include <random>
 #include <thread>
 
 namespace this_file
@@ -42,34 +30,23 @@ namespace this_file
 
     private:
 
-        natus::graphics::async_views_t _graphics ;
-
         natus::graphics::state_object_res_t _root_render_states ;
+        natus::application::util::simple_app_essentials_t _ae ;
+
         natus::graphics::framebuffer_object_res_t _fb = natus::graphics::framebuffer_object_t() ;
-
-        natus::device::three_device_res_t _dev_mouse ;
-        natus::device::ascii_device_res_t _dev_ascii ;
-
-        bool_t _do_tool = false ;
 
         natus::gfx::quad_res_t _quad ;
         natus::gfx::sprite_render_2d_res_t _sr ;
-        natus::gfx::pinhole_camera_t _camera_0 ;
-
-        natus::io::database_res_t _db ;
         
         natus::ntd::vector< natus::gfx::sprite_sheet_t > _sheets ;
-
-        
-
     public:
 
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
             #if 1
-            auto view1 = this_t::create_window( "A Render Window", wi ) ;
-            auto view2 = this_t::create_window( "A Render Window", wi,
+            auto view1 = this_t::create_window( "A Render Window Default", wi ) ;
+            auto view2 = this_t::create_window( "A Render Window Additional", wi,
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11}) ;
 
             view1.window().position( 50, 50 ) ;
@@ -77,36 +54,29 @@ namespace this_file
             view2.window().position( 50 + 800, 50 ) ;
             view2.window().resize( 800, 800 ) ;
 
-            _graphics = natus::graphics::async_views_t( { view1.async(), view2.async() } ) ;
-            #elif 0
+            _ae = natus::application::util::simple_app_essentials_t( 
+                natus::graphics::async_views_t( { view1.async(), view2.async() } ) ) ;
+            #else
             auto view1 = this_t::create_window( "A Render Window", wi, 
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
-            _graphics = natus::graphics::async_views_t( { view1.async() } ) ;
-            #else
-            auto view1 = this_t::create_window( "A Render Window", wi ) ;
-            _graphics = natus::graphics::async_views_t( { view1.async() } ) ;
+            _ae = natus::application::util::simple_app_essentials_t( 
+                natus::graphics::async_views_t( { view1.async() } ) ) ;
             #endif
-
-            _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
-            _camera_0 = std::move( rhv._camera_0 ) ;
-            _graphics = std::move( rhv._graphics ) ;
+            _ae = std::move( rhv._ae ) ;
             _sr = std::move( rhv._sr ) ;
-            _db = std::move( rhv._db ) ; 
             _quad = std::move( rhv._quad ) ;
         }
         virtual ~test_app( void_t ) 
         {}
 
-        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
+        virtual natus::application::result on_event( window_id_t const wid, this_t::window_event_info_in_t wei ) noexcept
         {
-            _camera_0.set_dims( float_t(wei.w), float_t(wei.h), 1.0f, 1000.0f ) ;
-            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ) ) ;
-            _camera_0.orthographic() ;
-
+            _ae.on_event( wid, wei ) ;
+            _ae.get_camera_0()->orthographic() ;
             return natus::application::result::ok ;
         }
 
@@ -114,36 +84,21 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t ) noexcept
         { 
-            natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
+            natus::application::util::simple_app_essentials_t::init_struct is = 
             {
-                if( natus::device::three_device_res_t::castable( dev_in ) )
-                {
-                    _dev_mouse = dev_in ;
-                }
-                else if( natus::device::ascii_device_res_t::castable( dev_in ) )
-                {
-                    _dev_ascii = dev_in ;
-                }
-            } ) ;
+                { "myapp" }, { natus::io::path_t( DATAPATH ), "./working", "data" }
+            } ;
 
-            if( !_dev_mouse.is_valid() )
-            {
-                natus::log::global_t::status( "no three mosue found" ) ;
-            }
-
-            if( !_dev_ascii.is_valid() )
-            {
-                natus::log::global_t::status( "no ascii keyboard found" ) ;
-            }
+            _ae.init( is ) ;
 
             {
-                _camera_0.look_at( natus::math::vec3f_t( 0.0f, 0.0f, -50.0f ),
+                _ae.get_camera_0()->look_at( natus::math::vec3f_t( 0.0f, 0.0f, -50.0f ),
                         natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
             }
 
             uint_t const fb_width = 1024 ;
             uint_t const fb_height = 512 ;
-
+            
             // root render states
             {
                 natus::graphics::state_object_t so = natus::graphics::state_object_t(
@@ -176,16 +131,16 @@ namespace this_file
                 }
 
                 _root_render_states = std::move( so ) ;
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( _root_render_states ) ;
                 } ) ;
             }
-            
+
             // import natus file
             {
                 natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                auto item = mod_reg->import_from( natus::io::location_t( "sprite_sheet.natus" ), _db ) ;
+                auto item = mod_reg->import_from( natus::io::location_t( "sprite_sheet.natus" ), _ae.db() ) ;
 
                 natus::format::natus_item_res_t ni = item.get() ;
                 if( ni.is_valid() )
@@ -201,7 +156,7 @@ namespace this_file
                         for( auto const & ss : doc.sprite_sheets )
                         {
                             auto const l = natus::io::location_t::from_path( natus::io::path_t(ss.image.src) ) ;
-                            futures.emplace_back( mod_reg->import_from( l, _db ) ) ;
+                            futures.emplace_back( mod_reg->import_from( l, _ae.db() ) ) ;
                         }
 
                     
@@ -296,7 +251,7 @@ namespace this_file
                         .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
                         .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
 
-                    _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                    _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                     {
                         a.configure( ires ) ;
                     } ) ;
@@ -309,7 +264,7 @@ namespace this_file
                 _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 1 ).
                     resize( fb_width, fb_height ) ;
 
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( _fb ) ;
                 } ) ;
@@ -318,13 +273,13 @@ namespace this_file
             // prepare sprite render
             {
                 _sr = natus::gfx::sprite_render_2d_res_t( natus::gfx::sprite_render_2d_t() ) ;
-                _sr->init( "debug_sprite_render", "image_array", _graphics ) ;
+                _sr->init( "debug_sprite_render", "image_array", _ae.graphics() ) ;
             }
             
             // prepare quad
             {
                 _quad = natus::gfx::quad_res_t( natus::gfx::quad_t("post_map") ) ;
-                _quad->init( _graphics ) ;
+                _quad->init( _ae.graphics() ) ;
                 _quad->set_texture("the_scene.0") ;
             }
             return natus::application::result::ok ; 
@@ -332,27 +287,14 @@ namespace this_file
 
         float value = 0.0f ;
 
-        virtual natus::application::result on_device( natus::application::app_t::device_data_in_t ) noexcept 
+        //**********************************************************************************************************
+        virtual natus::application::result on_device( natus::application::app_t::device_data_in_t dd ) noexcept 
         {
-            {
-                natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
-                if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f8 ) ==
-                    natus::device::components::key_state::released )
-                {
-                }
-                else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f9 ) ==
-                    natus::device::components::key_state::released )
-                {
-                }
-                else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f2 ) ==
-                    natus::device::components::key_state::released )
-                {
-                    _do_tool = !_do_tool ;
-                }
-            }
+            _ae.on_device( dd ) ;
             return natus::application::result::ok ; 
         }
 
+        //**********************************************************************************************************
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) noexcept 
         { 
             //NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
@@ -361,6 +303,7 @@ namespace this_file
 
         natus::math::vec2f_t _pos = natus::math::vec2f_t( -400.0f, -100.0f ) ;
 
+        //**********************************************************************************************************
         virtual natus::application::result on_physics( natus::application::app_t::physics_data_in_t pd ) noexcept
         { 
             natus::log::global_t::status( "physics: " + std::to_string( pd.micro_dt ) ) ;
@@ -383,10 +326,11 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        //**********************************************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rdi ) noexcept 
         { 
             natus::log::global_t::status( "graphics: " + std::to_string( rdi.micro_dt ) ) ;
-            _sr->set_view_proj( _camera_0.mat_view(), _camera_0.mat_proj() ) ;
+            _sr->set_view_proj( _ae.get_camera_0()->mat_view(), _ae.get_camera_0()->mat_proj() ) ;
 
             size_t const sheet = 0 ;
             size_t const ani = 0 ;
@@ -470,9 +414,9 @@ namespace this_file
             #endif
 
             {
-                _sr->set_view_proj( natus::math::mat4f_t().identity(), _camera_0.mat_proj() ) ;
+                _sr->set_view_proj( natus::math::mat4f_t().identity(), _ae.get_camera_0()->mat_proj() ) ;
 
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.use( _fb ) ;
                     a.push( _root_render_states ) ;
@@ -485,30 +429,31 @@ namespace this_file
                 //_pr->render( 3 ) ;
                 //_pr->render( 4 ) ;
 
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.pop( natus::graphics::backend::pop_type::render_state ) ;
                     a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                 } ) ;
             }
             
-            _quad->render( _graphics ) ;
+            _ae.on_graphics_begin( rdi ) ;
+            _quad->render( _ae.graphics() ) ;
+            _ae.on_graphics_end( 100 ) ;
 
             //NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t ) noexcept
+        //**********************************************************************************************************
+        virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t td ) noexcept
         {
-            if( !_do_tool ) return natus::application::result::no_tool ;
+            if( !_ae.on_tool( td ) ) return natus::application::result::ok ;
 
-            ImGui::Begin( "do something" ) ;
-
-            ImGui::End() ;
             return natus::application::result::ok ;
         }
 
+        //**********************************************************************************************************
         virtual natus::application::result on_shutdown( void_t ) noexcept 
         { return natus::application::result::ok ; }
     };
