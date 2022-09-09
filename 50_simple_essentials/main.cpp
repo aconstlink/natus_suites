@@ -24,10 +24,6 @@ namespace this_file
 
         natus::application::util::simple_app_essentials_t _ae ;
 
-    private: //
-
-        natus::graphics::async_views_t _graphics ;
-
     private:
 
     public:
@@ -45,11 +41,13 @@ namespace this_file
             view2.window().position( 50 + 800, 50 ) ;
             view2.window().resize( 800, 800 ) ;
 
-            _graphics = natus::graphics::async_views_t( { view1.async(), view2.async() } ) ;
+            _ae = natus::application::util::simple_app_essentials_t( 
+                natus::graphics::async_views_t( { view1.async(), view2.async() } ) ) ;
             #else
             auto view1 = this_t::create_window( "A Render Window", wi, 
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
-            _graphics = natus::graphics::async_views_t( { view1.async() } ) ;
+            _ae = natus::application::util::simple_app_essentials_t( 
+                natus::graphics::async_views_t( { view1.async() } ) ) ;
             #endif
         }
 
@@ -75,7 +73,7 @@ namespace this_file
         { 
             natus::application::util::simple_app_essentials_t::init_struct is = 
             {
-                { "myapp", _graphics }, 
+                { "myapp" }, 
                 { natus::io::path_t( DATAPATH ), "./working", "data" }
             } ;
 
@@ -114,10 +112,9 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t ) noexcept
+        virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t td ) noexcept
         {
-            if( false ) return natus::application::result::no_tool ;
-            return natus::application::result::ok ;
+            if( !_ae.on_tool( td ) ) return natus::application::result::ok ;
         }
 
         virtual natus::application::result on_shutdown( void_t ) noexcept 
