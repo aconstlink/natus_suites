@@ -69,6 +69,7 @@ namespace this_file
 
     private:
 
+        //*****************************************************************************
         virtual natus::application::result on_init( void_t ) noexcept
         { 
             natus::application::util::simple_app_essentials_t::init_struct is = 
@@ -86,6 +87,13 @@ namespace this_file
         virtual natus::application::result on_device( device_data_in_t dd ) noexcept 
         { 
             _ae.on_device( dd ) ;
+            return natus::application::result::ok ; 
+        }
+
+        //*****************************************************************************
+        virtual natus::application::result on_audio( audio_data_in_t ) noexcept 
+        { 
+            NATUS_PROFILING_COUNTER_HERE( "Audio Clock" ) ;
             return natus::application::result::ok ; 
         }
 

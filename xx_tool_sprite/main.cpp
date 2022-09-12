@@ -127,11 +127,6 @@ namespace this_file
         {
             if( !_ae.on_tool( td ) ) return natus::application::result::ok ;
 
-            {
-                bool_t show_demo = true ;
-                ImGui::ShowDemoWindow( &show_demo ) ;
-            }
-
             _se->do_tool( td.imgui ) ;
 
             return natus::application::result::ok ;
