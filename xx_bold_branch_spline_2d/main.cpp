@@ -147,7 +147,7 @@ namespace this_file
             // nnh - 1 per point
             typedef natus::ntd::vector< float_t > angles_t ;
 
-            points_t pts( {
+            static points_t pts( {
                 natus::math::vec2f_t( -100.0f, -50.0f ),
                 natus::math::vec2f_t( 100.0f, 50.0f ),
                 natus::math::vec2f_t( 50.0f, 100.0f ),
@@ -567,6 +567,36 @@ namespace this_file
                         }
                     }
                 }
+            }
+
+            // test pick points
+            {
+                static size_t idx = size_t(-1) ;
+                auto const ray = _ae.get_camera_0()->get_camera()->create_ray_norm( _ae.get_cur_mouse_pos_nrm() ) ;
+                auto const plane = natus::math::vec3f_t(0.0f,0.0f,-1.0f) ;
+                float_t const lambda = - ray.get_origin().dot( plane ) / ray.get_direction().dot( plane ) ;
+
+                // point on plane
+                natus::math::vec2f_t const pop = ray.point_at( lambda ).xy() ;
+                //_pr->draw_circle( 4, 10, pop, radius, 
+                 //           natus::math::vec4f_t(1.0f,1.0f,0.0f,1.0f), natus::math::vec4f_t(1.0f) ) ;
+
+                float_t const radius = 5.0f ;
+                for( size_t i=0; i<pts.size(); ++i )
+                {
+                    auto const p = pts[i] ;
+                    auto const b = (p - pop).length() < radius ;  
+                    if( b )
+                    {
+                        //pr->draw_circle( 4, 10, p, radius, 
+                          //  natus::math::vec4f_t(1.0f,1.0f,0.0f,1.0f), natus::math::vec4f_t(1.0f) ) ;
+                        if( _ae.left_down() && idx == size_t(-1) )
+                            idx = i ;
+                    }
+                }
+
+                if( idx != size_t(-1) ) pts[idx] += _ae.get_cur_mouse_dif() ;
+                if( !_ae.left_down() ) idx = size_t(-1) ;
             }
 
             _ae.on_graphics_end( 10 ) ;
