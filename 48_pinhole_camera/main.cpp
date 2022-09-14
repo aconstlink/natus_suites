@@ -330,7 +330,7 @@ namespace this_file
                                     1.0 ) ;
                             } )" ) ) ;
 
-                    sc.insert( natus::graphics::backend_type::gl3, std::move( ss ) ) ;
+                    sc.insert( natus::graphics::shader_api_type::glsl_1_4, std::move( ss ) ) ;
                 }
 
                 // shaders : es 3.0
@@ -370,7 +370,7 @@ namespace this_file
                                     1.0 ) ;
                             })" ) ) ;
 
-                    sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
+                    sc.insert( natus::graphics::shader_api_type::glsles_3_0, std::move( ss ) ) ;
                 }
 
                 // shaders : hlsl 11(5.0)
@@ -425,7 +425,7 @@ namespace this_file
                                 
                             } )" ) ) ;
 
-                    sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
+                    sc.insert( natus::graphics::shader_api_type::hlsl_5_0, std::move( ss ) ) ;
                 }
 
                 // configure more details

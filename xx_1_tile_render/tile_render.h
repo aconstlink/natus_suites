@@ -245,7 +245,7 @@ namespace proto
                                 out_color = vec4(1.0, 1.0, 1.0, 1.0) ;
                             } )" ) ) ;
 
-                        sc.insert( natus::graphics::backend_type::gl3, std::move( ss ) ) ;
+                        sc.insert( natus::graphics::shader_api_type::glsl_1_4, std::move( ss ) ) ;
                     }
 
                     // shaders : es 3.0
@@ -280,7 +280,7 @@ namespace proto
                                 out_color = mix( c0, c1, step( 0.5, var_tx.x ) ) ;
                             } )" ) ) ;
 
-                        sc.insert( natus::graphics::backend_type::es3, std::move( ss ) ) ;
+                        sc.insert( natus::graphics::shader_api_type::glsles_3_0, std::move( ss ) ) ;
                     }
 
                     // shaders : hlsl 11(5.0)
@@ -324,7 +324,7 @@ namespace proto
                                    u_tex_1.Sample( smp_u_tex_1, input.tx ), 0.5f ) ;
                             } )" ) ) ;
 
-                        sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
+                        sc.insert( natus::graphics::shader_api_type::hlsl_5_0, std::move( ss ) ) ;
                     }
 
                     // configure more details

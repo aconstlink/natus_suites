@@ -176,7 +176,7 @@ namespace this_file
                                 out_color = u_color * texture( u_tex, var_tx0 ) ;
                             } )" ) ) ;
                     
-                    sc.insert( natus::graphics::backend_type::gl3, std::move(ss) ) ;
+                    sc.insert( natus::graphics::shader_api_type::glsl_1_4, std::move(ss) ) ;
                 }
 
                 // shaders : es 3.0
@@ -211,7 +211,7 @@ namespace this_file
                                 out_color = u_color * texture( u_tex, var_tx0 ) ;
                             } )" ) ) ;
 
-                    sc.insert( natus::graphics::backend_type::es3, std::move(ss) ) ;
+                    sc.insert( natus::graphics::shader_api_type::glsles_3_0, std::move(ss) ) ;
                 }
 
                 // shaders : hlsl 11(5.0)
@@ -260,7 +260,7 @@ namespace this_file
                                 return u_tex.Sample( smp_u_tex, input.tx ) * u_color ;
                             } )" ) ) ;
 
-                    sc.insert( natus::graphics::backend_type::d3d11, std::move( ss ) ) ;
+                    sc.insert( natus::graphics::shader_api_type::hlsl_5_0, std::move( ss ) ) ;
                 }
 
                 // configure more details
