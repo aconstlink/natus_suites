@@ -264,9 +264,9 @@ namespace this_file
                 natus::format::glyph_atlas_item_res_t ii = fitem.get() ;
                 if( ii.is_valid() )
                 {
-                    _tr = natus::gfx::text_render_2d_res_t( natus::gfx::text_render_2d_t( "my_text_render", _graphics ) ) ;
+                    _tr = natus::gfx::text_render_2d_res_t( natus::gfx::text_render_2d_t(  ) ) ;
                     
-                    _tr->init( std::move( *ii->obj ) ) ;
+                    _tr->init( "my_text_render", _graphics, std::move( *ii->obj ) ) ;
                 }
             }
 
