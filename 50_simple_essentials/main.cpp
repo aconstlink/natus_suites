@@ -24,8 +24,6 @@ namespace this_file
 
         natus::application::util::simple_app_essentials_t _ae ;
 
-    private:
-
     public:
 
         test_app( void_t ) 

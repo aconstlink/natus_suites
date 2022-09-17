@@ -25,12 +25,6 @@ namespace this_file
 
         natus::application::util::simple_app_essentials_t _ae ;
 
-        bool_t _draw_debug = false ;
-
-    private:
-
-        natus::math::vec2f_t _window_dims = natus::math::vec2f_t( 1.0f ) ;
-
     public:
 
         test_app( void_t ) 
