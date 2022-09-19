@@ -38,11 +38,9 @@ namespace this_file
         natus_this_typedefs( test_app ) ;
 
     private:
-
         
-        natus::graphics::state_object_res_t _root_render_states ;
+        natus::graphics::state_object_res_t _fb_render_states ;
         natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
-
         
         natus::ntd::vector< natus::graphics::render_object_res_t > _render_objects ;
         natus::ntd::vector< natus::graphics::geometry_object_res_t > _geometries ;
@@ -55,11 +53,8 @@ namespace this_file
         
         typedef std::chrono::high_resolution_clock __clock_t ;
         __clock_t::time_point _tp = __clock_t::now() ;
-
         
         natus::nsl::database_res_t _ndb ;
-
-        
 
         typedef std::function< void_t ( void_t ) > work_task_t ;
 
@@ -140,7 +135,7 @@ namespace this_file
             // root render states
             {
                 natus::graphics::state_object_t so = natus::graphics::state_object_t(
-                    "root_render_states" ) ;
+                    "framebuffer_render_states" ) ;
 
                 {
                     natus::graphics::render_state_sets_t rss ;
@@ -167,10 +162,10 @@ namespace this_file
                     so.add_render_state_set( rss ) ;
                 }
 
-                _root_render_states = std::move( so ) ;
+                _fb_render_states = std::move( so ) ;
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.configure( _root_render_states ) ;
+                    a.configure( _fb_render_states ) ;
                 } ) ;
             }
 
@@ -597,8 +592,6 @@ namespace this_file
 
             tp = __clock_t::now() ;
 
-            
-
             // use the framebuffer
             {
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
@@ -612,7 +605,7 @@ namespace this_file
             {
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.push( _root_render_states ) ;
+                    a.push( _fb_render_states ) ;
                 } ) ;
             }
 
@@ -645,8 +638,6 @@ namespace this_file
                     a.use( natus::graphics::framebuffer_object_t() ) ;
                 } ) ;
             }
-
-            
 
             // perform mapping
             _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
