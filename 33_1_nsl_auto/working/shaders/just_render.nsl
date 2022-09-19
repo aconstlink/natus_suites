@@ -1,0 +1,53 @@
+config myshaders.just_render
+{
+    vertex_shader
+    {
+        mat4_t proj : projection ;
+        mat4_t view : view ;
+        mat4_t world : world ;
+
+        // the order must match the geometry 
+        // attribute binding order
+        in vec3_t pos : position ;
+        in vec3_t nrm : normal ;
+        in vec2_t tx : texcoord ;
+
+        out vec4_t pos : position ;
+        out vec2_t tx : texcoord ;
+        out vec3_t nrm : normal ;
+
+        void main()
+        {
+            vec3_t pos = in.pos.xyz ;//+ vec3_t( 0.5, 0.0, 0.5 ) ;
+            pos.xyz = pos.xyz * 10.0 ;
+            out.tx = in.tx ;
+            out.pos = proj * view * world * vec4_t( pos, 1.0 ) ;
+            out.nrm = normalize( world * vec4_t( in.nrm, 0.0 ) ).xyz ;
+        }
+    }
+
+    pixel_shader
+    {
+        tex2d_t tex ;
+        vec4_t color ;
+
+        in vec2_t tx : texcoord ;
+        in vec3_t nrm : normal ;
+        out vec4_t color0 : color0 ;
+        out vec4_t color1 : color1 ;
+        out vec4_t color2 : color2 ;
+
+        void main()
+        {
+            out.color0 = texture( tex, in.tx ) ' color  ;
+            //out.color0 = vec4_t( in.tx, 0.0, 1.0 ) ;
+            //out.color0 = out.color0 + 0.3  * pulse( 0.4, 0.6, in.tx.x ) ;
+            out.color1 = vec4_t( in.nrm, 1.0 ) ;
+
+            float_t light = dot( normalize( in.nrm ), normalize( vec3_t( 1.0, 1.0, 0.5) ) ) ;
+            out.color2 = vec4_t( vec3_t(light,light,light),1.0 ) ;
+
+            out.color2 = nsl.dep.my_color2( out.color2 ) ;
+        }
+    }
+}
