@@ -30,7 +30,7 @@ namespace this_file
 
     private:
 
-        natus::graphics::state_object_res_t _root_render_states ;
+        natus::graphics::state_object_res_t _fb_render_states ;
         natus::application::util::simple_app_essentials_t _ae ;
 
         natus::graphics::framebuffer_object_res_t _fb = natus::graphics::framebuffer_object_t() ;
@@ -102,7 +102,7 @@ namespace this_file
             // root render states
             {
                 natus::graphics::state_object_t so = natus::graphics::state_object_t(
-                    "root_render_states" ) ;
+                    "framebuffer_render_states" ) ;
 
                 {
                     natus::graphics::render_state_sets_t rss ;
@@ -130,10 +130,10 @@ namespace this_file
                     so.add_render_state_set( rss ) ;
                 }
 
-                _root_render_states = std::move( so ) ;
+                _fb_render_states = std::move( so ) ;
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.configure( _root_render_states ) ;
+                    a.configure( _fb_render_states ) ;
                 } ) ;
             }
 
@@ -419,7 +419,7 @@ namespace this_file
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.use( _fb ) ;
-                    a.push( _root_render_states ) ;
+                    a.push( _fb_render_states ) ;
                 } ) ;
 
                 _sr->prepare_for_rendering() ;
