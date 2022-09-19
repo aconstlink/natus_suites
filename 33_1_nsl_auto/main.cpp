@@ -53,14 +53,10 @@ namespace this_file
         
         typedef std::chrono::high_resolution_clock __clock_t ;
         __clock_t::time_point _tp = __clock_t::now() ;
-        
-        natus::nsl::database_res_t _ndb ;
 
         typedef std::function< void_t ( void_t ) > work_task_t ;
 
         natus::ntd::vector< std::future<void_t> > _tasks ;
-
-        natus::io::monitor_res_t _shader_mon = natus::io::monitor_t() ;
 
         natus::math::vec4ui_t _fb_dims = natus::math::vec4ui_t( 0, 0, 1280, 768 ) ;
 
@@ -89,8 +85,6 @@ namespace this_file
             _ae = natus::application::util::simple_app_essentials_t( 
                 natus::graphics::async_views_t( { view1.async() } ) ) ;
             #endif
-
-            _ndb = natus::nsl::database_t() ;
         }
 
         test_app( this_cref_t ) = delete ;
@@ -102,8 +96,6 @@ namespace this_file
             _render_objects = std::move( rhv._render_objects ) ;
             _fb = std::move( rhv._fb ) ;
             _rc_map = std::move( rhv._rc_map ) ;
-            _ndb = std::move( rhv._ndb ) ;
-            _shader_mon = std::move( rhv._shader_mon ) ;
         }
 
         virtual ~test_app( void_t ) noexcept
@@ -119,13 +111,23 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t ) noexcept
         { 
-            natus::application::util::simple_app_essentials_t::init_struct is = 
             {
-                { "myapp" }, 
-                { natus::io::path_t( DATAPATH ), "./working", "data" }
-            } ;
+                natus::ntd::vector< natus::io::location_t > shader_locations = {
+                    natus::io::location_t( "shaders.dep2.nsl" ),
+                    natus::io::location_t( "shaders.dep.nsl" ),
+                    natus::io::location_t( "shaders.just_render.nsl" ),
+                    natus::io::location_t( "shaders.post_blit.nsl" )
+                };
 
-            _ae.init( is ) ;
+                natus::application::util::simple_app_essentials_t::init_struct is = 
+                {
+                    { "myapp" }, 
+                    { natus::io::path_t( DATAPATH ), "./working", "data" },
+                    shader_locations
+                } ;
+
+                _ae.init( is ) ;
+            }
 
             {
                 _ae.get_camera_0()->look_at( natus::math::vec3f_t( 0.0f, 60.0f, -150.0f ),
@@ -275,54 +277,6 @@ namespace this_file
                 } ) ;
             }
 
-            
-            // load
-            {
-                natus::ntd::vector< natus::io::location_t > shader_locations = {
-                    natus::io::location_t( "shaders.dep2.nsl" ),
-                    natus::io::location_t( "shaders.dep.nsl" ),
-                    natus::io::location_t( "shaders.just_render.nsl" ),
-                    natus::io::location_t( "shaders.post_blit.nsl" )
-                };
-
-                natus::ntd::vector< natus::nsl::symbol_t > config_symbols ;
-
-                for( auto const & l : shader_locations )
-                {
-                    natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                    auto fitem2 = mod_reg->import_from( l, _ae.db() ) ;
-
-                    natus::format::nsl_item_res_t ii = fitem2.get() ;
-                    if( ii.is_valid() ) _ndb->insert( std::move( std::move( ii->doc ) ), config_symbols ) ;
-
-                    _ae.db()->attach( l.as_string(), _shader_mon ) ;
-                }
-
-                // generate configs
-                for( auto const & s : config_symbols )
-                {
-                    natus::nsl::generatable_t res = natus::nsl::dependency_resolver_t().resolve(
-                        _ndb, s ) ;
-
-                    if( res.missing.size() != 0 )
-                    {
-                        natus::log::global_t::warning( "We have missing symbols." ) ;
-                        for( auto const& s : res.missing )
-                        {
-                            natus::log::global_t::status( s.expand() ) ;
-                        }
-                    }
-
-                    auto const sc = natus::graphics::nsl_bridge_t().create(
-                        natus::nsl::generator_t( std::move( res ) ).generate() ).set_name( s.expand() ) ;
-
-                    _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
-                    {
-                        a.configure( sc ) ;
-                    } ) ;
-                }
-            }
-
             // the rendering objects
             size_t const num_object = 30 ;
             for( size_t i=0; i<num_object;++i )
@@ -451,57 +405,16 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
-        float value = 0.0f ;
+        
 
-        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) noexcept 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ud ) noexcept 
         { 
-            // check file changes
-            // and recompile and set new shaders
-            {
-                _shader_mon->for_each_and_swap( [&] ( natus::io::location_cref_t loc, natus::io::monitor_t::notify const )
-                {
-                    natus::nsl::database_t::symbols_t config_symbols ;
-
-                    natus::log::global_t::status( "File changed: " + loc.as_string() ) ;
-
-                    natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                    auto fitem2 = mod_reg->import_from( loc, _ae.db() ) ;
-
-                    natus::format::nsl_item_res_t ii = fitem2.get() ;
-                    if( ii.is_valid() ) _ndb->insert( std::move( std::move( ii->doc ) ), config_symbols ) ;
-
-                    for( auto const & s : config_symbols )
-                    {
-                        natus::nsl::generatable_t res = natus::nsl::dependency_resolver_t().resolve(
-                            _ndb, s ) ;
-
-                        if( res.missing.size() != 0 )
-                        {
-                            natus::log::global_t::warning( "We have missing symbols." ) ;
-                            for( auto const& s : res.missing )
-                            {
-                                natus::log::global_t::status( s.expand() ) ;
-                            }
-                        }
-
-                        auto const sc = natus::graphics::nsl_bridge_t().create(
-                            natus::nsl::generator_t( std::move( res ) ).generate() ).set_name( s.expand() ) ;
-
-                        _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
-                        {
-                            a.configure( sc ) ;
-                        } ) ;
-                    }
-                } ) ;
-            }
+            _ae.on_update( ud ) ;
 
             auto const dif = std::chrono::duration_cast< std::chrono::microseconds >( __clock_t::now() - _tp ) ;
             _tp = __clock_t::now() ;
 
             float_t const dt = float_t( double_t( dif.count() ) / std::chrono::microseconds::period().den ) ;
-            
-            if( value > 1.0f ) value = 0.0f ;
-            value += natus::math::fn<float_t>::fract( dt ) ;
 
             {
                 static float_t t = 0.0f ;
@@ -803,46 +716,6 @@ namespace this_file
                             a.configure( geo ) ;
                         } ) ;
                     }
-                } ) ) ;
-            }
-
-            if( ImGui::Button( "Reconfig Object Shader" ) )
-            {
-                _tasks.emplace_back( std::async( std::launch::async, [=] ( void_t )
-                {
-                    natus::format::module_registry_res_t mod_reg = natus::format::global_t::registry() ;
-                    auto fitem2 = mod_reg->import_from( natus::io::location_t( "shaders.just_render.nsl" ), _ae.db() ) ;
-
-                    natus::nsl::database_t::symbols_t configs ;
-                    // do the config
-                    {
-                        natus::format::nsl_item_res_t ii = fitem2.get() ;
-                        if( ii.is_valid() ) _ndb->insert( std::move( std::move( ii->doc ) ), configs ) ;
-                    }
-
-                    for( auto const & c : configs )
-                    {
-                        natus::nsl::generatable_t res = natus::nsl::dependency_resolver_t().resolve(
-                            _ndb, c ) ;
-
-                        if( res.missing.size() != 0 )
-                        {
-                            natus::log::global_t::warning( "We have missing symbols." ) ;
-                            for( auto const& s : res.missing )
-                            {
-                                natus::log::global_t::status( s.expand() ) ;
-                            }
-                        }
-
-                        auto const sc = natus::graphics::nsl_bridge_t().create(
-                            natus::nsl::generator_t( std::move( res ) ).generate() ).set_name( c.expand() ) ;
-
-                        _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
-                        {
-                            a.configure( sc ) ;
-                        } ) ;
-                    }
-                    
                 } ) ) ;
             }
 
