@@ -3,27 +3,19 @@
 
 #include <natus/application/global.h>
 #include <natus/application/app.h>
-#include <natus/gfx/util/quad.h>
-#include <natus/gfx/camera/pinhole_camera.h>
-#include <natus/graphics/variable/variable_set.hpp>
+#include <natus/application/util/app_essentials.h>
+#include <natus/tool/imgui/custom_widgets.h>
 
-#include <natus/concurrent/parallel_for.hpp>
-#include <natus/device/layouts/ascii_keyboard.hpp>
-#include <natus/device/layouts/three_mouse.hpp>
-#include <natus/device/global.h>
-
+#include <natus/geometry/3d/cube.h>
 #include <natus/geometry/mesh/tri_mesh.h>
 #include <natus/geometry/mesh/flat_tri_mesh.h>
-#include <natus/geometry/3d/cube.h>
 
-#include <natus/math/utility/angle.hpp>
-#include <natus/math/utility/3d/transformation.hpp>
-#include <natus/math/vector/vector3.hpp>
-#include <natus/math/vector/vector4.hpp>
-#include <natus/math/matrix/matrix4.hpp>
+#include <natus/concurrent/parallel_for.hpp>
 
+#include <natus/gfx/util/quad.h>
 #include <natus/profile/macros.h>
 
+#include <random>
 #include <thread>
 
 namespace this_file
@@ -36,12 +28,12 @@ namespace this_file
 
     private:
 
-        natus::graphics::async_views_t _graphics ;
+        natus::application::util::app_essentials_t _ae ;
         
         natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
         natus::graphics::array_object_res_t _gpu_data = natus::graphics::array_object_t() ;
 
-        natus::graphics::state_object_res_t _root_render_states ;
+        natus::graphics::state_object_res_t _fb_render_states ;
         natus::ntd::vector< natus::graphics::render_object_res_t > _render_objects ;
         natus::ntd::vector< natus::graphics::geometry_object_res_t > _geometries ;
 
@@ -54,16 +46,10 @@ namespace this_file
         typedef std::chrono::high_resolution_clock __clock_t ;
         __clock_t::time_point _tp = __clock_t::now() ;
 
-        natus::gfx::pinhole_camera_t _camera_0 ;
-
         int_t _max_objects = 0 ;
         int_t _num_objects_rnd = 0 ;
 
         natus::math::vec4ui_t _fb_dims = natus::math::vec4ui_t( 0, 0, 1280, 768 ) ;
-
-        bool_t _do_tool = true ;
-
-        natus::device::ascii_device_res_t _dev_ascii ;
 
     public:
 
@@ -73,35 +59,28 @@ namespace this_file
 
             natus::application::app::window_info_t wi ;
             #if 1
-            app::window_async_t wid_async = this_t::create_window( "A Render Window", wi ) ;
-            app::window_async_t wid_async2 = this_t::create_window( "A Render Window", wi,
-                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 }) ;
+            auto view1 = this_t::create_window( "A Render Window Default", wi ) ;
+            auto view2 = this_t::create_window( "A Render Window Additional", wi,
+                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11}) ;
 
-            wid_async.window().position( 50, 50 ) ;
-            wid_async.window().resize( 800, 800 ) ;
-            wid_async2.window().position( 50 + 800, 50 ) ;
-            wid_async2.window().resize( 800, 800 ) ;
+            view1.window().position( 50, 50 ) ;
+            view1.window().resize( 800, 800 ) ;
+            view2.window().position( 50 + 800, 50 ) ;
+            view2.window().resize( 800, 800 ) ;
 
-            _graphics = natus::graphics::async_views_t( {wid_async.async(), wid_async2.async()} ) ;
-            #elif 0
-            app::window_async_t wid_async = this_t::create_window( "A Render Window", wi, 
-                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
-            _graphics = natus::graphics::async_views_t( {wid_async.async()} ) ;
-            #elif 1
-            app::window_async_t wid_async = this_t::create_window( "A Render Window", wi, 
-                { natus::graphics::backend_type::d3d11, natus::graphics::backend_type::gl3 } ) ;
-            _graphics = natus::graphics::async_views_t( {wid_async.async()} ) ;
+            _ae = natus::application::util::app_essentials_t( 
+                natus::graphics::async_views_t( { view1.async(), view2.async() } ) ) ;
             #else
-            app::window_async_t wid_async = this_t::create_window( "A Render Window", wi, 
-                { natus::graphics::backend_type::es3, natus::graphics::backend_type::d3d11 } ) ;
-            _graphics = natus::graphics::async_views_t( {wid_async.async()} ) ;
+            auto view1 = this_t::create_window( "A Render Window", wi, 
+                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
+            _ae = natus::application::util::app_essentials_t( 
+                natus::graphics::async_views_t( { view1.async() } ) ) ;
             #endif
         }
         test_app( this_cref_t ) = delete ;
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
-            _graphics = std::move( rhv._graphics ) ;
-            _camera_0 = std::move( rhv._camera_0 ) ;
+            _ae = std::move( rhv._ae ) ;
             _geometries = std::move( rhv._geometries ) ;
             _render_objects = std::move( rhv._render_objects ) ;
             _fb = std::move( rhv._fb ) ;
@@ -109,10 +88,9 @@ namespace this_file
         virtual ~test_app( void_t ) 
         {}
 
-        virtual natus::application::result on_event( window_id_t const, this_t::window_event_info_in_t wei ) noexcept
+        virtual natus::application::result on_event( window_id_t const wid, this_t::window_event_info_in_t wei ) noexcept
         {
-            _camera_0.set_dims( float_t(wei.w) , float_t(wei.h), 1.0f, 10000.0f ) ;
-            _camera_0.perspective_fov( natus::math::angle<float_t>::degree_to_radian( 90.0f ) ) ;
+            _ae.on_event( wid, wei ) ;
 
             return natus::application::result::ok ;
         }
@@ -122,25 +100,30 @@ namespace this_file
         virtual natus::application::result on_init( void_t ) noexcept
         { 
             {
-                _camera_0.look_at( natus::math::vec3f_t( 2500.0f, 1000.0f, 1000.0f ),
-                        natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, 0.0f, 0.0f )) ;
-            }
+                natus::ntd::vector< natus::io::location_t > shader_locations = {
+                    natus::io::location_t( "shaders.dep2.nsl" ),
+                    natus::io::location_t( "shaders.dep.nsl" ),
+                    natus::io::location_t( "shaders.just_render.nsl" ),
+                    natus::io::location_t( "shaders.post_blit.nsl" )
+                };
 
-            natus::device::global_t::system()->search( [&] ( natus::device::idevice_res_t dev_in )
-            {
-                if( natus::device::three_device_res_t::castable( dev_in ) )
+                natus::application::util::app_essentials_t::init_struct is = 
                 {
-                }
-                else if( natus::device::ascii_device_res_t::castable( dev_in ) )
-                {
-                    _dev_ascii = dev_in ;
-                }
-            } ) ;
+                    { "myapp" }, 
+                    { natus::io::path_t( DATAPATH ), "./working", "data" },
+                    shader_locations
+                } ;
+
+                _ae.init( is ) ;
+                _ae.get_camera_0()->look_at( natus::math::vec3f_t( 0.0f, -2000.0f, 1000.0f ),
+                        natus::math::vec3f_t( 0.0f, 1.0f, 0.0f ), natus::math::vec3f_t( 0.0f, -2000.0f, 0.0f )) ;
+                _ae.get_camera_0()->set_near_far( 1.0f, 100000.0f ) ;
+            }
 
             // root render states
             {
                 natus::graphics::state_object_t so = natus::graphics::state_object_t(
-                    "root_render_states" ) ;
+                    "framebuffer_render_states" ) ;
 
                 {
                     natus::graphics::render_state_sets_t rss ;
@@ -167,10 +150,10 @@ namespace this_file
                     so.add_render_state_set( rss ) ;
                 }
 
-                _root_render_states = std::move( so ) ;
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _fb_render_states = std::move( so ) ;
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
-                    a.configure( _root_render_states ) ;
+                    a.configure( _fb_render_states ) ;
                 } ) ;
             }
 
@@ -238,7 +221,7 @@ namespace this_file
                 natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "cubes",
                     natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( geo ) ;
                 } ) ;
@@ -259,7 +242,7 @@ namespace this_file
                     .add_layout_element( natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 ) ;
 
                 _gpu_data = natus::graphics::array_object_t( "object_data", std::move( db ) ) ;
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( _gpu_data ) ;
                 } ) ;
@@ -296,7 +279,7 @@ namespace this_file
                     .set_filter( natus::graphics::texture_filter_mode::min_filter, natus::graphics::texture_filter_type::nearest )
                     .set_filter( natus::graphics::texture_filter_mode::mag_filter, natus::graphics::texture_filter_type::nearest );
 
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( _imgconfig ) ;
                 } ) ;
@@ -518,7 +501,7 @@ namespace this_file
                         .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
                 }
 
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( sc ) ;
                 } ) ;
@@ -559,7 +542,7 @@ namespace this_file
                     rc.add_variable_set( std::move( vars ) ) ;
                 }
                 
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( rc ) ;
                 } ) ;
@@ -573,7 +556,7 @@ namespace this_file
                     .set_target( natus::graphics::depth_stencil_target_type::depth32 )
                     .resize( _fb_dims.z(), _fb_dims.w() ) ;
 
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( _fb ) ;
                 } ) ;
@@ -581,7 +564,7 @@ namespace this_file
 
             {
                 _quad = natus::gfx::quad_res_t( natus::gfx::quad_t("post.quad") ) ;                
-                _quad->init( _graphics ) ;
+                _quad->init( _ae.graphics() ) ;
                 _quad->set_texture("the_scene.0") ;
             }
             
@@ -590,10 +573,17 @@ namespace this_file
 
         float value = 0.0f ;
 
-        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ) noexcept 
+        virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ud ) noexcept 
         { 
+            _ae.on_update( ud ) ;
             NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
 
+            return natus::application::result::ok ; 
+        }
+
+        virtual natus::application::result on_device( device_data_in_t dd ) noexcept 
+        { 
+            _ae.on_device( dd ) ;
             return natus::application::result::ok ; 
         }
         
@@ -703,7 +693,7 @@ namespace this_file
                     #endif
 
                 } ) ;
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.configure( _gpu_data ) ;
                 } ) ; 
@@ -716,12 +706,12 @@ namespace this_file
                 {
                     {
                         auto* var = vs->data_variable< natus::math::mat4f_t >( "u_view" ) ;
-                        var->set( _camera_0.mat_view() ) ;
+                        var->set( _ae.get_camera_0()->mat_view() ) ;
                     }
 
                     {
                         auto* var = vs->data_variable< natus::math::mat4f_t >( "u_proj" ) ;
-                        var->set( _camera_0.mat_proj() ) ;
+                        var->set( _ae.get_camera_0()->mat_proj() ) ;
                     }
 
                     {
@@ -747,28 +737,18 @@ namespace this_file
                 } ) ;
             }
 
-             // use the framebuffer
+             
             {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     a.use( _fb ) ;
+                    a.push( _fb_render_states ) ;
                 } ) ;
             }
-
-            // render the root render state sets render object
-            // this will set the root render states
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.push( _root_render_states ) ;
-                } ) ;
-            }
-
-           
 
             for( size_t i=0; i<_render_objects.size(); ++i )
             {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
                     natus::graphics::backend_t::render_detail_t detail ;
                     detail.start = 0 ;
@@ -779,60 +759,37 @@ namespace this_file
                 } ) ;
             }
 
-            // un-use the framebuffer
             {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
+                    a.pop( natus::graphics::backend::pop_type::render_state ) ;
                     a.unuse( natus::graphics::backend::unuse_type::framebuffer ) ;
                 } ) ;
             }
 
-            // render the root render state sets render object
-            // this will set the root render states
-            {
-                _graphics.for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.pop( natus::graphics::backend::pop_type::render_state ) ;
-                } ) ;
-            }
+            _ae.on_graphics_begin( rd ) ;
 
-            _quad->render( _graphics ) ;
+            _quad->render( _ae.graphics() ) ;
+
+            _ae.on_graphics_end( 10 ) ;
+
             NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
 
             return natus::application::result::ok ; 
         }
 
-        virtual natus::application::result on_device( device_data_in_t ) noexcept 
-        { 
-            natus::device::layouts::ascii_keyboard_t ascii( _dev_ascii ) ;
-            if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f8 ) ==
-                natus::device::components::key_state::released )
-            {
-            }
-            else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f9 ) ==
-                natus::device::components::key_state::released )
-            {
-            }
-            else if( ascii.get_state( natus::device::layouts::ascii_keyboard_t::ascii_key::f2 ) ==
-                natus::device::components::key_state::released )
-            {
-                _do_tool = !_do_tool ;
-            }
-
-            return natus::application::result::ok ; 
-        }
-
-        virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t ) noexcept
+        virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t td ) noexcept
         {
-            if( !_do_tool ) return natus::application::result::no_tool ;
+            if( !_ae.on_tool( td ) ) return natus::application::result::ok ;
 
-            ImGui::Begin( "Config" ) ;
+            ImGui::Begin( "Test Control" ) ;
 
             if( ImGui::SliderInt( "Objects", &_num_objects_rnd, 0, _max_objects  ) )
             {
             } 
 
             ImGui::End() ;
+
             return natus::application::result::ok ;
         }
 
