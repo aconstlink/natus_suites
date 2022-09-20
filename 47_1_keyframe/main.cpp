@@ -4,7 +4,7 @@
 
 #include <natus/application/global.h>
 #include <natus/application/app.h>
-#include <natus/application/util/simple_app_essentials.h>
+#include <natus/application/util/app_essentials.h>
 
 #include <natus/math/animation/keyframe_sequence.hpp>
 
@@ -26,7 +26,7 @@ namespace this_file
 
     private:
 
-        natus::application::util::simple_app_essentials_t _ae ;
+        natus::application::util::app_essentials_t _ae ;
 
     public:
 
@@ -43,12 +43,12 @@ namespace this_file
             view2.window().position( 50 + 800, 50 ) ;
             view2.window().resize( 800, 800 ) ;
 
-            _ae = natus::application::util::simple_app_essentials_t( 
+            _ae = natus::application::util::app_essentials_t( 
                 natus::graphics::async_views_t( { view1.async(), view2.async() } ) ) ;
             #else
             auto view1 = this_t::create_window( "A Render Window", wi, 
                 { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
-            _ae = natus::application::util::simple_app_essentials_t( 
+            _ae = natus::application::util::app_essentials_t( 
                 natus::graphics::async_views_t( { view1.async() } ) ) ;
             #endif
         }
@@ -71,7 +71,7 @@ namespace this_file
 
         virtual natus::application::result on_init( void_t ) noexcept
         { 
-            natus::application::util::simple_app_essentials_t::init_struct is = 
+            natus::application::util::app_essentials_t::init_struct is = 
             {
                 { "myapp" }, 
                 { natus::io::path_t( DATAPATH ), "./working", "data" }

@@ -18,7 +18,7 @@ config myshaders.just_render
 
         void main()
         {
-            vec3_t pos = in.pos.xyz ;//+ vec3_t( 0.5, 0.0, 0.5 ) ;
+            vec3_t pos = in.pos.xyz ; //+ vec3_t( 0.5, 0.0, 0.5 ) ;
             pos.xyz = pos.xyz * 10.0 ;
             out.tx = in.tx ;
             out.pos = proj * view * world * vec4_t( pos, 1.0 ) ;
