@@ -1,0 +1,37 @@
+config test_texture_array
+{
+    vertex_shader
+    {
+        int_t quad ; // in [0,1] left or right quad
+
+        in vec3_t pos : position ;
+        out vec2_t tx : texcoord ;
+
+        void main()
+        {
+            vec2_t offset = { vec2(-0.5, 0.0), vec2(0.5,0.0) } ;
+            out.pos = vec4_t( in.pos.xy ' vec2_t(0.85) + offset[quad], 0.0, 1.0 ) ;
+            out.tx = sign( in.pos.xy ) ' vec2(0.5) + vec2( 0.5 ) ;
+        }
+    }
+
+    pixel_shader
+    {
+        int_t quad ; // in [0,1] left or right quad
+        int_t tx_id ; // in [0,3] choosing the sampler in u_tex
+
+        tex2d_t u_tex ;
+
+        in vec2_t tx : texcoord ;
+        out vec4 color ;
+
+        void main()
+        {
+            vec2 uv = fract( in.tx * 2.0 ) ;
+            int_t quadrant = int_t( dot( floor( in.tx * 2.0 ), vec2(1,2) ) ) ;
+            int_t idx = quad * tx_id + quadrant * ( 1.0 - quad ) ;
+            out.color = texture( u_tex, vec3(uv, float_t(idx) ) ) ;
+        }
+    }
+
+}
