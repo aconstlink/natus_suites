@@ -100,7 +100,8 @@ namespace this_file
                 natus::application::util::app_essentials_t::init_struct is = 
                 {
                     { "myapp" }, 
-                    { natus::io::path_t( DATAPATH ), "./working", "data" }
+                    { natus::io::path_t( DATAPATH ), "./working", "data" },
+                    shader_locations
                 } ;
 
                 _ae.init( is ) ;
@@ -218,7 +219,7 @@ namespace this_file
 
                 {
                     rc.link_geometry( "quad" ) ;
-                    rc.link_shader( "test_variable_array" ) ;
+                    rc.link_shader( "test_texture_array" ) ;
                 }
 
                 // add variable set 0
@@ -296,7 +297,7 @@ namespace this_file
             _ro->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
             {
                 {
-                    auto* var = vs->data_variable< int32_t >( "u_texture" ) ;
+                    auto* var = vs->data_variable< int32_t >( "tx_id" ) ;
                     var->set( _used_texture ) ;
                 }
             } ) ;
