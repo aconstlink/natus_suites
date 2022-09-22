@@ -27,29 +27,17 @@ namespace this_file
 
         natus::application::util::app_essentials_t _ae ;
         
-        natus::graphics::array_object_res_t _gpu_data = natus::graphics::array_object_t() ;
-
-        natus::graphics::state_object_res_t _root_render_states ;
-
         natus::graphics::render_object_res_t _ro ;
         natus::graphics::geometry_object_res_t _go ;
 
-        natus::graphics::variable_set_res_t _vs0 ;
-        natus::graphics::variable_set_res_t _vs1 ;
-
         struct vertex { natus::math::vec3f_t pos ; } ;
-        
-        typedef std::chrono::high_resolution_clock __clock_t ;
-        __clock_t::time_point _tp = __clock_t::now() ;
-
 
         int_t _max_textures = 3 ;
         int_t _used_texture = 0 ;
 
-
     public:
 
-        test_app( void_t ) 
+        test_app( void_t ) noexcept
         {
             srand( uint_t( time(NULL) ) ) ;
 
@@ -74,11 +62,11 @@ namespace this_file
             #endif
         }
         test_app( this_cref_t ) = delete ;
-        test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
+        test_app( this_rref_t rhv ) noexcept : app( ::std::move( rhv ) ) 
         {
             _ae = std::move( rhv._ae ) ;
         }
-        virtual ~test_app( void_t ) 
+        virtual ~test_app( void_t ) noexcept
         {}
 
         virtual natus::application::result on_event( window_id_t const wid, this_t::window_event_info_in_t wei ) noexcept
@@ -105,39 +93,6 @@ namespace this_file
                 } ;
 
                 _ae.init( is ) ;
-            }
-
-            // root render states
-            {
-                natus::graphics::state_object_t so = natus::graphics::state_object_t(
-                    "root_render_states" ) ;
-
-                {
-                    natus::graphics::render_state_sets_t rss ;
-
-                    rss.depth_s.do_change = true ;
-                    rss.depth_s.ss.do_activate = false ;
-                    rss.depth_s.ss.do_depth_write = true ;
-
-                    rss.polygon_s.do_change = true ;
-                    rss.polygon_s.ss.do_activate = false ;
-                    rss.polygon_s.ss.ff = natus::graphics::front_face::clock_wise ;
-                    rss.polygon_s.ss.cm = natus::graphics::cull_mode::back ;
-                    rss.polygon_s.ss.fm = natus::graphics::fill_mode::fill ;
-
-                    rss.clear_s.do_change = true ;
-                    rss.clear_s.ss.do_activate = true ;
-                    rss.clear_s.ss.do_color_clear = true ;
-                    rss.clear_s.ss.do_depth_clear = true ;
-                   
-                    so.add_render_state_set( rss ) ;
-                }
-
-                _root_render_states = std::move( so ) ;
-                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.configure( _root_render_states ) ;
-                } ) ;
             }
 
             // geometry configuration
@@ -240,8 +195,7 @@ namespace this_file
                         auto * var = vars->data_variable<int32_t>("u_texture" ) ;
                         var->set( 0 ) ;
                     }
-
-                    _vs0 = vars ;
+                    
                     rc.add_variable_set( std::move( vars ) ) ;
                 }
 
@@ -262,8 +216,7 @@ namespace this_file
                         auto * var = vars->data_variable<int32_t>("u_texture" ) ;
                         var->set( 0 ) ;
                     }
-
-                    _vs1 = vars ;
+                    
                     rc.add_variable_set( std::move( vars ) ) ;
                 }
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )

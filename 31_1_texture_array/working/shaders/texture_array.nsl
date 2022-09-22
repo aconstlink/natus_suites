@@ -8,7 +8,6 @@ config test_texture_array
 
         out vec4_t pos : position ;
         out vec2_t tx : texcoord ;
-        
 
         void main()
         {
