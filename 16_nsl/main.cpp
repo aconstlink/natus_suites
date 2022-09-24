@@ -20,6 +20,8 @@ using namespace natus::core::types ;
 int main( int argc, char ** argv )
 {
 
+    #if 0
+    // testing parameter decomposition
     {
         natus::ntd::string_t s = "a = mul ( mul ( mul ( a , b ) , bv ) , vec4_t ( in.pos , 1.0 ) )";
 
@@ -55,16 +57,17 @@ int main( int argc, char ** argv )
         }
         int bp = 0  ;
     }
-    
+    #endif
 
 
     natus::io::database_res_t db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
     natus::nsl::database_res_t ndb = natus::nsl::database_t() ;
 
     natus::ntd::vector< natus::io::location_t > shader_locations = {
-        natus::io::location_t( "shaders.lib_a.nsl" ),
-        natus::io::location_t( "shaders.lib_b.nsl" ),
-        natus::io::location_t( "shaders.effect.nsl" ),
+        //natus::io::location_t( "shaders.lib_a.nsl" ),
+        //natus::io::location_t( "shaders.lib_b.nsl" ),
+        //natus::io::location_t( "shaders.effect.nsl" ),
+        natus::io::location_t( "shaders.test_if.nsl" )
     };
 
     natus::ntd::vector< natus::nsl::symbol_t > config_symbols ;
