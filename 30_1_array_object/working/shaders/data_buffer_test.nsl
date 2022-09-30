@@ -1,7 +1,10 @@
-config myshaders.just_render
+config test_data_buffer
 {
     vertex_shader
     {
+        uint_t vid : vertex_id ;
+        data_buffer_t u_data ;
+
         mat4_t proj : projection ;
         mat4_t view : view ;
         mat4_t world : world ;
@@ -15,14 +18,20 @@ config myshaders.just_render
         out vec4_t pos : position ;
         out vec2_t tx : texcoord ;
         out vec3_t nrm : normal ;
+        out vec4_t col : color ;
 
         void main()
         {
-            vec3_t pos = in.pos.xyz ; //+ vec3_t( 0.5, 0.0, 0.5 ) ;
-            pos.xyz = pos.xyz * 10.0 ;
+            int_t idx = vid / 24 ;
+            vec4_t pos_scl = fetch_data( u_data, (idx << 1)+0 ) ;
+            out.col = fetch_data( u_data, (idx<<1)+1 ) ;
+
+            vec4_t pos = vec4_t( in.pos ' as_vec3( pos_scl.w ), 1.0 ) ;
+            pos = world * pos + vec4_t( pos_scl.xyz * (pos_scl.w*2), 0.0 ) ;
+            out.pos = proj * view * pos ;
+
             out.tx = in.tx ;
-            out.pos = proj * view * world * vec4_t( pos, 1.0 ) ;
-            out.nrm = normalize( world * vec4_t( in.nrm, 0.0 ) ).xyz ;
+            out.nrm = normalize( world * vec4_t(in.nrm, 0.0 ) ).xyz ;
         }
     }
 
@@ -33,22 +42,19 @@ config myshaders.just_render
 
         in vec2_t tx : texcoord ;
         in vec3_t nrm : normal ;
+        in vec4_t col : color ;
+
         out vec4_t color0 : color0 ;
         out vec4_t color1 : color1 ;
         out vec4_t color2 : color2 ;
 
         void main()
         {
-            out.color0 = texture( tex, in.tx ) ' color  ;
-            //out.color0 = vec4_t( in.tx, 0.0, 1.0 ) ;
-            out.color0 = out.color0 + 0.3  * pulse( 0.4, 0.6, in.tx.x )  ;
-            //out.color0 = vec4_t(1.0, 1.0, 1.0, 1.0) ;
+            out.color0 = in.col ' texture( tex, in.tx ) ' in.col ;
             out.color1 = vec4_t( in.nrm, 1.0 ) ;
-
-            float_t light = dot( normalize( in.nrm ), normalize( vec3_t( 1.0, 1.0, 0.5) ) ) ;
-            out.color2 = vec4_t( vec3_t(light,light,light),1.0 ) ;
-
-            out.color2 = nsl.dep.my_color2( out.color2 ) ;
+            out.color2 = vec4_t( 
+                       as_vec3( dot( normalize( in.nrm ), normalize( vec3_t( 1.0, 1.0, 0.5) ) ) ), 
+                                    1.0 ) ;
         }
     }
 }
