@@ -9,11 +9,9 @@ config test_data_buffer
         mat4_t view : view ;
         mat4_t world : world ;
 
-        // the order must match the geometry 
-        // attribute binding order
-        in vec3_t pos : position ;
         in vec3_t nrm : normal ;
-        in vec2_t tx : texcoord ;
+        in vec2_t tx : texcoord ; 
+        in vec3_t pos : position ;
 
         out vec4_t pos : position ;
         out vec2_t tx : texcoord ;
