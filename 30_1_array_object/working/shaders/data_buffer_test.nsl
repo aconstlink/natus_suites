@@ -25,7 +25,7 @@ config test_data_buffer
             out.col = fetch_data( u_data, (idx<<1)+1 ) ;
 
             vec4_t pos = vec4_t( in.pos ' as_vec3( pos_scl.w ), 1.0 ) ;
-            pos = world * pos + vec4_t( pos_scl.xyz * (pos_scl.w*2), 0.0 ) ;
+            pos = world * pos + vec4_t( pos_scl.xyz * vec3_t(pos_scl.w*2.0), 0.0 ) ;
             out.pos = proj * view * pos ;
 
             out.tx = in.tx ;
