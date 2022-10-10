@@ -77,6 +77,7 @@ set( subdirs
     "48_pinhole_camera"
     "49_picking_2d"
     "50_simple_essentials"
+    "51_post_process"
     "xx_1_tile_render"
     "xx_bold_branch_spline_2d"
     "xx_2_tile_render"
