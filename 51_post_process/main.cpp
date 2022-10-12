@@ -527,6 +527,7 @@ namespace this_file
                 size_t const num_object = _render_objects.size() ;
 
                 float_t const dt = float_t ( double_t( std::chrono::duration_cast< std::chrono::milliseconds >( __clock_t::now() - tp ).count() ) / 1000.0 ) ;
+                tp = __clock_t::now() ;
 
                 // per frame update of variables
                 for( auto & rc : _render_objects )
@@ -565,8 +566,6 @@ namespace this_file
                         }
                     } ) ;
                 }
-
-                tp = __clock_t::now() ;
             }
 
             // render into framebuffer

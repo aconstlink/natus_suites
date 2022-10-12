@@ -78,6 +78,7 @@ set( subdirs
     "49_picking_2d"
     "50_simple_essentials"
     "51_post_process"
+    "52_time_measure"
     "xx_1_tile_render"
     "xx_bold_branch_spline_2d"
     "xx_2_tile_render"
