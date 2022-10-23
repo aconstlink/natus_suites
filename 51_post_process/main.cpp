@@ -496,14 +496,12 @@ namespace this_file
         //*****************************************************************************
         virtual natus::application::result on_audio( audio_data_in_t ) noexcept 
         { 
-            NATUS_PROFILING_COUNTER_HERE( "Audio Clock" ) ;
             return natus::application::result::ok ; 
         }
 
         //*****************************************************************************
         virtual natus::application::result on_update( natus::application::app_t::update_data_in_t ud ) noexcept 
         { 
-            NATUS_PROFILING_COUNTER_HERE( "Update Clock" ) ;
             return natus::application::result::ok ; 
         }
 
@@ -608,8 +606,6 @@ namespace this_file
             
             _ae.on_graphics_end( 100 ) ;
 
-            NATUS_PROFILING_COUNTER_HERE( "Render Clock" ) ;
-
             return natus::application::result::ok ; 
         }
 
@@ -645,9 +641,8 @@ namespace this_file
                         }
                     } ) ;
                 }
+                ImGui::End() ;
             }
-
-            ImGui::End() ;
         }
 
         virtual natus::application::result on_shutdown( void_t ) noexcept 
