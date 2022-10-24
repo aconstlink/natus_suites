@@ -6,6 +6,9 @@ library if_test
         int_t a = 4 ;
         int_t b = 3 ;
         if( a > b && b > a ) {}
+        else if( a < b ){}
+        else if( a == b ) {}
+        else {a}
         return 4.0 ;
     }
 }

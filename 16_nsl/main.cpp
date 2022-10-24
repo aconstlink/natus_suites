@@ -265,9 +265,9 @@ int main( int argc, char ** argv )
     //test_1() ;
     //test_1_1_extract_by_tokenize() ;
     //test_2( db ) ;
-    //test_3( db ) ;
+    test_3( db ) ;
 
-    test_4( db ) ;
+    //test_4( db ) ;
 
     return 0 ;
 }
