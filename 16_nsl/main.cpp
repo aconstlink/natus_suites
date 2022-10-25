@@ -145,6 +145,171 @@ void_t test_1_1_extract_by_tokenize( void_t )
     
 }
 
+// test operator extraction
+void_t test_1_2( void_t ) 
+{
+    // 1. precondition is that white spaces are inserted before function extraction.
+    natus::ntd::string_t s0 = "sign ( in.pos.xy ) * __float(0.5) + __float(0.5)";
+    natus::ntd::string_t s1 = "vec2i_t ( __int(1) , __int(1) ) * - __int(1)";
+    natus::ntd::string_t s2 = "++ i ; i ++ ; + i ; - i ";
+    natus::ntd::string_t s3 = "__float(0.5) + __float(0.5)";
+
+    struct repl
+    {
+        natus::ntd::string_t what ;
+        natus::ntd::string_t with ;
+
+        // a + b -> false
+        // a /= b -> false
+        // ++a -> true
+        // ^b -> true
+        bool_t single = false ;
+    };
+
+    typedef std::function< bool_t ( char const t, size_t const l ) > is_stop_t ;
+    auto do_replacement = [] ( natus::ntd::string_ref_t line, repl const& r, is_stop_t is_stop )
+    {
+        size_t off = 0 ;
+        while( true )
+        {
+            size_t const p0 = line.find( r.what, off ) ;
+            if( p0 == std::string::npos ) break ;
+            
+            natus::ntd::string_t arg0, arg1 ;
+
+            size_t beg = 0 ;
+            size_t end = 0 ;
+
+            // arg 0, left of what
+            if( p0 > 0 )
+            {
+                size_t level = 0 ;
+                size_t const cut = p0 - 1 ;
+                size_t p1 = p0 ;
+                while( --p1 != size_t( -1 ) )
+                {
+                    if( line[ p1 ] == ')' ) ++level ;
+                    else if( line[ p1 ] == '(' ) --level ;
+
+                    if( is_stop( line[ p1 ], level ) ) break ;
+                }
+                // if the beginning is hit, there is one position missing.
+                if( p1 == size_t( -1 ) ) --p1 ;
+
+                // p3 is the (at stop char) + the char + a white space
+                size_t const p3 = p1 + 2 ;
+
+                // the condition may happen if the algo above has no arg0 for operator found
+                if( p3 > cut ) arg0 = "" ;
+                else arg0 = line.substr( p1 + 2, cut - ( p1 + 2 ) ) ;
+
+                beg = p3 ;
+            }
+
+            // arg1, right of what
+            {
+                size_t level = 0 ;
+
+                size_t p1 = p0 + r.what.size() - 1 ;
+                while( ++p1 != line.size() )
+                {
+                    if( line[ p1 ] == '(' ) ++level ;
+                    else if( line[ p1 ] == ')' ) --level ;
+
+                    if( is_stop( line[ p1 ], level ) ) break ;
+                }
+
+                // +1 : jump over the whitespace
+                size_t const cut = p0 + r.what.size() + 1 ;
+                if( p1 == cut ) arg1 = "" ;
+                else arg1 = line.substr( cut, ( p1 - 1 ) - cut ) ;
+
+                end = p1 ;
+            }
+
+            if( r.single )
+            {
+                // prefix
+                if( arg0.empty() )
+                {
+                    line = line.replace( beg, end - beg,
+                        r.with + " ( " + arg1 + " ) " ) ;
+                }
+                // postfix
+                else if( arg1.empty() )
+                {
+                    line = line.replace( beg, end - beg,
+                        r.with.substr(0, r.with.size()-1) + "_post: ( " + arg0 + " ) " ) ;
+                }
+                // else ambiguous operator 
+                else {}
+            }
+            else
+            {
+                if( arg0.empty() )
+                {
+                    line = line.replace( beg, end - beg,
+                        r.with + " ( " + arg1 + " ) " ) ;
+                }
+                else if( arg1.empty() )
+                {
+                    line = line.replace( beg, end - beg,
+                        r.with + " ( " + arg0 + " ) " ) ;
+                }
+                else
+                {
+                    line = line.replace( beg, end - beg,
+                        r.with + " ( " + arg0 + " , " + arg1 + " ) " ) ;
+                }
+            }
+
+            // find another
+            off = p0 + 1 ;
+        }
+    } ;
+
+    // replacing operators #2
+    {
+        natus::ntd::vector< repl > repls =
+        {
+            { "++", ":inc:", true },
+            { "--", ":dec:", true },
+            { "+", ":add:", true },
+            { "-", ":sub:", true },
+            { "*", ":mmul:" },    // math multiplication
+            { "'", ":cmul:" },    // component-wise multiplication
+            { "/", ":div:" },
+            { "+", ":add:" },
+            { "-", ":sub:" },
+            { ">>", ":rs:" },
+            { "<<", ":ls:" },
+            { "<", ":lt:" },
+            { ">", ":gt:" },
+            { "||", ":lor:" },
+            { "&&", ":land:" }
+        } ;
+
+        auto is_stop = [&] ( char const t, size_t const l )
+        {
+            if( l == size_t( -1 ) )  return true ;
+            if( l != 0 ) return false ;
+            if( t == '*' || t == '/' || t == '+' || t == '-' ||
+                t == '=' || t == ';' || t == ',' || t == '>' || t == '<' ) return true ;
+            return false ;
+        } ;
+
+        for( auto const & r : repls )
+        {
+            do_replacement( s0, r, is_stop ) ;
+            do_replacement( s1, r, is_stop ) ;
+            do_replacement( s2, r, is_stop ) ;
+            do_replacement( s3, r, is_stop ) ;
+        }
+    }
+
+    return ; 
+}
+
 void_t test_2( natus::io::database_res_t db )
 {
     natus::nsl::database_res_t ndb = natus::nsl::database_t() ;
@@ -264,8 +429,9 @@ int main( int argc, char ** argv )
 
     //test_1() ;
     //test_1_1_extract_by_tokenize() ;
+    test_1_2() ;
     //test_2( db ) ;
-    test_3( db ) ;
+    //test_3( db ) ;
 
     //test_4( db ) ;
 

@@ -29,12 +29,13 @@ config fxaa
     vertex_shader
     {
         in vec3_t pos : position ;
+        in vec2_t tx : texcoord ;
         out vec4_t pos : position ;
         out vec2_t tx : texcoord ;
 
         void main()
         {
-            out.tx = sign( in.pos.xy ) * 0.5 + 0.5 ;
+            out.tx = in.tx; //sign( in.pos.xy ) * 0.5 + 0.5 ; 
             out.pos = vec4_t( sign( in.pos.xy ), 0.0, 1.0 ) ;
         }
     }
@@ -48,6 +49,10 @@ config fxaa
 
         void main()
         {
+            out.color = rt_texture( u_tex_0, in.tx ) ;
+            //out.color = vec4_t( in.tx, 0.0, 1.0 ) ;
+            //out.color = vec4_t( 1.0,1.0, 0.0, 1.0 ) ;
+/*
              vec3_t rgbN = rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, +1 ) ).xyz ;
              vec3_t rgbW = rt_texture_offset( u_tex_0, in.tx, vec2i_t( +1, 0 ) ).xyz ;
              vec3_t rgbM = rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, 0 ) ).xyz ;
@@ -65,12 +70,17 @@ config fxaa
              float_t range_max = max( lumaM, max( max( lumaN, lumaW), max( lumaS, lumaE) ) ) ;
              float_t range = range_max - range_min ;
 
+             out.color = vec4_t( rgbE, 1.0 ) ;
+             //out.color = as_vec4( lumaN ) ;
+
+
              if( range < max( nsl.fxaa.edge_threshold_min, range_max * nsl.fxaa.edge_threshold ) )
              {
                 out.color = vec4_t( rgbM, 1.0 ) ;
              }
              else
              {
+                out.color = vec4_t( rgbM, 1.0 ) ;
                 vec2_t posM = in.tx ;
 
                 float_t lumaL = ( lumaN + lumaW + lumaE + lumaS ) * 0.25 ;
@@ -106,7 +116,7 @@ config fxaa
 
                 out.color = nsl.fxaa.split_view( vec3_t(edgeVert, edgeHorz, 0.0), as_vec3(0.0), in.tx ) ;
 
-/*
+
                 bool_t horzSpan = edgeHorz >= edgeVert;
 
                 float_t lengthSign = 1.0 / texture_dims( u_tex_0 ).x ; 
@@ -184,9 +194,10 @@ config fxaa
                     //out.color.x += lumaM ;
                 }
                 else out.color = vec4_t( rgbM, 1.0 ) ;
-*/
              }
+
              if( in.tx.x > 0.499 && in.tx.x < 0.5 ) out.color = as_vec4(1.0) ;
+*/
         }
     }
 }

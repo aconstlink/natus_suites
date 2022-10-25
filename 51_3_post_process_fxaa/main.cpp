@@ -306,7 +306,7 @@ namespace this_file
             // framebuffer
             {
                 _fb = natus::graphics::framebuffer_object_t( "the_scene" ) ;
-                _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 3 )
+                _fb->set_target( natus::graphics::color_target_type::rgba_uint_8, 1 )
                     .set_target( natus::graphics::depth_stencil_target_type::depth32 )
                     .resize( _fb_dims.z(), _fb_dims.w() ) ;
 
@@ -315,8 +315,6 @@ namespace this_file
                     a.configure( _fb ) ;
                 } ) ;
             }
-
-            
 
             // post framebuffer render object
             {
@@ -334,36 +332,7 @@ namespace this_file
                         {
                             auto* var = vars->texture_variable( "u_tex_0" ) ;
                             var->set( "the_scene.0" ) ;
-                            //var->set( "checker_board" ) ;
                         }
-
-                        {
-                            auto* var = vars->data_variable< natus::math::vec4f_t >( "u_dark_color" ) ;
-                            var->set( natus::math::vec4f_t( _dark_color, 0.0f) ) ;
-                        }
-
-                        {
-                            auto* var = vars->data_variable< natus::math::vec4f_t >( "u_light_color" ) ;
-                            var->set( natus::math::vec4f_t(_light_color, 0.0f) ) ;
-                        }
-
-                        #if 0
-                        {
-                            auto* var = vars->texture_variable( "u_tex_1" ) ;
-                            var->set( "the_scene.1" ) ;
-                            //var->set( "checker_board" ) ;
-                        }
-                        {
-                            auto* var = vars->texture_variable( "u_tex_2" ) ;
-                            var->set( "the_scene.2" ) ;
-                            //var->set( "checker_board" ) ;
-                        }
-                        {
-                            auto* var = vars->texture_variable( "u_tex_3" ) ;
-                            var->set( "the_scene.depth" ) ;
-                            //var->set( "checker_board" ) ;
-                        }
-                        #endif
                     }
 
                     rc.add_variable_set( std::move( vars ) ) ;
@@ -402,7 +371,7 @@ namespace this_file
             // root render states
             {
                 natus::graphics::state_object_t so = natus::graphics::state_object_t(
-                    "root_render_states" ) ;
+                    "fb_render_states" ) ;
 
                 {
                     natus::graphics::render_state_sets_t rss ;
@@ -523,7 +492,7 @@ namespace this_file
                     } ) ;
                 }
             }
-
+            
             // render into framebuffer
             {
                 {
@@ -536,14 +505,9 @@ namespace this_file
 
                 for( size_t i=0; i<_render_objects.size(); ++i )
                 {
-                    natus::graphics::backend_t::render_detail_t detail ;
-                    detail.start = 0 ;
-                    //detail.num_elems = 3 ;
-                    detail.varset = 0 ;
-                    //detail.render_states = _render_states ;
                     _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                     {
-                        a.render( _render_objects[i], detail ) ;
+                        a.render( _render_objects[i] ) ;
                     } ) ;
                 }
 
@@ -555,21 +519,25 @@ namespace this_file
                     } ) ;
                 }
             }
-
+            
             _ae.on_graphics_begin( rd ) ;
             _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
             {
-                a.render( _rc_map ) ;
+                natus::graphics::backend::render_detail_t rd ;
+                    rd.varset = 0 ;
+                a.render( _rc_map, rd ) ;
             } ) ;
             
             _ae.on_graphics_end( 100 ) ;
-
+            
             return natus::application::result::ok ; 
         }
 
         virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t td ) noexcept
         {
             if( !_ae.on_tool( td ) ) return natus::application::result::ok ;
+
+            ImGui::Text( "Not done yet") ;
 
             if( ImGui::Begin("Post Processing Control") )
             {

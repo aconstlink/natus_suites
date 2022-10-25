@@ -592,7 +592,7 @@ namespace this_file
                 }
             }
 
-            // render into framebuffer
+            // render scene into framebuffer color target 0
             {
                 {
                     _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
@@ -604,14 +604,9 @@ namespace this_file
 
                 for( size_t i=0; i<_render_objects.size(); ++i )
                 {
-                    natus::graphics::backend_t::render_detail_t detail ;
-                    detail.start = 0 ;
-                    //detail.num_elems = 3 ;
-                    detail.varset = 0 ;
-                    //detail.render_states = _render_states ;
                     _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                     {
-                        a.render( _render_objects[i], detail ) ;
+                        a.render( _render_objects[i] ) ;
                     } ) ;
                 }
 
@@ -624,8 +619,7 @@ namespace this_file
                 }
             }
 
-            // render into framebuffer for post
-            // blur ping-pong
+            // render into framebuffer color target 0 for post
             {
                 {
                     _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
