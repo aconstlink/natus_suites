@@ -49,10 +49,10 @@ config fxaa
 
         void main()
         {
-            out.color = rt_texture( u_tex_0, in.tx ) ;
+            //out.color = rt_texture( u_tex_0, in.tx ) ;
             //out.color = vec4_t( in.tx, 0.0, 1.0 ) ;
             //out.color = vec4_t( 1.0,1.0, 0.0, 1.0 ) ;
-/*
+
              vec3_t rgbN = rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, +1 ) ).xyz ;
              vec3_t rgbW = rt_texture_offset( u_tex_0, in.tx, vec2i_t( +1, 0 ) ).xyz ;
              vec3_t rgbM = rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, 0 ) ).xyz ;
@@ -77,6 +77,7 @@ config fxaa
              if( range < max( nsl.fxaa.edge_threshold_min, range_max * nsl.fxaa.edge_threshold ) )
              {
                 out.color = vec4_t( rgbM, 1.0 ) ;
+                
              }
              else
              {
@@ -197,7 +198,7 @@ config fxaa
              }
 
              if( in.tx.x > 0.499 && in.tx.x < 0.5 ) out.color = as_vec4(1.0) ;
-*/
+
         }
     }
 }
