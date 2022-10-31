@@ -177,13 +177,13 @@ config fxaa
                 float_t dstP = posP.x - posM.x ;
                 if( !horzSpan ) dstN = posM.y - posN.y ;
                 if( !horzSpan ) dstP = posP.y - posM.y ;
-                
+
                 bool_t lumaMLTZero = lumaMM < 0.0;
                 bool_t goodSpanN = (lumaEndN <0.0) != lumaMLTZero ;
                 float_t spanLength = dstP + dstN ;
                 bool_t goodSpanP = (lumaEndP <0.0) != lumaMLTZero ;
                 float_t spanLengthRcp = 1.0/spanLength ;
-                
+
                 bool_t directionN = dstN < dstP ;
                 float_t dst = min( dstN, dstP ) ;
                 bool_t goodSpan = directionN ? goodSpanN : goodSpanP ;
