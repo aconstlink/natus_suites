@@ -4,14 +4,21 @@ library fxaa
     float_t edge_threshold = 1.0 / 8.0 ;
     float_t subpix_trim = 1.0  / 8.0 ;
     float_t subpix_trim_scale = 2.5 ; 
+    float_t subpix_quality = 0.0 ;
     float_t subpix_cap =  3.0 / 4.0 ;
-    uint_t search_steps = 4 ;
-    uint_t search_acceleration = 2 ;
+    
+    
 
-    float_t QUALITY__PS = 3.0 ;
-    float_t QUALITY__P0 = 1.5 ;
-    float_t QUALITY__P1 = 3.0 ;
-    float_t QUALITY__P2 = 12.0 ;
+    uint_t QUALITY__PS = 8 ;
+    float_t QUALITY__P0 = 1.0 ;
+    float_t QUALITY__P1 = 1.5 ;
+    float_t QUALITY__P2 = 2.0 ;
+    float_t QUALITY__P3 = 2.0 ;
+    float_t QUALITY__P4 = 2.0 ;
+    float_t QUALITY__P5 = 2.0 ;
+    float_t QUALITY__P6 = 4.0 ;
+    float_t QUALITY__P7 = 12.0 ;
+   
 
     float_t luma( vec3_t color )
     {
@@ -49,155 +56,196 @@ config fxaa
 
         void main()
         {
-            //out.color = rt_texture( u_tex_0, in.tx ) ;
-            //out.color = vec4_t( in.tx, 0.0, 1.0 ) ;
-            //out.color = vec4_t( 1.0,1.0, 0.0, 1.0 ) ;
+            vec2_t posM = in.tx ;
+            vec4_t colorM = rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, 0 ) ) ;
 
-             vec3_t rgbN = rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, +1 ) ).xyz ;
-             vec3_t rgbW = rt_texture_offset( u_tex_0, in.tx, vec2i_t( +1, 0 ) ).xyz ;
-             vec3_t rgbM = rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, 0 ) ).xyz ;
-             vec3_t rgbE = rt_texture_offset( u_tex_0, in.tx, vec2i_t( -1, 0 ) ).xyz ;
-             vec3_t rgbS = rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, -1 ) ).xyz ;
-             vec3_t rgbL = rgbN + rgbW + rgbM + rgbE + rgbS ;
+            float_t lumaM = nsl.fxaa.luma( colorM.xyz ) ;
+            float_t lumaN = nsl.fxaa.luma( rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, +1 ) ).xyz ) ;
+            float_t lumaW = nsl.fxaa.luma( rt_texture_offset( u_tex_0, in.tx, vec2i_t( +1, 0 ) ).xyz ) ;
+            float_t lumaE = nsl.fxaa.luma( rt_texture_offset( u_tex_0, in.tx, vec2i_t( -1, 0 ) ).xyz ) ;
+            float_t lumaS = nsl.fxaa.luma( rt_texture_offset( u_tex_0, in.tx, vec2i_t( 0, -1 ) ).xyz ) ;
 
-             float_t lumaN = nsl.fxaa.luma( rgbN ) ;
-             float_t lumaW = nsl.fxaa.luma( rgbW ) ;
-             float_t lumaM = nsl.fxaa.luma( rgbM ) ;
-             float_t lumaE = nsl.fxaa.luma( rgbE ) ;
-             float_t lumaS = nsl.fxaa.luma( rgbS ) ;
+            float_t range_min = min( lumaM, min( min( lumaN, lumaW), min( lumaS, lumaE) ) ) ;
+            float_t range_max = max( lumaM, max( max( lumaN, lumaW), max( lumaS, lumaE) ) ) ;
+            float_t range = range_max - range_min ;
 
-             float_t range_min = min( lumaM, min( min( lumaN, lumaW), min( lumaS, lumaE) ) ) ;
-             float_t range_max = max( lumaM, max( max( lumaN, lumaW), max( lumaS, lumaE) ) ) ;
-             float_t range = range_max - range_min ;
+            if( range < max( nsl.fxaa.edge_threshold_min, range_max * nsl.fxaa.edge_threshold ) )
+            {
+                out.color = colorM ;
+                if( in.tx.x > 0.499 && in.tx.x < 0.5 ) out.color = as_vec4(1.0) ;
+                return ;
+            }
 
-             out.color = vec4_t( rgbE, 1.0 ) ;
-             //out.color = as_vec4( lumaN ) ;
+            float_t lumaNW = nsl.fxaa.luma( rt_texture_offset( u_tex_0, in.tx, vec2i_t( +1, +1 ) ).xyz ) ;
+            float_t lumaNE = nsl.fxaa.luma( rt_texture_offset( u_tex_0, in.tx, vec2i_t( -1, +1 ) ).xyz ) ;
+            float_t lumaSW = nsl.fxaa.luma( rt_texture_offset( u_tex_0, in.tx, vec2i_t( +1, -1 ) ).xyz ) ;
+            float_t lumaSE = nsl.fxaa.luma( rt_texture_offset( u_tex_0, in.tx, vec2i_t( -1, -1 ) ).xyz ) ;
+            float_t lumaNS = lumaN + lumaS;
+            float_t lumaWE = lumaW + lumaE;
+            float_t lumaNESE = lumaNE + lumaSE;
+            float_t lumaNWNE = lumaNW + lumaNE;
+            float_t lumaNWSW = lumaNW + lumaSW;
+            float_t lumaSWSE = lumaSW + lumaSE;
 
+            float_t edgeVert = 
+                 abs((0.25 * lumaNW) + (-0.5 * lumaN) + (0.25 * lumaNE)) +
+                 abs((0.50 * lumaW ) + (-1.0 * lumaM) + (0.50 * lumaE )) +
+                 abs((0.25 * lumaSW) + (-0.5 * lumaS) + (0.25 * lumaSE));
 
-             if( range < max( nsl.fxaa.edge_threshold_min, range_max * nsl.fxaa.edge_threshold ) )
+             float_t edgeHorz =
+                 abs((0.25 * lumaNW) + (-0.5 * lumaW) + (0.25 * lumaSW)) +
+                 abs((0.50 * lumaN ) + (-1.0 * lumaM) + (0.50 * lumaS )) +
+                 abs((0.25 * lumaNE) + (-0.5 * lumaE) + (0.25 * lumaSE));
+
+             float_t subpix = abs((lumaNS + lumaWE * 2.0 + lumaNWSW + lumaNESE / 12.0) - lumaM) / range ;
+             float_t subpixC = clamp( subpix, 0.0, 1.0 ) ;
+             float_t subpixD = -2.0 * subpixC + 3.0 ;
+             float_t subpixE = subpixC * subpixC ;
+             float_t subpixF = subpixD * subpixE ;
+             float_t subpixG = subpixF * subpixF ;
+             float_t subpixH = subpixG * nsl.fxaa.subpix_quality ;
+
+             vec2_t tex_dims = texture_dims( u_tex_0 ).xy ;
+
+             bool_t horzSpan = edgeHorz >= edgeVert;
+             float_t lengthSign = 1.0 / (horzSpan ? tex_dims.y : tex_dims.x ) ;
+
+             if(!horzSpan)
              {
-                out.color = vec4_t( rgbM, 1.0 ) ;
-                
-             }
-             else
-             {
-                out.color = vec4_t( rgbM, 1.0 ) ;
-                vec2_t posM = in.tx ;
-
-                float_t lumaL = ( lumaN + lumaW + lumaE + lumaS ) * 0.25 ;
-                float_t rangeL = abs( lumaL - lumaM ) ;
-                float_t blendL = max( 0.0, (rangeL/range) - nsl.fxaa.subpix_trim ) * 
-                        nsl.fxaa.subpix_trim_scale ;
-                blendL = min( nsl.fxaa.subpix_cap, blendL ) ; 
-
-                vec3_t rgbNW = rt_texture_offset( u_tex_0, in.tx, vec2i_t( +1, +1 ) ).xyz ;
-                vec3_t rgbNE = rt_texture_offset( u_tex_0, in.tx, vec2i_t( -1, +1 ) ).xyz ;
-                vec3_t rgbSW = rt_texture_offset( u_tex_0, in.tx, vec2i_t( +1, -1 ) ).xyz ;
-                vec3_t rgbSE = rt_texture_offset( u_tex_0, in.tx, vec2i_t( -1, -1 ) ).xyz ;
-                
-                rgbL += ( rgbNW + rgbNE + rgbSW + rgbSE ) ;
-                rgbL *= as_vec3( 1.0 /9.0 ) ;
-
-                float_t lumaNW = nsl.fxaa.luma( rgbNW ) ;
-                float_t lumaNE = nsl.fxaa.luma( rgbNE ) ;
-                float_t lumaSW = nsl.fxaa.luma( rgbSW ) ;
-                float_t lumaSE = nsl.fxaa.luma( rgbSE ) ;
-                float_t lumaNN = lumaN + lumaM ;
-                float_t lumaSS = lumaS + lumaM ;
-
-                float_t edgeVert = 
-                      abs((0.25 * lumaNW) + (-0.5 * lumaN) + (0.25 * lumaNE)) +
-                      abs((0.50 * lumaW ) + (-1.0 * lumaM) + (0.50 * lumaE )) +
-                      abs((0.25 * lumaSW) + (-0.5 * lumaS) + (0.25 * lumaSE));
-
-                float_t edgeHorz =
-                       abs((0.25 * lumaNW) + (-0.5 * lumaW) + (0.25 * lumaSW)) +
-                       abs((0.50 * lumaN ) + (-1.0 * lumaM) + (0.50 * lumaS )) +
-                       abs((0.25 * lumaNE) + (-0.5 * lumaE) + (0.25 * lumaSE));
-
-                out.color = nsl.fxaa.split_view( vec3_t(edgeVert, edgeHorz, 0.0), as_vec3(0.0), in.tx ) ;
-
-
-                bool_t horzSpan = edgeHorz >= edgeVert;
-
-                float_t lengthSign = 1.0 / texture_dims( u_tex_0 ).x ; 
-
-                float_t gradientN = lumaN - lumaM ;
-                float_t gradientS = lumaS - lumaM ;
-                float_t gradient = max( abs( gradientN ), abs( gradientS ) ) ;
-                float_t gradientScaled = gradient * 1.0 / 4.0 ;
-
-                bool_t pairN = abs( gradientN ) >= abs( gradientS ) ;
-                if( pairN ) lengthSign = -lengthSign ;
-                if( !pairN ) lumaNN = lumaSS ;
-                float_t lumaMM = lumaM - lumaNN * 0.5 ;
-
-                vec2_t posB = posM ;
-                vec2_t offNP = vec2_t( 0.0, 0.0 ) ;
-                if( !horzSpan ) offNP.x = 1.0 / texture_dims( u_tex_0 ).x ;
-                else offNP.y = 1.0 / texture_dims( u_tex_0 ).y ;
-                if(!horzSpan) posB.x += lengthSign * 0.5;
-                if( horzSpan) posB.y += lengthSign * 0.5;
-
-                vec2_t posN = posB - offNP * nsl.fxaa.QUALITY__P0 ;
-                vec2_t posP = posB + offNP * nsl.fxaa.QUALITY__P0 ;
-
-                
-
-                float_t lumaEndN = nsl.fxaa.luma( rt_texture( u_tex_0, posN ).xyz ) ;
-                float_t lumaEndP = nsl.fxaa.luma( rt_texture( u_tex_0, posP ).xyz ) ;
-                lumaEndN -= lumaNN * 0.5 ;
-                lumaEndP -= lumaNN * 0.5 ;
-
-                bool_t doneN = abs(lumaEndN) >= gradientScaled ;
-                bool_t doneP = abs(lumaEndP) >= gradientScaled ;
-                bool_t doneNP = (!doneN) || (!doneP) ;
-                
-                if( !doneN ) posN -= offNP * nsl.fxaa.QUALITY__P1 ;
-                if( !doneP ) posP += offNP * nsl.fxaa.QUALITY__P1 ;
-
-                for(int i = 0; i < nsl.fxaa.search_steps; i++) 
-                {
-                    if(!doneN) lumaEndN = nsl.fxaa.luma(rt_texture(u_tex_0, posN).xyz);
-                    if(!doneP) lumaEndP = nsl.fxaa.luma(rt_texture(u_tex_0, posP).xyz);
-                    if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;
-                    if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;
-                    doneN = abs(lumaEndN) >= gradientScaled;
-                    doneP = abs(lumaEndP) >= gradientScaled;
-
-                    if( !doneN ) posN -= offNP * nsl.fxaa.QUALITY__P2 ;
-                    if( !doneP ) posP += offNP * nsl.fxaa.QUALITY__P2 ;
-
-                    doneNP = (!doneN) || (!doneP);
-
-                    if(doneN && doneP) break;
-                }
-
-                float_t dstN = posM.x - posN.x ;
-                float_t dstP = posP.x - posM.x ;
-                if( !horzSpan ) dstN = posM.y - posN.y ;
-                if( !horzSpan ) dstP = posP.y - posM.y ;
-
-                bool_t lumaMLTZero = lumaMM < 0.0;
-                bool_t goodSpanN = (lumaEndN <0.0) != lumaMLTZero ;
-                float_t spanLength = dstP + dstN ;
-                bool_t goodSpanP = (lumaEndP <0.0) != lumaMLTZero ;
-                float_t spanLengthRcp = 1.0/spanLength ;
-
-                bool_t directionN = dstN < dstP ;
-                float_t dst = min( dstN, dstP ) ;
-                bool_t goodSpan = directionN ? goodSpanN : goodSpanP ;
-                float_t pixelOffset = (dst * (-spanLengthRcp)) + 0.5;
-
-                if( in.tx.x < 0.5 ) 
-                {
-                    out.color = vec4_t( rt_texture( u_tex_0, posM ).xyz, lumaM ) ;
-                    //out.color.x += lumaM ;
-                }
-                else out.color = vec4_t( rgbM, 1.0 ) ;
+                 lumaN = lumaW;
+                 lumaS = lumaE;
              }
 
-             if( in.tx.x > 0.499 && in.tx.x < 0.5 ) out.color = as_vec4(1.0) ;
+             vec2_t g = abs( vec2_t(lumaN,lumaS) - vec2_t(lumaM,lumaM) ) ;
+             float_t gradientScaled = max(g.x, g.y) * 1.0/4.0;
+
+             float_t luma = lumaN + lumaM ;
+
+             if( g.x >= g.y ) lengthSign = -lengthSign;
+             else luma = lumaS + lumaM ;
+
+             vec2_t posB = posM ;
+             vec2_t offNP = vec2_t(
+                    !horzSpan ? 0.0 : 1.0 / tex_dims.x, 
+                    horzSpan ? 0.0 : 1.0 / tex_dims.y ) ;
+
+             if( !horzSpan ) posB.x += lengthSign * 0.5 ;
+             else posB.y += lengthSign * 0.5 ;
+
+             vec2_t posN = posB - offNP * as_vec2( nsl.fxaa.QUALITY__P0 ) ;
+             vec2_t posP = posB + offNP * as_vec2( nsl.fxaa.QUALITY__P0 ) ;
+
+             float_t lumaMM = lumaM - luma * 0.5;
+             bool_t lumaMLTZero = lumaMM < 0.0;
+
+             float_t lumaEndN = nsl.fxaa.luma( rt_texture( u_tex_0, posN ).xyz ) - luma * 0.5 ;
+             float_t lumaEndP = nsl.fxaa.luma( rt_texture( u_tex_0, posP ).xyz ) - luma * 0.5 ;
+
+             bool_t doneN = abs(lumaEndN) >= gradientScaled;
+             bool_t doneP = abs(lumaEndP) >= gradientScaled;
+             bool_t doneNP = (!doneN) || (!doneP);
+
+             if(!doneN) posN -= offNP * as_vec2( nsl.fxaa.QUALITY__P1 ) ;
+             if(!doneP) posP += offNP * as_vec2( nsl.fxaa.QUALITY__P1 ) ;
+
+             if(doneNP) 
+             {
+                 if(!doneN) lumaEndN = nsl.fxaa.luma( rt_texture( u_tex_0, posN ).xyz ) - luma * 0.5 ;
+                 if(!doneP) lumaEndP = nsl.fxaa.luma( rt_texture( u_tex_0, posP ).xyz ) - luma * 0.5 ;
+
+                 doneN = abs(lumaEndN) >= gradientScaled;
+                 doneP = abs(lumaEndP) >= gradientScaled;
+                 doneNP = (!doneN) || (!doneP) ;
+
+                 if(!doneN) posN -= offNP * as_vec2( nsl.fxaa.QUALITY__P2 );
+                 if(!doneP) posP += offNP * as_vec2( nsl.fxaa.QUALITY__P2 ) ;
+             }
+
+             if(doneNP && (nsl.fxaa.QUALITY__PS > 3) ) 
+             {
+                 if(!doneN) lumaEndN = nsl.fxaa.luma( rt_texture( u_tex_0, posN ).xyz ) - luma * 0.5 ;
+                 if(!doneP) lumaEndP = nsl.fxaa.luma( rt_texture( u_tex_0, posP ).xyz ) - luma * 0.5 ;
+
+                 doneN = abs(lumaEndN) >= gradientScaled;
+                 doneP = abs(lumaEndP) >= gradientScaled;
+                 doneNP = (!doneN) || (!doneP) ;
+
+                 if(!doneN) posN -= offNP * as_vec2( nsl.fxaa.QUALITY__P3 );
+                 if(!doneP) posP += offNP * as_vec2( nsl.fxaa.QUALITY__P3 ) ;
+             }
+
+             if(doneNP && (nsl.fxaa.QUALITY__PS > 4) ) 
+             {
+                 if(!doneN) lumaEndN = nsl.fxaa.luma( rt_texture( u_tex_0, posN ).xyz ) - luma * 0.5 ;
+                 if(!doneP) lumaEndP = nsl.fxaa.luma( rt_texture( u_tex_0, posP ).xyz ) - luma * 0.5 ;
+
+                 doneN = abs(lumaEndN) >= gradientScaled;
+                 doneP = abs(lumaEndP) >= gradientScaled;
+                 doneNP = (!doneN) || (!doneP) ;
+
+                 if(!doneN) posN -= offNP * as_vec2( nsl.fxaa.QUALITY__P4 );
+                 if(!doneP) posP += offNP * as_vec2( nsl.fxaa.QUALITY__P4 ) ;
+             }
+
+             if(doneNP && (nsl.fxaa.QUALITY__PS > 5) ) 
+             {
+                 if(!doneN) lumaEndN = nsl.fxaa.luma( rt_texture( u_tex_0, posN ).xyz ) - luma * 0.5 ;
+                 if(!doneP) lumaEndP = nsl.fxaa.luma( rt_texture( u_tex_0, posP ).xyz ) - luma * 0.5 ;
+
+                 doneN = abs(lumaEndN) >= gradientScaled;
+                 doneP = abs(lumaEndP) >= gradientScaled;
+                 doneNP = (!doneN) || (!doneP) ;
+
+                 if(!doneN) posN -= offNP * as_vec2( nsl.fxaa.QUALITY__P5 );
+                 if(!doneP) posP += offNP * as_vec2( nsl.fxaa.QUALITY__P5 ) ;
+             }
+             
+             if(doneNP && (nsl.fxaa.QUALITY__PS > 6) ) 
+             {
+                 if(!doneN) lumaEndN = nsl.fxaa.luma( rt_texture( u_tex_0, posN ).xyz ) - luma * 0.5 ;
+                 if(!doneP) lumaEndP = nsl.fxaa.luma( rt_texture( u_tex_0, posP ).xyz ) - luma * 0.5 ;
+
+                 doneN = abs(lumaEndN) >= gradientScaled;
+                 doneP = abs(lumaEndP) >= gradientScaled;
+                 doneNP = (!doneN) || (!doneP) ;
+
+                 if(!doneN) posN -= offNP * as_vec2( nsl.fxaa.QUALITY__P6 );
+                 if(!doneP) posP += offNP * as_vec2( nsl.fxaa.QUALITY__P6 ) ;
+             }
+
+             float_t dstN = posM.x - posN.x;
+             float_t dstP = posP.x - posM.x;
+             if(!horzSpan) dstN = posM.y - posN.y;
+             if(!horzSpan) dstP = posP.y - posM.y;
+
+             bool_t goodSpanN = (lumaEndN < 0.0) != lumaMLTZero;
+             float_t spanLength = (dstP + dstN);
+             bool_t goodSpanP = (lumaEndP < 0.0) != lumaMLTZero;
+             float_t spanLengthRcp = 1.0/spanLength;
+
+             bool_t directionN = dstN < dstP;
+             float_t dst = min(dstN, dstP);
+             bool_t goodSpan = directionN ? goodSpanN : goodSpanP;
+    
+             float_t pixelOffset = (dst * (-spanLengthRcp)) + 0.5;
+             
+
+             float_t pixelOffsetGood = goodSpan ? pixelOffset : 0.0;
+             float_t pixelOffsetSubpix = max(pixelOffsetGood, subpixH);
+             if(!horzSpan) posM.x += pixelOffsetSubpix * lengthSign;
+             if( horzSpan) posM.y += pixelOffsetSubpix * lengthSign;
+
+             if( in.tx.x > 0.5 ) 
+             {
+                 out.color = vec4_t( rt_texture( u_tex_0, posM ).xyz, lumaM )  ;
+                 //out.color = vec4_t( lumaMM, 0.0, 0.0, 1.0) ;
+                 //out.color = vec4_t( lumaM, 0.0, 0.0, 1.0 ) ;
+                 //vec4_t col = rt_texture( u_tex_0, posM ) ; 
+                 //out.color = mix( colorM, col, lumaM) ; 
+             }
+             else out.color = colorM ;
+
+             if( in.tx.x > 0.499 && in.tx.x < 0.5 ) out.color = as_vec4(1.0) ; 
 
         }
     }
