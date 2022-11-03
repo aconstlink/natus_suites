@@ -12,7 +12,7 @@ config post.box
 
         void main()
         {
-            out.tx = in.tx ;
+            out.tx = rt_texcoords( in.tx ) ;
             out.pos = vec4_t( sign( in.pos.xy ), 0.0, 1.0 ) ;
         }
     }
@@ -25,15 +25,15 @@ config post.box
 
         void main()
         {
-           out.color = rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) ;
-           out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) ;
-           out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) ;
-           out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) ;
-           out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,0) ) ;
-           out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) ;
-           out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) ;
-           out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) ;
-           out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) ;
+           out.color = texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) ;
+           out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) ;
+           out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) ;
+           out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) ;
+           out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,0) ) ;
+           out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) ;
+           out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) ;
+           out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) ;
+           out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) ;
            out.color = out.color / 9.0 ;
         }
    }
@@ -52,7 +52,7 @@ config post.gauss
 
         void main()
         {
-            out.tx = in.tx ;
+            out.tx = rt_texcoords( in.tx ) ;
             out.pos = vec4_t( sign( in.pos.xy ), 0.0, 1.0 ) ;
         }
     }
@@ -69,15 +69,15 @@ config post.gauss
             float_t c1 = 2.0 / 16.0 ;
             float_t c2 = 4.0 / 16.0 ;
 
-            out.color = rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * c0 ;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) * c1 ;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * c0 ;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) * c1 ;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,0) ) * c2 ;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) * c1;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * c0 ;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) * c1 ;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * c0 ;
+            out.color = texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * c0 ;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) * c1 ;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * c0 ;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) * c1 ;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,0) ) * c2 ;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) * c1;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * c0 ;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) * c1 ;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * c0 ;
         }
    }
 }
@@ -95,7 +95,7 @@ config post.color_grade
 
         void main()
         {
-            out.tx = in.tx ;
+            out.tx = rt_texcoords( in.tx ) ;
             out.pos = vec4_t( sign( in.pos.xy ), 0.0, 1.0 ) ;
         }
     }
@@ -111,7 +111,7 @@ config post.color_grade
 
         void main()
         {
-            out.color = rt_texture( u_tex_0, in.tx ) ;
+            out.color = texture( u_tex_0, in.tx ) ;
 
             float_t light_pitch = dot( out.color.xyz, vec3_t(1.0,1.0,1.0) ) ;
             float_t dark_pitch = 1.0 - light_pitch ; //dot( out.color.xyz, vec3_t(0.1,0.1,0.1) ) ;
@@ -137,7 +137,7 @@ config post.sobel
 
         void main()
         {
-            out.tx = in.tx ;
+            out.tx = rt_texcoords( in.tx ) ;
             out.pos = vec4_t( sign( in.pos.xy ), 0.0, 1.0 ) ;
         }
     }
@@ -155,42 +155,42 @@ config post.sobel
             // x direction
             if( u_sobel_type == 0u )
             {
-                out.color = rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * 0.5 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) * 1.0;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * 0.5 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * -0.5 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) * -1.0 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * -0.5 ;
+                out.color = texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * 0.5 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) * 1.0;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * 0.5 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * -0.5 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) * -1.0 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * -0.5 ;
             }
             // y direction
             else if( u_sobel_type == 1u )
             {
-                out.color = rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * -0.5 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * 0.5 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) * 1.0 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) * -1.0 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * 0.5 ; 
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * -0.5 ;
+                out.color = texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * -0.5 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * 0.5 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) * 1.0 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) * -1.0 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * 0.5 ; 
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * -0.5 ;
             }
             else if( u_sobel_type == 2u )
             {
                 float_t coeff = 3.0 / 10.0 ;
-                out.color = rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * coeff ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) * 1.0;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * coeff ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * -coeff ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) * -1.0 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * -coeff ;
+                out.color = texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * coeff ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) * 1.0;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * coeff ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * -coeff ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) * -1.0 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * -coeff ;
             }
             else if( u_sobel_type == 3u )
             {
                 float_t coeff = 3.0 / 10.0 ;
-                out.color = rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * -coeff ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * coeff ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) * 1.0 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) * -1.0 ;
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * coeff ; 
-                out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * -coeff ;
+                out.color = texture_offset( u_tex_0, in.tx, vec2i_t(-1,-1) ) * -coeff ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(-1,1) ) * coeff ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) * 1.0 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) * -1.0 ;
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,1) ) * coeff ; 
+                out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,-1) ) * -coeff ;
             }
         }
     }
@@ -209,7 +209,7 @@ config post.laplace
 
         void main()
         {
-            out.tx = in.tx ;
+            out.tx = rt_texcoords( in.tx ) ;
             out.pos = vec4_t( sign( in.pos.xy ), 0.0, 1.0 ) ;
         }
     }
@@ -222,11 +222,11 @@ config post.laplace
 
         void main()
         {
-            out.color = rt_texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) * 0.25 ;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) * -0.25 ;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,0) ) * -1.0;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) * 0.25;
-            out.color += rt_texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) * 0.25 ;
+            out.color = texture_offset( u_tex_0, in.tx, vec2i_t(-1,0) ) * 0.25 ;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,1) ) * -0.25 ;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,0) ) * -1.0;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(0,-1) ) * 0.25;
+            out.color += texture_offset( u_tex_0, in.tx, vec2i_t(1,0) ) * 0.25 ;
 
         }
     }
@@ -245,7 +245,7 @@ config post.map
 
         void main()
         {
-            out.tx = in.tx ;
+            out.tx = rt_texcoords( in.tx ) ;
             out.pos = vec4_t( sign( in.pos.xy ), 0.0, 1.0 ) ;
         }
     }
@@ -262,9 +262,9 @@ config post.map
 
         void main()
         {
-            out.color = rt_texture( u_tex_1, in.tx ) ;
+            out.color = texture( u_tex_1, in.tx ) ;
 
-            if( in.tx.x < u_split ) out.color = rt_texture( u_tex_0, in.tx ) ;
+            if( in.tx.x < u_split ) out.color = texture( u_tex_0, in.tx ) ;
             if( in.tx.x > (u_split -0.001) && in.tx.x < (u_split+0.001) ) out.color = as_vec4( 1.0 ) ;
         }
     }
