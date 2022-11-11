@@ -331,8 +331,6 @@ namespace this_file
                     {
                         vertex_shader
                         {
-                            // the order must match the geometry 
-                            // attribute binding order
                             in vec3_t pos : position ;
                             in vec2_t tx : texcoord ;
 
@@ -384,8 +382,6 @@ namespace this_file
                     {
                         vertex_shader
                         {
-                            // the order must match the geometry 
-                            // attribute binding order
                             in vec3_t pos : position ;
                             in vec2_t tx : texcoord ;
 
