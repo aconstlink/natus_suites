@@ -125,7 +125,7 @@ namespace this_file
                     array[ 5 ] = 3 ;
                 } ) ;
 
-                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "quad.0",
+                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "quad",
                     natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
@@ -139,33 +139,67 @@ namespace this_file
                 auto vb = natus::graphics::vertex_buffer_t()
                     .add_layout_element( natus::graphics::vertex_attribute::position, natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 )
                     .add_layout_element( natus::graphics::vertex_attribute::color0, natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 )
-                    .resize( 4 ).update<vertex>( [=] ( vertex* array, size_t const ne )
+                    .resize( 9 ).update<vertex>( [=] ( vertex* array, size_t const ne )
                 {
-                    array[ 0 ].pos = natus::math::vec4f_t( -0.5f, -0.5f, 0.0f, 1.0f ) ;
-                    array[ 1 ].pos = natus::math::vec4f_t( -0.5f, +0.5f, 0.0f, 1.0f ) ;
-                    array[ 2 ].pos = natus::math::vec4f_t( +0.5f, +0.5f, 0.0f, 1.0f ) ;
-                    array[ 3 ].pos = natus::math::vec4f_t( +0.5f, -0.5f, 0.0f, 1.0f ) ;
+                    array[ 0 ].pos = natus::math::vec4f_t( -0.25f, +0.50f, 0.0f, 1.0f ) ;
+                    array[ 1 ].pos = natus::math::vec4f_t( +0.25f, +0.50f, 0.0f, 1.0f ) ;
+                    array[ 2 ].pos = natus::math::vec4f_t( +0.50f, +0.25f, 0.0f, 1.0f ) ;
+                    array[ 3 ].pos = natus::math::vec4f_t( +0.50f, -0.25f, 0.0f, 1.0f ) ;
+                    array[ 4 ].pos = natus::math::vec4f_t( +0.25f, -0.50f, 0.0f, 1.0f ) ;
+                    array[ 5 ].pos = natus::math::vec4f_t( -0.25f, -0.50f, 0.0f, 1.0f ) ;
+                    array[ 6 ].pos = natus::math::vec4f_t( -0.50f, -0.25f, 0.0f, 1.0f ) ;
+                    array[ 7 ].pos = natus::math::vec4f_t( -0.50f, +0.25f, 0.0f, 1.0f ) ;
+                    array[ 8 ].pos = natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f ) ;
 
-                    array[ 0 ].col = natus::math::vec4f_t( 1.0f, 1.0f,0.0f,1.0f ) ;
-                    array[ 1 ].col = natus::math::vec4f_t( 1.0f, 1.0f,0.0f,1.0f ) ;
-                    array[ 2 ].col = natus::math::vec4f_t( 1.0f, 1.0f,0.0f,1.0f ) ;
-                    array[ 3 ].col = natus::math::vec4f_t( 1.0f, 1.0f,0.0f,1.0f ) ;
+                    array[ 0 ].col = natus::math::vec4f_t( 1.0f, 1.0f, 0.0f, 1.0f ) ;
+                    array[ 1 ].col = natus::math::vec4f_t( 1.0f, 1.0f, 0.0f, 1.0f ) ;
+                    array[ 2 ].col = natus::math::vec4f_t( 1.0f, 1.0f, 0.0f, 1.0f ) ;
+                    array[ 3 ].col = natus::math::vec4f_t( 1.0f, 1.0f, 0.0f, 1.0f ) ;
+                    array[ 4 ].col = natus::math::vec4f_t( 1.0f, 1.0f, 0.0f, 1.0f ) ;
+                    array[ 5 ].col = natus::math::vec4f_t( 1.0f, 1.0f, 0.0f, 1.0f ) ;
+                    array[ 6 ].col = natus::math::vec4f_t( 1.0f, 1.0f, 0.0f, 1.0f ) ;
+                    array[ 7 ].col = natus::math::vec4f_t( 1.0f, 1.0f, 0.0f, 1.0f ) ;
+                    array[ 8 ].col = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
                 } );
 
                 auto ib = natus::graphics::index_buffer_t().
-                    set_layout_element( natus::graphics::type::tuint ).resize( 6 ).
+                    set_layout_element( natus::graphics::type::tuint ).resize( 24 ).
                     update<uint_t>( [] ( uint_t* array, size_t const ne )
                 {
                     array[ 0 ] = 0 ;
                     array[ 1 ] = 1 ;
-                    array[ 2 ] = 2 ;
+                    array[ 2 ] = 8 ;
 
-                    array[ 3 ] = 0 ;
+                    array[ 3 ] = 1 ;
                     array[ 4 ] = 2 ;
-                    array[ 5 ] = 3 ;
+                    array[ 5 ] = 8 ;
+
+                    array[ 6 ] = 2 ;
+                    array[ 7 ] = 3 ;
+                    array[ 8 ] = 8 ;
+
+                    array[ 9 ] = 3 ;
+                    array[ 10 ] = 4 ;
+                    array[ 11 ] = 8 ;
+
+                    array[ 12 ] = 4 ;
+                    array[ 13 ] = 5 ;
+                    array[ 14 ] = 8 ;
+
+                    array[ 15 ] = 5 ;
+                    array[ 16 ] = 6 ;
+                    array[ 17 ] = 8 ;
+
+                    array[ 18 ] = 6 ;
+                    array[ 19 ] = 7 ;
+                    array[ 20 ] = 8 ;
+
+                    array[ 21 ] = 7 ;
+                    array[ 22 ] = 0 ;
+                    array[ 23 ] = 8 ;
                 } ) ;
 
-                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "quad.1",
+                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "geometry",
                     natus::graphics::primitive_type::triangles, std::move( vb ), std::move( ib ) ) ;
 
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
@@ -179,7 +213,7 @@ namespace this_file
                 natus::graphics::render_object_t rc = natus::graphics::render_object_t( "quad" ) ;
 
                 {
-                    rc.link_geometry( {"quad.0", "quad.1"} ) ;
+                    rc.link_geometry( {"quad", "geometry"} ) ;
                     rc.link_shader( "test_multi_geometry" ) ;
                 }
                
