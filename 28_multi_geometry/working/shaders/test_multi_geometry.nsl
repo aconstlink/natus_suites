@@ -1,0 +1,32 @@
+config test_multi_geometry
+{
+    vertex_shader
+    {
+        in vec4_t pos : position ;
+        in vec4_t col : color0 ;
+        out vec4_t pos : position ;
+        out vec4_t col : color ;
+
+        mat4_t u_proj : projection ;
+        mat4_t u_view : view ;
+        mat4_t u_world : world ;
+
+        void main()
+        {
+            out.col = in.col ;
+            out.pos = u_proj * u_view * u_world * in.pos ;
+        }
+    }
+
+    pixel_shader
+    {
+        in vec4_t col : color0 ;
+        out vec4_t color : color0 ;
+
+        void main()
+        {
+            out.color = in.col ;
+        }
+    }
+
+}
