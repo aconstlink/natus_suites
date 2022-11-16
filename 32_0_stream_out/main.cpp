@@ -351,10 +351,10 @@ namespace this_file
                             in vec4 in_pos ;
 
                             out vec4 out_pos ;
-                            
+                            uniform float u_time ;                            
                             void main()
                             {
-                                out_pos = in_pos ;
+                                out_pos = in_pos + vec4( u_time, 0.0, 0.0, 0.0 ) ;
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::shader_api_type::glsl_1_4, std::move( ss ) ) ;
@@ -427,7 +427,7 @@ namespace this_file
                 natus::graphics::render_object_t rc = natus::graphics::render_object_t( "quad" ) ;
 
                 {
-                    rc.link_geometry( "quad" ) ;
+                    rc.link_geometry( "quad", "compute" ) ;
                     rc.link_shader( "render_original" ) ;
                 }
 
@@ -448,7 +448,7 @@ namespace this_file
                 natus::graphics::render_object_t rc = natus::graphics::render_object_t( "stream_out" ) ;
 
                 {
-                    rc.link_geometry( "quad" ) ;
+                    rc.link_geometry( "quad", "compute" ) ;
                     rc.link_shader( "stream_out" ) ;
                 }
 
@@ -465,6 +465,15 @@ namespace this_file
             {
                 a.configure( _ro ) ;
                 a.configure( _ro_so ) ;
+            } ) ;
+
+
+            // do initial stream out pass for filling buffer
+            _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
+            {
+                a.use( _soo ) ;
+                a.render( _ro_so ) ;
+                a.unuse( natus::graphics::backend::unuse_type::streamout ) ;
             } ) ;
 
             return natus::application::result::ok ; 
@@ -485,6 +494,19 @@ namespace this_file
 
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rd ) noexcept 
         { 
+
+            _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
+            {
+                // do stream out
+                a.use( _soo ) ;
+                {
+                    natus::graphics::backend_t::render_detail_t detail ;
+                    detail.feed_from_streamout = true ;
+                    a.render( _ro_so, detail ) ;
+                }
+                a.unuse( natus::graphics::backend::unuse_type::streamout ) ;
+            } ) ;
+
             _ae.on_graphics_begin( rd ) ;
 
             _ro->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
@@ -505,24 +527,31 @@ namespace this_file
                 }
             } ) ;
 
+            _ro_so->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
+            {
+                {
+                    auto * var = vs->data_variable<natus::math::float_t>("u_time") ;
+                    var->set( 0.001f ) ;
+                }
+            } ) ;
+
             _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
             {
-                // do stream out
-                {
-                    a.use( _soo ) ;
-                    a.render( _ro_so ) ;
-                    a.unuse( natus::graphics::backend::unuse_type::streamout ) ;
-                }
-
-                // render original
+                #if 0
+                // render original from geometry
                 {
                     natus::graphics::backend_t::render_detail_t detail ;
-                    detail.varset = 0 ;
+                    detail.feed_from_streamout = false ;
                     a.render( _ro, detail ) ;
                 }
 
                 // render streamed out
-                {}
+                {
+                    natus::graphics::backend_t::render_detail_t detail ;
+                    detail.feed_from_streamout = true ;
+                    a.render( _ro, detail ) ;
+                }
+                #endif
             } ) ;
 
             _ae.on_graphics_end( 10 ) ;
