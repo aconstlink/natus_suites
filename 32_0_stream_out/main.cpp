@@ -352,10 +352,11 @@ namespace this_file
                             in vec4 in_pos ;
 
                             out vec4 out_pos ;
-                            uniform float u_time ;                            
+                            uniform float u_ani ;                            
                             void main()
                             {
-                                out_pos = in_pos + vec4( u_time, 0.0, 0.0, 0.0 ) ;
+                                float t = u_ani * 3.14526 * 2.0 ;
+                                out_pos = in_pos + vec4( 0.02 *cos(t), 0.02 *sin(t), 0.0, 0.0 ) ;
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::shader_api_type::glsl_1_4, std::move( ss ) ) ;
@@ -528,11 +529,15 @@ namespace this_file
                 }
             } ) ;
 
+            static float_t max_time = 2.0f ;
+            static float_t time = 0.0f ;
+            time += rd.sec_dt ;
+            if( time > max_time ) time = 0.0f ;
             _ro_so->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
             {
                 {
-                    auto * var = vs->data_variable<natus::math::float_t>("u_time") ;
-                    var->set( 0.001f ) ;
+                    auto * var = vs->data_variable<natus::math::float_t>("u_ani") ;
+                    var->set( time / max_time ) ;
                 }
             } ) ;
 
