@@ -74,12 +74,24 @@ Tests and shows how to use the streamout object. This test directly uses the pla
 ## 39_1_sprite_sheet
 ## 39_2_sprite_sheet
 ## 41_particle_system
+First implmentation of an particle system. See next test for more detail. 
+This test may go away in the future.
 ## 42_particle_system
-## 43_0_world_2d
+Tests the use of particles in the engine and uses the primitive renderer for simple visualization. The UI allows to change some parameters of the particle system.
+![Particle System]( images/particles.jpg )
 ## 43_inv_space_2d
+This was a curious endeavour into infinite space by developing a custom coordinate system. The coordinate system divides all space into regions and indexes those rough regions by a ```size_t``` type in 2d. Each of those regions is further divided which is referenced by a 2d ```float``` coordinate. Essentially the test showed those custom coordinates needed to be dragged throughout the whole system/engine by even implementing all math using those coordinates. I think it would be simpler to just use ```double``` floating point types instead.
+The image shows region division by the blue lines and sub/floating point division using the green line. So every blue box has its own whole 32 bit floating point space.
+![Infinite Space]( images/infspace.jpg )
 ## 44_0_world_2d
+Shows how to render a huge world grid. Allows translation through the world by keyboard usage. The world is split into regions which are further devided into smaller cells. Each cell or region could contain data. This test is more an endeavour into towards game development.
+![World Grid Rendering]( images/world1.jpg )
 ## 44_1_world_2d
+Does the same as the previous test but draws cells according to some implicit function into the world.
+![World Grid Rendering]( images/world2.jpg )
 ## 45_0_line_3d
+Tests and shows how to use the line renderer 3d. It simply draws some lines in 3d space.
+![Line Renderer]( images/lines.jpg )
 ## 46_0_spline
 This is a simple console test application checking the engines' splines functionality. It also shows how to use splines basically.
 ## 46_1_spline
