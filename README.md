@@ -47,7 +47,7 @@ Some tests allow to use the mouse and keyboard to move the camera.
 ## 27_1_framebuffer_mrt
 ## 27_2_framebuffer_nsl
 ## 28_multi_geometry
-Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index. Important to note here is that the geometry can be arbitrary, but the geometry layout of any added geometry to the render objects needs to be the same. 
+Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index. Important to note here is that the geometry can be arbitrary, but the geometry layout of any added geometry to the render objects needs to be the same. The images shows the test application rendering tow different geometry objects with differend vertex attributes like vertex positions and vertex color but uses the same vertex layout which is important.
 ![Multi Geometry]( images/multi_geometry.jpg )
 ## 30_0_array_object
 Tests and shows how to use an array object by doing the so called "vertex pulling" in the platform shader. Additional geometry data is pulled from an array buffer in the shader for further transformation. The shader pulls translation, rotation and color information from the array object. Array objects can be used to transfer alot of data to the GPU and decouple it from the geometry. So the geometry just needs to be present a few time or even only a single time but can be rendered many times by accessing the array object arbitrarilly in the shader.
@@ -87,6 +87,8 @@ Tests and shows how to use the streamout object. This test directly uses the pla
 ## 47_1_keyframe
 ## 48_pinhole_camera
 ## 49_picking_2d
+Tests and shows how to pick objects in 3d space using natus. The mouse was hovered over the red circle in the window but the mouse cursor was not captured, instread the black arrow marks the hovered circle.
+![Picking]( images/picking.jpg )
 ## 50_simple_essentials
 ## 51_0_post_process
 Tests and shows how to use post processing using nsl. The shaders are contained and loaded from within the code. The test renders a few rotating cubes and performs a post process using a framebuffer and an post processing shader that performs some color correction.
