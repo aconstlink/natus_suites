@@ -181,10 +181,10 @@ namespace this_file
 
             // stream out object configuration
             {
-                auto db = natus::graphics::data_buffer_t()
-                    .add_layout_element( natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 ) ;
+                auto vb = natus::graphics::vertex_buffer_t()
+                    .add_layout_element( natus::graphics::vertex_attribute::position, natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 ) ;
 
-                _soo = natus::graphics::streamout_object_t( "compute", std::move( db ) ).resize( 1000 ) ;
+                _soo = natus::graphics::streamout_object_t( "compute", std::move( vb ) ).resize( 1000 ) ;
 
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a ) { a.configure( _soo ) ; } ) ;
             }
@@ -328,6 +328,7 @@ namespace this_file
                 {
                     sc
                         .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
+                        .add_input_binding( natus::graphics::binding_point::world_matrix, "u_world" )
                         .add_input_binding( natus::graphics::binding_point::view_matrix, "u_view" )
                         .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
                 }
@@ -544,14 +545,14 @@ namespace this_file
                     detail.feed_from_streamout = false ;
                     a.render( _ro, detail ) ;
                 }
-
+                #endif
                 // render streamed out
                 {
                     natus::graphics::backend_t::render_detail_t detail ;
                     detail.feed_from_streamout = true ;
                     a.render( _ro, detail ) ;
                 }
-                #endif
+                
             } ) ;
 
             _ae.on_graphics_end( 10 ) ;
