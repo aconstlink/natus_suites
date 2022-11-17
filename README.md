@@ -47,7 +47,7 @@ Some tests allow to use the mouse and keyboard to move the camera.
 ## 27_1_framebuffer_mrt
 ## 27_2_framebuffer_nsl
 ## 28_multi_geometry
-Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index.
+Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index. Important to note here is that the geometry can be arbitrary, but the geometry layout of any added geometry to the render objects needs to be the same. 
 ![Multi Geometry]( images/multi_geometry.jpg )
 ## 30_0_array_object
 Tests and shows how to use an array object by doing the so call vertex pulling in the platform shader. Additional geometry data is pulled from an array buffer in the shader for further transformation. The shader pulls translation, rotation and color information from the array object. 
