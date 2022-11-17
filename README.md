@@ -50,14 +50,14 @@ Some tests allow to use the mouse and keyboard to move the camera.
 Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index.
 ![Multi Geometry]( images/multi_geometry.jpg )
 ## 30_0_array_object
-Tests and shows how to use an array object by doing the so call vertex pulling in the platform shader. Additional geometry data is pulled from an array buffer in the shader for further transformation.
+Tests and shows how to use an array object by doing the so call vertex pulling in the platform shader. Additional geometry data is pulled from an array buffer in the shader for further transformation. The shader pulls translation, rotation and color information from the array object. 
 ## 30_1_array_object
 Does the same as the last test but uses nsl only.
 ![Array Object]( images/array_object.jpg )
 ## 31_0_texture_array
-Tests and shows how to use a texture buffer. The app loads four images and allows access in the shaders through a texture array. The shaders are implemented as platform shaders directly.
+Tests and shows how to use a texture buffer. The app loads four images and allows access in the shaders through a texture array. The shaders are implemented as platform shaders directly. 
 ## 31_1_texture_array
-Does the same as the last test but with nsl only.
+Does the same as the last test but with nsl only. The left quad shows all images in the texture array mapped to the quad and the right quad shows only one selected texture from the texture array using the ui slider.
 ![Texture Array]( images/texture_array.jpg )
 ## 32_0_stream_out
 Tests and shows how to use the streamout object. This test directly uses the platform shaders. Nsl shaders will be tested in the next test. The application uses the streamout to transform geometry in a loop and renders it afterwards. This is a GPU only transformation.
