@@ -50,7 +50,7 @@ Some tests allow to use the mouse and keyboard to move the camera.
 Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index. Important to note here is that the geometry can be arbitrary, but the geometry layout of any added geometry to the render objects needs to be the same. 
 ![Multi Geometry]( images/multi_geometry.jpg )
 ## 30_0_array_object
-Tests and shows how to use an array object by doing the so call vertex pulling in the platform shader. Additional geometry data is pulled from an array buffer in the shader for further transformation. The shader pulls translation, rotation and color information from the array object. 
+Tests and shows how to use an array object by doing the so called "vertex pulling" in the platform shader. Additional geometry data is pulled from an array buffer in the shader for further transformation. The shader pulls translation, rotation and color information from the array object. Array objects can be used to transfer alot of data to the GPU and decouple it from the geometry. So the geometry just needs to be present a few time or even only a single time but can be rendered many times by accessing the array object arbitrarilly in the shader.
 ## 30_1_array_object
 Does the same as the last test but uses nsl only.
 ![Array Object]( images/array_object.jpg )
