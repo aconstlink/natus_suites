@@ -81,11 +81,20 @@ Tests and shows how to use the streamout object. This test directly uses the pla
 ## 44_1_world_2d
 ## 45_0_line_3d
 ## 46_0_spline
+This is a simple console test application checking the engines' splines functionality. It also shows how to use splines basically.
 ## 46_1_spline
+Tests and shows how to use and render splines in the engine. The test application simply draws the spline using the line renderer.
+![Splines]( images/splines1.jpg )
 ## 46_2_spline
+Tests and shows how to use and render splines in a simple way using the line renderer. Additionally its performs changine splines at runtime by changing control points. 
+![Splines]( images/splines2.jpg )
 ## 47_0_keyframe
+Tests ands shows keyframe functionlity in a simple console application.
 ## 47_1_keyframe
+Tests and shows how to use keyframes and use it for altering position and color or renderable objects.
+![Keyframes]( images/keyframes1.jpg )
 ## 48_pinhole_camera
+Tests and shows how to use a pinhole camera. 
 ## 49_picking_2d
 Tests and shows how to pick objects in 3d space using natus. The mouse was hovered over the red circle in the window but the mouse cursor was not captured, instread the black arrow marks the hovered circle.
 ![Picking]( images/picking.jpg )
