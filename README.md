@@ -47,12 +47,12 @@ Some tests allow to use the mouse and keyboard to move the camera.
 ## 27_1_framebuffer_mrt
 ## 27_2_framebuffer_nsl
 ## 28_multi_geometry
-Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index. Important to note here is that the geometry can be arbitrary, but the geometry layout of any added geometry to the render objects needs to be the same. 
+Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index. Important to note here is that the geometry can be arbitrary, but the geometry layout of any added geometry to the render objects needs to be the same. The images shows the test application rendering tow different geometry objects with differend vertex attributes like vertex positions and vertex color but uses the same vertex layout which is important.
 ![Multi Geometry]( images/multi_geometry.jpg )
 ## 30_0_array_object
 Tests and shows how to use an array object by doing the so called "vertex pulling" in the platform shader. Additional geometry data is pulled from an array buffer in the shader for further transformation. The shader pulls translation, rotation and color information from the array object. Array objects can be used to transfer alot of data to the GPU and decouple it from the geometry. So the geometry just needs to be present a few time or even only a single time but can be rendered many times by accessing the array object arbitrarilly in the shader.
 ## 30_1_array_object
-Does the same as the last test but uses nsl only.
+Does the same as the last test but uses nsl only. The image shows the test application rendering many cubes with just one render call but accesses all the data within the shader. In this example, there is a one-to-one ratio of cubes and data per cube. It always is a trade off runtime cost versus memory cost. So this test uses more memory but only call the render function once. 
 ![Array Object]( images/array_object.jpg )
 ## 31_0_texture_array
 Tests and shows how to use a texture buffer. The app loads four images and allows access in the shaders through a texture array. The shaders are implemented as platform shaders directly. 
@@ -81,12 +81,23 @@ Tests and shows how to use the streamout object. This test directly uses the pla
 ## 44_1_world_2d
 ## 45_0_line_3d
 ## 46_0_spline
+This is a simple console test application checking the engines' splines functionality. It also shows how to use splines basically.
 ## 46_1_spline
+Tests and shows how to use and render splines in the engine. The test application simply draws the spline using the line renderer.
+![Splines]( images/splines1.jpg )
 ## 46_2_spline
+Tests and shows how to use and render splines in a simple way using the line renderer. Additionally its performs changine splines at runtime by changing control points. 
+![Splines]( images/splines2.jpg )
 ## 47_0_keyframe
+Tests ands shows keyframe functionlity in a simple console application.
 ## 47_1_keyframe
+Tests and shows how to use keyframes and use it for altering position and color or renderable objects.
+![Keyframes]( images/keyframes1.jpg )
 ## 48_pinhole_camera
+Tests and shows how to use a pinhole camera. 
 ## 49_picking_2d
+Tests and shows how to pick objects in 3d space using natus. The mouse was hovered over the red circle in the window but the mouse cursor was not captured, instread the black arrow marks the hovered circle.
+![Picking]( images/picking.jpg )
 ## 50_simple_essentials
 ## 51_0_post_process
 Tests and shows how to use post processing using nsl. The shaders are contained and loaded from within the code. The test renders a few rotating cubes and performs a post process using a framebuffer and an post processing shader that performs some color correction.
