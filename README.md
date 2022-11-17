@@ -43,6 +43,7 @@ A real sample repo will be created later on.
 ## 27_1_framebuffer_mrt
 ## 27_2_framebuffer_nsl
 ## 28_multi_geometry
+Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index.
 ## 30_0_array_object
 Tests and shows how to use an array object by doing the so call vertex pulling in the platform shader. Additional geometry data is pulled from an array buffer in the shader for further transformation.
 ## 30_1_array_object
