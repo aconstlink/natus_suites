@@ -16,17 +16,25 @@ Some tests allow to use the mouse and keyboard to move the camera.
 ## 04_app
 ## 05_imgui
 ## 06_devices
+Tests and shows how to use mouse and keyboard. Outputs device information.
 ## 07_gamepad
+Tests and shows how to use a xbox controller by polling device events and displaying those in the console.
 ## 08_gamepad2
+Tests and shows how to use the game controller device. The device is assigned a mapping of any known pluged in game pad and maps buttons in the background. 
 ## 09_gamepad3
+Tests and shows how to use the game controller device and shows how to setup a user defined mapping to the game device.
 ## 10_database
-## 11_database
-## 12_database
+Console application performs basic io database functionality tests by loading files and installing file monitors.
 ## 13_0_tasks
+Console application performing async C++ lambdas. Break point application.
 ## 13_1_tasks
+Tests and shows how to use the natus task graph in this simple console application.
 ## 13_2_thread_pool
+Tests the engines thread pool class using tasks and sync objects. This app also prototypes a ```parallel_for``` kind of mechanism which requires some sort of ```yield``` operation.
 ## 13_3_parallel_for
+Tests and shows how to use a ```parallel_for``` for computation intensive tasks on the CPU.
 ## 13_4_loose_scheduler
+In contrast to the thread pool scheduler which distributes tasks across the threads in the pool which are limited, the loose scheduler immediately performs the tasks. This is useful if tasks need to wait for a uncertain amount of time which would block a thread pool thread.
 ## 14_import
 ## 15_import
 ## 16_nsl
