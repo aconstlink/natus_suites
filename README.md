@@ -8,6 +8,8 @@ Some tests allow to use the mouse and keyboard to move the camera.
 - Right click and mouse move for camera rotation 
 - WASDQR for camera translation
 
+Please note that not all applications of this repository run on linux. The main development platform is still windows and once in a while I test this repository on a linux platform. It may be the case that this repository does not build on Linux. I just did not found the time to establish continuous integration for this project. I will work on that.
+
 # The Tests 
 
 ## 00_empty
@@ -162,3 +164,10 @@ Does the same as the last test but also lets the user choose a post processing s
 Not properly working and is work in progress.
 ## 52_time_measure
 Placeholder
+## xx_tool_player_timeline
+Tests, prototypes and shows how to use the timeline UI widget along with the player widget. Those UI elements could be used for any sort of animation timing.
+![Timeline Tool]( images/timeline.jpg )
+## xx_tool_sprite
+Tests, prototypes and shows how to use the sprite editor. It loads and stores sprite information within a natus own sprite sheet file format. The tools allows to set various bounds for animation, collision, damage and allows to specify linear animation sequences. The source is a sprite sheets that can be accossiated with sprite file.
+I wanted to make a few games with this tool but still working on the engine X)
+![Sprite Editor Tool]( images/spritetool.jpg )
