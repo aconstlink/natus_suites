@@ -68,7 +68,7 @@ Tests and shows how to reconfigure rendering objects. In the engine every used r
 ![Reconfigure Rendering Objects]( images/reconfig.jpg )
 ## 33_1_nsl_auto
 Tests reconfiguration nsl as the last test but also tests and shows how to use a file monitor on the shaders. Changing the shaders in the files affects the application so that shaders are reloaded in the engine. Every user interaction is put into tasks and is performed asynchronously.
-![Reconfigure Rendering Objects]( images/nslauto.jpg )
+![Reconfigure Rendering Objects]( images/nsl_auto.jpg )
 ## 33_2_nsl_auto
 Does exactly the same as the previous test but uses the ```app_essentials``` for file monitoring and refreshing the shaders.
 ## 34_glyph_atlas
