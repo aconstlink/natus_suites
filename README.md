@@ -171,4 +171,4 @@ Tests, prototypes and shows how to use the timeline UI widget along with the pla
 Tests, prototypes and shows how to use the sprite editor. It loads and stores sprite information within a natus own sprite sheet file format. The tools allows to set various bounds for animation, collision, damage and allows to specify linear animation sequences. The source is a sprite sheets that can be accossiated with sprite file.
 I wanted to make a few games with this tool but still working on the engine X)
 ![Sprite Editor Tool]( images/spritetool.jpg )
-![Sprite Editor Tool]( images/spritetool1.jpg )
+![Sprite Editor Tool]( images/spritetool2.jpg )
