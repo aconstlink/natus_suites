@@ -59,8 +59,7 @@ int main( int argc, char ** argv )
 
         natus::concurrent::semaphore_t loop_counter ;
 
-        natus::concurrent::parallel_for<size_t>( 
-        natus::concurrent::range_1d<size_t>(0,n1), 
+        natus::concurrent::parallel_for<size_t>( natus::concurrent::range_1d<size_t>(0,n1), 
         [&]( natus::concurrent::range_1d<size_t> const & r0 )
         {
             inc_thread_counter() ;
