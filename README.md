@@ -8,6 +8,8 @@ Some tests allow to use the mouse and keyboard to move the camera.
 - Right click and mouse move for camera rotation 
 - WASDQR for camera translation
 
+Please note that not all applications of this repository run on linux. The main development platform is still windows and once in a while I test this repository on a linux platform. It may be the case that this repository does not build on Linux. I just did not found the time to establish continuous integration for this project. I will work on that.
+
 # The Tests 
 
 ## 00_empty
