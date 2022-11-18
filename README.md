@@ -68,11 +68,21 @@ Tests and shows how to use the streamout object. This test directly uses the pla
 ## 34_glyph_atlas
 ## 35_text_render_2d
 ## 36_primitive_render_2d
+Totally simple breakpoint test case checking the ```primitive_render_2d``` class.
+![Primitive Renderer]( images/primrender1.jpg )
 ## 37_primitive_render_2d
+Tests and shows how to use the ```primitive_render_2d``` class drawing more geometry. This type of renderer is supposed to be used as a debugging tool discovering rendering issues or just helping in tool/debug visualization.
+![Primitive Renderer]( images/primrender2.jpg )
 ## 38_sprite_render_2d
+Simple ```sprite_render_2d```test just allowing to set and debug by break points.
 ## 39_0_sprite_sheet
+Self running test for placing breakpoints for debugging.
 ## 39_1_sprite_sheet
+Tests and shows how to load a sprite sheet and setting up the render for it. This gives the ```sprite_render_2d``` a first test run.
+![Sprite Sheet]( images/spritesheet1.jpg )
 ## 39_2_sprite_sheet
+Does the same as the previous test but also moves the sprites.
+![Sprite Sheet]( images/spritesheet2.jpg )
 ## 41_particle_system
 First implmentation of an particle system. See next test for more detail. 
 This test may go away in the future.
