@@ -42,10 +42,19 @@ Some tests allow to use the mouse and keyboard to move the camera.
 ## 19_4_audio_async_capture
 ## 19_5_audio_gen_2
 ## 19_6_audio_play
+Tests and shows how to play audio files in the engine.
+![Play Audio]( images/play_audio.jpg )
 ## 26_render_states
+Tests and shows how to use render states. Render states management is somehow complex. The engine allows to push/pop render state sets which must enable/disable those render states and on popping those the old set need to be activated again.
+![Render States]( images/render_states.jpg )
 ## 27_0_framebuffer_simple
+Tests and shows MTR and framebuffer usage. Outputs two colors and allows to switch between the two render target outputs in post via the UI. Uses platform shaders only.
 ## 27_1_framebuffer_mrt
+Tests and shows how to use MRT and the framebuffer object. Displays all output at the same time in post. Uses platform shaders.
+![Framebuffer MRT]( images/framebuffer_mrt.jpg )
 ## 27_2_framebuffer_nsl
+Does all the same as the previous test but uses an nsl shader. The test also shows how to display an output of the mrt framebuffer event in the tool UI.
+![Framebuffer MRT]( images/framebuffer_mrt_nsl.jpg )
 ## 28_multi_geometry
 Test and shows how to use multiple geometry objects in a single render configuration. The geometry can be changed via a render call using an index. Important to note here is that the geometry can be arbitrary, but the geometry layout of any added geometry to the render objects needs to be the same. The images shows the test application rendering tow different geometry objects with differend vertex attributes like vertex positions and vertex color but uses the same vertex layout which is important.
 ![Multi Geometry]( images/multi_geometry.jpg )
@@ -68,7 +77,7 @@ Tests and shows how to reconfigure rendering objects. In the engine every used r
 ![Reconfigure Rendering Objects]( images/reconfig.jpg )
 ## 33_1_nsl_auto
 Tests reconfiguration nsl as the last test but also tests and shows how to use a file monitor on the shaders. Changing the shaders in the files affects the application so that shaders are reloaded in the engine. Every user interaction is put into tasks and is performed asynchronously.
-![Reconfigure Rendering Objects]( images/nslauto.jpg )
+![Reconfigure Rendering Objects]( images/nsl_auto.jpg )
 ## 33_2_nsl_auto
 Does exactly the same as the previous test but uses the ```app_essentials``` for file monitoring and refreshing the shaders.
 ## 34_glyph_atlas
