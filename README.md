@@ -62,11 +62,21 @@ Does the same as the last test but with nsl only. The left quad shows all images
 ## 32_0_stream_out
 Tests and shows how to use the streamout object. This test directly uses the platform shaders. Nsl shaders will be tested in the next test. The application uses the streamout to transform geometry in a loop and renders it afterwards. This is a GPU only transformation.
 ## 32_1_geometry_shader
+Still a placeholder.
 ## 33_0_reconfig
+Tests and shows how to reconfigure rendering objects. In the engine every used rendering objects needs to be configured before it can be used. But it is also possible to re-configure the rendering object so data can change during runtime! This test allows to reconfigure the used image, geometry and shader. This allows to break point and step through this mechanism. The test uses nsl loaded from a file.
+![Reconfigure Rendering Objects]( images/reconfig.jpg )
 ## 33_1_nsl_auto
+Tests reconfiguration nsl as the last test but also tests and shows how to use a file monitor on the shaders. Changing the shaders in the files affects the application so that shaders are reloaded in the engine. Every user interaction is put into tasks and is performed asynchronously.
+![Reconfigure Rendering Objects]( images/nslauto.jpg )
 ## 33_2_nsl_auto
+Does exactly the same as the previous test but uses the ```app_essentials``` for file monitoring and refreshing the shaders.
 ## 34_glyph_atlas
+Tests the glyph atlas creation algorithm and the proper importing of glyphs. Allows to break point the app for debugging. The glyph atlas is created based on user provided .ttf or .otf files. The atlas is actually created during importing the fonts in the specific import module.
+![Glyph Atlas]( images/glyph_atlas.jpg )
 ## 35_text_render_2d
+Tests and shows how to use the ```text_render_2d``` class. The test simply draws some lines in different sizes and outputs a counter updated continuously.
+![Text Rendering]( images/text_render.jpg )
 ## 36_primitive_render_2d
 Totally simple breakpoint test case checking the ```primitive_render_2d``` class.
 ![Primitive Renderer]( images/primrender1.jpg )
@@ -121,6 +131,7 @@ Tests and shows how to use a pinhole camera.
 Tests and shows how to pick objects in 3d space using natus. The mouse was hovered over the red circle in the window but the mouse cursor was not captured, instread the black arrow marks the hovered circle.
 ![Picking]( images/picking.jpg )
 ## 50_simple_essentials
+Tests and shows how to use the very usefull ```app_essentials```class. It provides many essentials like mouse, keyboard, basic camera, basic camera movement, basic UI elements, shader file loading/monitoring/reloading and much more.
 ## 51_0_post_process
 Tests and shows how to use post processing using nsl. The shaders are contained and loaded from within the code. The test renders a few rotating cubes and performs a post process using a framebuffer and an post processing shader that performs some color correction.
 ![Post0]( images/post0.jpg )
@@ -131,4 +142,6 @@ Does the same as the last test but also performs a box blur filter in the post s
 Does the same as the last test but also lets the user choose a post processing shader from a list in the ui. This time, the shaders are imported and loaded from a file. When the shader is loaded into the engine, it is completely newly compiled and provided to the run-time, so shaders can be changed during run-time. The changed shader is loaded automatically if the changed file is saved on the disc. No user interaction required.
 ![Post2]( images/post3.jpg )
 ## 51_3_post_process_fxaa
+Not properly working and is work in progress.
 ## 52_time_measure
+Placeholder
