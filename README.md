@@ -91,32 +91,32 @@ Tests reconfiguration nsl as the last test but also tests and shows how to use a
 ![Reconfigure Rendering Objects]( images/nsl_auto.jpg )
 ## 33_2_nsl_auto
 Does exactly the same as the previous test but uses the ```app_essentials``` for file monitoring and refreshing the shaders.
-## 34_glyph_atlas
+## 37_0_glyph_atlas
 Tests the glyph atlas creation algorithm and the proper importing of glyphs. Allows to break point the app for debugging. The glyph atlas is created based on user provided .ttf or .otf files. The atlas is actually created during importing the fonts in the specific import module.
 ![Glyph Atlas]( images/glyph_atlas.jpg )
-## 35_text_render_2d
+## 37_1_text_render_2d
 Tests and shows how to use the ```text_render_2d``` class. The test simply draws some lines in different sizes and outputs a counter updated continuously.
 ![Text Rendering]( images/text_render.jpg )
-## 36_primitive_render_2d
+## 37_2_primitive_render_2d
 Totally simple breakpoint test case checking the ```primitive_render_2d``` class.
 ![Primitive Renderer]( images/primrender1.jpg )
-## 37_primitive_render_2d
+## 37_3_primitive_render_2d
 Tests and shows how to use the ```primitive_render_2d``` class drawing more geometry. This type of renderer is supposed to be used as a debugging tool discovering rendering issues or just helping in tool/debug visualization.
 ![Primitive Renderer]( images/primrender2.jpg )
-## 38_sprite_render_2d
+## 38_0_sprite_render_2d
 Simple ```sprite_render_2d```test just allowing to set and debug by break points.
-## 39_0_sprite_sheet
+## 38_1_sprite_sheet
 Self running test for placing breakpoints for debugging.
-## 39_1_sprite_sheet
+## 38_2_sprite_sheet
 Tests and shows how to load a sprite sheet and setting up the render for it. This gives the ```sprite_render_2d``` a first test run.
 ![Sprite Sheet]( images/spritesheet1.jpg )
-## 39_2_sprite_sheet
+## 38_2_sprite_sheet
 Does the same as the previous test but also moves the sprites.
 ![Sprite Sheet]( images/spritesheet2.jpg )
-## 41_particle_system
+## 41_0_particle_system
 First implmentation of an particle system. See next test for more detail. 
 This test may go away in the future.
-## 42_particle_system
+## 41_1_particle_system
 Tests the use of particles in the engine and uses the primitive renderer for simple visualization. The UI allows to change some parameters of the particle system.
 ![Particle System]( images/particles.jpg )
 ## 43_inv_space_2d
