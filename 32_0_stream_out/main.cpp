@@ -386,7 +386,9 @@ namespace this_file
 
                         set_vertex_shader( natus::graphics::shader_t( R"(
                             cbuffer ConstantBuffer : register( b0 ) 
-                            {}
+                            {
+                                float u_ani ;
+                            }
 
                             struct VS_INPUT
                             {
@@ -401,8 +403,8 @@ namespace this_file
                             VS_OUTPUT VS( VS_INPUT input )
                             {
                                 VS_OUTPUT output = (VS_OUTPUT)0 ;
-
-                                output.out_pos = input.in_pos ;
+                                float t = u_ani * 3.14526 * 2.0 ;
+                                output.out_pos = input.in_pos + float4( 0.02 *cos(t), 0.02 *sin(t), 0.0, 0.0 ) ;
 
                                 return output;
                             } )" ) ) ;
