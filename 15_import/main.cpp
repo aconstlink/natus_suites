@@ -45,7 +45,7 @@ namespace this_file
         test_app( void_t ) 
         {
             natus::application::app::window_info_t wi ;
-            _wid_async = this_t::create_window( "A Render Window", wi/*, {natus::graphics::backend_type::gl3}*/ ) ;
+            _wid_async = this_t::create_window( "A Render Window", wi/*, {natus::graphics::backend_type::gl4}*/ ) ;
             _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
         }
         test_app( this_cref_t ) = delete ;

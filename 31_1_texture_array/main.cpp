@@ -45,7 +45,7 @@ namespace this_file
             #if 1
             auto view1 = this_t::create_window( "A Render Window Default", wi ) ;
             auto view2 = this_t::create_window( "A Render Window Additional", wi,
-                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11}) ;
+                { natus::graphics::backend_type::gl4, natus::graphics::backend_type::d3d11}) ;
 
             view1.window().position( 50, 50 ) ;
             view1.window().resize( 800, 800 ) ;
@@ -56,7 +56,7 @@ namespace this_file
                 natus::graphics::async_views_t( { view1.async(), view2.async() } ) ) ;
             #else
             auto view1 = this_t::create_window( "A Render Window", wi, 
-                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
+                { natus::graphics::backend_type::gl4, natus::graphics::backend_type::d3d11 } ) ;
             _ae = natus::application::util::app_essentials_t( 
                 natus::graphics::async_views_t( { view1.async() } ) ) ;
             #endif

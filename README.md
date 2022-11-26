@@ -110,7 +110,7 @@ Self running test for placing breakpoints for debugging.
 ## 38_2_sprite_sheet
 Tests and shows how to load a sprite sheet and setting up the render for it. This gives the ```sprite_render_2d``` a first test run.
 ![Sprite Sheet]( images/spritesheet1.jpg )
-## 38_2_sprite_sheet
+## 38_3_sprite_sheet
 Does the same as the previous test but also moves the sprites.
 ![Sprite Sheet]( images/spritesheet2.jpg )
 ## 41_0_particle_system

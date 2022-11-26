@@ -32,7 +32,7 @@ namespace this_file
             _wid_async = this_t::create_window( "A Render Window", wi ) ;
             #else
             _wid_async = this_t::create_window( "A Render Window", wi, 
-                { natus::graphics::backend_type::gl3, natus::graphics::backend_type::d3d11 } ) ;
+                { natus::graphics::backend_type::gl4, natus::graphics::backend_type::d3d11 } ) ;
             #endif
         }
         test_app( this_cref_t ) = delete ;

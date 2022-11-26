@@ -64,7 +64,7 @@ namespace this_file
             _wid_async = this_t::create_window( "A Render Window", wi, { 
                 natus::graphics::backend_type::d3d11, 
                 natus::graphics::backend_type::es3, 
-                natus::graphics::backend_type::gl3 } ) ;
+                natus::graphics::backend_type::gl4 } ) ;
             _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
             _ndb = natus::nsl::database_t() ;
         }
