@@ -82,6 +82,7 @@ Does the same as the last test but with nsl only. The left quad shows all images
 Tests and shows how to use the streamout object. This test directly uses the platform shaders. Nsl shaders will be tested in the next test. The application uses the streamout to transform geometry in a loop and renders it afterwards. This is a GPU only transformation.
 ![Streamout]( images/streamout1.jpg )
 ## 32_1_stream_out
+This test performs a feedback loop using point primitives and binds the streamed out data to a data buffer object in the rendering shader which pulls the per vertex data from that data buffer which carries the streamout data.
 ## 32_2_stream_out
 ## 33_0_geometry_shader
 Still a placeholder.
