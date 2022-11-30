@@ -44,7 +44,6 @@ namespace this_file
         natus::graphics::render_object_res_t _ro_sec ;
 
         natus::graphics::geometry_object_res_t _go ;
-        natus::graphics::geometry_object_res_t _go_pts ;
 
         natus::graphics::variable_set_res_t _vs0 ;
 
@@ -186,34 +185,6 @@ namespace this_file
                 _go = std::move( geo ) ;
             }
 
-            // geometry configuration
-            {
-                auto vb = natus::graphics::vertex_buffer_t()
-                    .add_layout_element( natus::graphics::vertex_attribute::position, natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 )
-                    .add_layout_element( natus::graphics::vertex_attribute::color0, natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 )
-                    .resize( 4 ).update<vertex>( [=] ( vertex* array, size_t const ne )
-                {
-                    array[ 0 ].pos = natus::math::vec4f_t( -0.5f, -0.5f, 0.0f, 1.0f ) ;
-                    array[ 1 ].pos = natus::math::vec4f_t( -0.5f, +0.5f, 0.0f, 1.0f ) ;
-                    array[ 2 ].pos = natus::math::vec4f_t( +0.5f, +0.5f, 0.0f, 1.0f ) ;
-                    array[ 3 ].pos = natus::math::vec4f_t( +0.5f, -0.5f, 0.0f, 1.0f ) ;
-
-                    array[ 0 ].color = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
-                    array[ 1 ].color = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
-                    array[ 2 ].color = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
-                    array[ 3 ].color = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
-                } );
-
-                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "points",
-                    natus::graphics::primitive_type::triangles, std::move( vb ) ) ;
-
-                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.configure( geo ) ;
-                } ) ;
-                _go = std::move( geo ) ;
-            }
-
             // stream out object configuration
             {
                 auto vb = natus::graphics::vertex_buffer_t()
@@ -226,256 +197,91 @@ namespace this_file
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a ) { a.configure( _soo ) ; } ) ;
             }
 
-            // shader configuration
             {
-                natus::graphics::shader_object_t sc( "render_original" ) ;
-
-                // shaders : ogl 3.1
-                {
-                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
-
-                        set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 140
-                            in vec4 in_pos ;
-                            in vec4 in_color ;
-                            out vec4 var_color ;
-
-                            uniform mat4 u_proj ;
-                            uniform mat4 u_view ;
-                            uniform mat4 u_world ;
+                natus::ntd::string_t const nsl_shader = R"(
+                    config render_original
+                    {
+                        vertex_shader
+                        {
+                            mat4_t proj : projection ;
+                            mat4_t view : view ;
+                            mat4_t world : world ;
                             
-                            void main()
-                            {
-                                var_color = in_color ;
-                                gl_Position = u_proj * u_view * u_world * in_pos ;
+                            in vec4_t pos : position ;
+                            in vec4_t col : color ;
 
-                            } )" ) ).
-
-                        set_pixel_shader( natus::graphics::shader_t( R"(
-                            #version 140
-                            #extension GL_ARB_separate_shader_objects : enable
-                            #extension GL_ARB_explicit_attrib_location : enable
-    
-                            in vec4 var_color ;
-                            layout( location = 0 ) out vec4 out_color ;
+                            out vec4_t pos : position ;
 
                             void main()
                             {
-                                out_color = var_color ;
-                            } )" ) ) ;
-
-                    sc.insert( natus::graphics::shader_api_type::glsl_1_4, std::move( ss ) ) ;
-                }
-
-                // shaders : es 3.0
-                {
-                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
-
-                        set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
-                            in vec4 in_pos ;
-                            in vec4 in_color ;
-                            out vec4 var_color ;
-
-                            uniform mat4 u_proj ;
-                            uniform mat4 u_view ;
-                            uniform mat4 u_world ;
-                            
-                            void main()
-                            {
-                                var_color = in_color ;
-                                gl_Position = u_proj * u_view * u_world * vec4( in_pos, 1.0 ) ;
-
-                            } )" ) ).
-
-                        set_pixel_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
-                            precision mediump int ;
-                            precision mediump float ;
-                            precision mediump sampler2DArray ;
-
-                            in vec4 var_color ;
-                            out vec4 out_color ;
-
-                            void main()
-                            {
-                                out_color = var_color ;
-                            } )" ) ) ;
-
-                    sc.insert( natus::graphics::shader_api_type::glsles_3_0, std::move( ss ) ) ;
-                }
-
-                // shaders : hlsl 11(5.0)
-                {
-                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
-
-                        set_vertex_shader( natus::graphics::shader_t( R"(
-                            cbuffer ConstantBuffer : register( b0 ) 
-                            {
-                                float4x4 u_proj ;
-                                float4x4 u_view ;
-                                float4x4 u_world ;
+                                out.pos = proj * view * world * in.pos ;
                             }
+                        }
 
-                            struct VS_INPUT
+                        pixel_shader
+                        {
+                            vec4_t color ;
+
+                            out vec4_t color : color0 ;
+
+                            void main()
                             {
-                                uint in_id: SV_VertexID ;
-                                float4 in_pos : POSITION ; 
-                                float4 in_color : COLOR ;
-                            } ;
+                                out.color = color ;
+                            }
+                        }
+                    }
+                )" ;
 
-                            struct VS_OUTPUT
-                            {
-                                float4 pos : SV_POSITION ;
-                                float4 col : COLOR ;
-                            };
+                _ae.process_shader( nsl_shader ) ;
 
-                            Buffer< float4 > u_data ;
-
-                            VS_OUTPUT VS( VS_INPUT input )
-                            {
-                                VS_OUTPUT output = (VS_OUTPUT)0 ;
-                                
-                                int idx = input.in_id / 4 ;
-                                float4 pos_scl = u_data.Load( (idx * 2) + 0 ) ;
-                                float4 col = u_data.Load( (idx * 2) + 1 ) ;
-        
-                                float4 pos = pos_scl + input.in_pos ;
-                                output.pos = mul( pos, u_world ) ;
-                                output.pos = mul( output.pos, u_view ) ;
-                                output.pos = mul( output.pos, u_proj ) ;
-                                output.col = (input.in_id < 2) ? input.in_color : col ;
-                                return output;
-                            } )" ) ).
-
-                        set_pixel_shader( natus::graphics::shader_t( R"(
-                            
-                            cbuffer ConstantBuffer : register( b0 ) 
-                            {}
-
-                            struct VS_OUTPUT
-                            {
-                                float4 pos : SV_POSITION;
-                                float4 col : COLOR ;
-                            } ;
-
-                            float4 PS( VS_OUTPUT input ) : SV_Target0
-                            {
-                                return input.col ;
-                            } )" ) ) ;
-
-                    sc.insert( natus::graphics::shader_api_type::hlsl_5_0, std::move( ss ) ) ;
-                }
-
-                // configure more details
-                {
-                    sc
-                        .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
-                        .add_vertex_input_binding( natus::graphics::vertex_attribute::color0, "in_color" )
-                        .add_input_binding( natus::graphics::binding_point::world_matrix, "u_world" )
-                        .add_input_binding( natus::graphics::binding_point::view_matrix, "u_view" )
-                        .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
-                }
-
-                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.configure( sc ) ;
-                } ) ;
+                // check this
+                /*
+                    .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
+                    .add_vertex_input_binding( natus::graphics::vertex_attribute::color0, "in_color" )
+                    .add_input_binding( natus::graphics::binding_point::world_matrix, "u_world" )
+                    .add_input_binding( natus::graphics::binding_point::view_matrix, "u_view" )
+                    .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
+                */
             }
-            
-            // shader configuration
+
             {
-                natus::graphics::shader_object_t sc( "stream_out" ) ;
-                
-                {
-                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
+                natus::ntd::string_t const nsl_shader = R"(
+                    config stream_out
+                    {
+                        vertex_shader
+                        {
+                            mat4_t proj : projection ;
+                            mat4_t view : view ;
+                            mat4_t world : world ;
+                            
+                            in vec4_t pos : position ;
+                            in vec4_t col : color ;
 
-                        set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 140
-                            in vec4 in_pos ;
-                            in vec4 in_color ;
-                            out vec4 out_pos ;
-                            out vec4 out_col ;
+                            out vec4_t pos : position ;
+                            out vec4_t col : color ;
 
-                            uniform float u_ani ;
+                            float_t u_ani ;
+
                             void main()
                             {
-                                float t = u_ani * 3.14526 * 2.0 ;
-                                out_pos = in_pos + vec4( 0.02 *cos(t), 0.02 *sin(t), 0.0, 0.0 ) ;
-                                out_col = vec4( 1.0, 1.0, 0.0, 1.0 ) ;
-                            } )" ) ) ;
-
-                    sc.insert( natus::graphics::shader_api_type::glsl_1_4, std::move( ss ) ) ;
-                }
-
-                {
-                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
-
-                        set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
-                            precision mediump int ;
-                            in vec4 in_pos ;
-                            in vec4 in_color ;
-                            out vec4 out_pos ;
-                            out vec4 out_col ;
-
-                            uniform float u_ani ;  
-                            void main()
-                            {
-                                out_pos = in_pos ;
-                                out_col = vec4( 1.0, 1.0, 0.0, 1.0 ) ;
-                            } )" ) ) ;
-
-                    sc.insert( natus::graphics::shader_api_type::glsles_3_0, std::move( ss ) ) ;
-                }
-
-                {
-                    natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
-
-                        set_vertex_shader( natus::graphics::shader_t( R"(
-                            cbuffer ConstantBuffer : register( b0 ) 
-                            {
-                                float u_ani ;
+                                float_t t = u_ani * 3.14526 * 2.0 ;
+                                out.pos = in.pos + vec4_t( 0.02 *cos(t), 0.02 *sin(t), 0.0, 0.0 ) ;
+                                out.col = vec4_t( 1.0, 1.0, 0.0, 1.0 ) ;
                             }
+                        }
+                    }
+                )" ;
 
-                            struct VS_INPUT
-                            {
-                                float4 in_pos : POSITION ; 
-                                float4 in_color : COLOR ;
-                            } ;
+                _ae.process_shader( nsl_shader ) ;
 
-                            struct VS_OUTPUT
-                            {
-                                float4 out_pos : SV_POSITION ;
-                                float4 out_col : COLOR ;
-                            };
-
-                            VS_OUTPUT VS( VS_INPUT input )
-                            {
-                                VS_OUTPUT output = (VS_OUTPUT)0 ;
-                                float t = u_ani * 3.14526 * 2.0 ;
-                                output.out_pos = input.in_pos + float4( 0.02 *cos(t), 0.02 *sin(t), 0.0, 0.0 ) ;
-                                output.out_col = float4( 1.0, 1.0, 0.0, 1.0 ) ;
-                                return output;
-                            } )" ) ) ;
-
-                    sc.insert( natus::graphics::shader_api_type::hlsl_5_0, std::move( ss ) ) ;
-                }
-
-                // configure more details
-                {
-                    sc
-                        .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
-                        .add_vertex_input_binding( natus::graphics::vertex_attribute::color0, "in_color" )
-                        .add_vertex_output_binding( natus::graphics::vertex_attribute::position, "out_pos" )
-                        .add_vertex_output_binding( natus::graphics::vertex_attribute::color0, "out_col" )
-                        .set_streamout_mode( natus::graphics::streamout_mode::interleaved ) ;
-                }
-
-                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
-                {
-                    a.configure( sc ) ;
-                } ) ;
+                // check this
+                /*
+                    .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
+                    .add_vertex_input_binding( natus::graphics::vertex_attribute::color0, "in_color" )
+                    .add_vertex_output_binding( natus::graphics::vertex_attribute::position, "out_pos" )
+                    .add_vertex_output_binding( natus::graphics::vertex_attribute::color0, "out_col" )
+                    .set_streamout_mode( natus::graphics::streamout_mode::interleaved ) ;
+                */
             }
 
             // the original geometry render object
@@ -483,7 +289,7 @@ namespace this_file
                 natus::graphics::render_object_t rc = natus::graphics::render_object_t( "quad" ) ;
 
                 {
-                    rc.link_geometry( "quad" ) ;
+                    rc.link_geometry( "quad", "compute" ) ;
                     rc.link_shader( "render_original" ) ;
                 }
 
@@ -491,11 +297,7 @@ namespace this_file
                 {
                     natus::graphics::variable_set_res_t vars = natus::graphics::variable_set_t() ;
                     
-                    // associate variable with streamout object
-                    {
-                        auto* var = vars->array_variable_streamout( "u_data" ) ;
-                        var->set( "compute" ) ;
-                    }
+                    {}
                     _vs0 = vars ;
                     rc.add_variable_set( std::move( vars ) ) ;
                 }
@@ -508,7 +310,7 @@ namespace this_file
                 natus::graphics::render_object_t rc = natus::graphics::render_object_t( "stream_out" ) ;
 
                 {
-                    rc.link_geometry( "points", "compute" ) ;
+                    rc.link_geometry( "quad", "compute" ) ;
                     rc.link_shader( "stream_out" ) ;
                 }
 

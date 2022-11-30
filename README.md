@@ -81,15 +81,17 @@ Does the same as the last test but with nsl only. The left quad shows all images
 ## 32_0_stream_out
 Tests and shows how to use the streamout object. This test directly uses the platform shaders. Nsl shaders will be tested in the next test. The application uses the streamout to transform geometry in a loop and renders it afterwards. This is a GPU only transformation.
 ![Streamout]( images/streamout1.jpg )
-## 32_1_geometry_shader
+## 32_1_stream_out
+## 32_2_stream_out
+## 33_0_geometry_shader
 Still a placeholder.
-## 33_0_reconfig
+## 34_0_reconfig
 Tests and shows how to reconfigure rendering objects. In the engine every used rendering objects needs to be configured before it can be used. But it is also possible to re-configure the rendering object so data can change during runtime! This test allows to reconfigure the used image, geometry and shader. This allows to break point and step through this mechanism. The test uses nsl loaded from a file.
 ![Reconfigure Rendering Objects]( images/reconfig.jpg )
-## 33_1_nsl_auto
+## 34_1_nsl_auto
 Tests reconfiguration nsl as the last test but also tests and shows how to use a file monitor on the shaders. Changing the shaders in the files affects the application so that shaders are reloaded in the engine. Every user interaction is put into tasks and is performed asynchronously.
 ![Reconfigure Rendering Objects]( images/nsl_auto.jpg )
-## 33_2_nsl_auto
+## 34_2_nsl_auto
 Does exactly the same as the previous test but uses the ```app_essentials``` for file monitoring and refreshing the shaders.
 ## 37_0_glyph_atlas
 Tests the glyph atlas creation algorithm and the proper importing of glyphs. Allows to break point the app for debugging. The glyph atlas is created based on user provided .ttf or .otf files. The atlas is actually created during importing the fonts in the specific import module.

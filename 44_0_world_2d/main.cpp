@@ -330,9 +330,9 @@ namespace this_file
                             auto const start = _grid.get_dims().transform_to_center( _grid.get_dims().cells_to_pixels( mouse_global ) )  ;
 
                             natus::math::vec2f_t p0 = start ;
-                            natus::math::vec2f_t p1 = start + natus::math::vec2f_t(0.0f,cdims.y()) ;
+                            natus::math::vec2f_t p1 = start + natus::math::vec2f_t(0.0f,float_t(cdims.y())) ;
                             natus::math::vec2f_t p2 = start + cdims ;
-                            natus::math::vec2f_t p3 = start + natus::math::vec2f_t(cdims.x(),0.0f) ;
+                            natus::math::vec2f_t p3 = start + natus::math::vec2f_t(float_t(cdims.x()),0.0f) ;
 
                             pr->draw_rect( 1, p0, p1,p2,p3,
                                 natus::math::vec4f_t( 1.0f, 0.0f, 0.0f, 1.0f ),

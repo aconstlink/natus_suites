@@ -50,14 +50,19 @@ set( subdirs
     "28_multi_geometry"
     "30_0_array_object"
     "30_1_array_object"
-    "32_0_stream_out"
-    "32_1_stream_out"
-    "32_2_geometry_shader"
+    
     "31_0_texture_array"
     "31_1_texture_array"
-    "33_0_reconfig"
-    "33_1_nsl_auto"
-    "33_2_nsl_auto"
+
+    "32_0_stream_out"
+    "32_1_stream_out"
+    "32_2_stream_out"
+
+    "33_0_geometry_shader"
+
+    "34_0_reconfig"
+    "34_1_nsl_auto"
+    "34_2_nsl_auto"
     "37_0_glyph_atlas"
     "37_1_text_render_2d"
     "37_2_primitive_render_2d"

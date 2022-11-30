@@ -167,7 +167,7 @@ namespace this_file
             {
                 // display data items
                 {
-                    ImGui::PlotHistogram("Histogram", _data_items.data(), _data_items.size(), 0, NULL, 0.0f, _max_value, ImVec2(0, 80.0f));
+                    ImGui::PlotHistogram("Histogram", _data_items.data(), int_t(_data_items.size()), 0, NULL, 0.0f, _max_value, ImVec2(0, 80.0f));
                 }
             }
 
