@@ -205,7 +205,7 @@ namespace this_file
                 } );
 
                 natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "points",
-                    natus::graphics::primitive_type::triangles, std::move( vb ) ) ;
+                    natus::graphics::primitive_type::points, std::move( vb ) ) ;
 
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
                 {
@@ -244,10 +244,17 @@ namespace this_file
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
                             
+                            uniform samplerBuffer u_data ;
+
                             void main()
                             {
-                                var_color = in_color ;
-                                gl_Position = u_proj * u_view * u_world * in_pos ;
+                                int idx = gl_VertexID / 4 ;
+                                vec4 pos = texelFetch( u_data, (idx *2) + 0 ) ;
+                                vec4 col = texelFetch( u_data, (idx *2) + 1 ) ;
+
+                                pos = vec4( (pos + in_pos).xyz, 1.0 ) ;
+                                var_color = ( gl_VertexID < 2) ? in_color : col ;
+                                gl_Position = u_proj * u_view * u_world * pos ;
 
                             } )" ) ).
 
@@ -337,10 +344,10 @@ namespace this_file
                                 VS_OUTPUT output = (VS_OUTPUT)0 ;
                                 
                                 int idx = input.in_id / 4 ;
-                                float4 pos_scl = u_data.Load( (idx * 2) + 0 ) ;
+                                float4 pos = u_data.Load( (idx * 2) + 0 ) ;
                                 float4 col = u_data.Load( (idx * 2) + 1 ) ;
         
-                                float4 pos = pos_scl + input.in_pos ;
+                                pos = float4( (pos + input.in_pos).xyz, 1.0 ) ;
                                 output.pos = mul( pos, u_world ) ;
                                 output.pos = mul( output.pos, u_view ) ;
                                 output.pos = mul( output.pos, u_proj ) ;
@@ -601,7 +608,7 @@ namespace this_file
 
             _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
             {
-                #if 1
+                #if 0
                 // render original from geometry
                 {
                     natus::graphics::backend_t::render_detail_t detail ;
@@ -609,13 +616,14 @@ namespace this_file
                     a.render( _ro, detail ) ;
                 }
                 #endif
+                #if 1
                 // render streamed out
                 {
                     natus::graphics::backend_t::render_detail_t detail ;
-                    detail.feed_from_streamout = true ;
+                    detail.feed_from_streamout = false ;
                     a.render( _ro, detail ) ;
                 }
-                
+                #endif
             } ) ;
 
             _ae.on_graphics_end( 10 ) ;

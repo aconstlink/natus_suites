@@ -84,6 +84,8 @@ Tests and shows how to use the streamout object. This test directly uses the pla
 ## 32_1_stream_out
 This test performs a feedback loop using point primitives and binds the streamed out data to a data buffer object in the rendering shader which pulls the per vertex data from that data buffer which carries the streamout data.
 ## 32_2_stream_out
+This test performs a feedback loop using point primitives. The streamed out vertices/points are then attached to a shader as a buffer object. The shader renders a quad using the streamed out points as position and color data that is pulled from a buffer object. 
+![Streamout with Buffer Object]( images/streamout_object_as_buffer_object.jpg )
 ## 33_0_geometry_shader
 Still a placeholder.
 ## 34_0_reconfig
