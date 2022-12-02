@@ -52,10 +52,12 @@ In contrast to the thread pool scheduler which distributes tasks across the thre
 ## 19_4_audio_async_capture
 ## 19_5_audio_gen_2
 ## 19_6_audio_play
-Tests and shows how to play audio files in the engine.
+Tests and shows how to play audio files in the engine. 
+
 ![Play Audio]( images/play_audio.jpg )
 ## 26_render_states
 Tests and shows how to use render states. Render states management is somehow complex. The engine allows to push/pop render state sets which must enable/disable those render states and on popping those the old set need to be activated again.
+
 ![Render States]( images/render_states.jpg )
 ## 27_0_framebuffer_simple
 Tests and shows MTR and framebuffer usage. Outputs two colors and allows to switch between the two render target outputs in post via the UI. Uses platform shaders only.
