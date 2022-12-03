@@ -95,7 +95,7 @@ Does the same as the last test but with nsl only. The left quad shows all images
 ![Texture Array]( images/texture_array.jpg )
 
 ## 32_0_stream_out
-Tests and shows how to use the streamout object. This test directly uses the platform shaders. Nsl shaders will be tested in the next test. The application uses the streamout to transform geometry in a loop and renders it afterwards. This is a GPU only transformation.
+Tests and shows how to use the streamout object in a GPU only simulation loop. This test does not use nsl shaders yet but platform shaders directy. The application uses the streamout object to transform geometry in a loop and afterwards binds it as a geometry object(vertex input data) for rendering. 
 
 ![Streamout]( images/streamout1.jpg )
 
