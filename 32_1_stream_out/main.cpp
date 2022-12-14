@@ -50,14 +50,6 @@ namespace this_file
 
         struct vertex { natus::math::vec4f_t pos ; natus::math::vec4f_t color ; } ;
         
-        typedef std::chrono::high_resolution_clock __clock_t ;
-        __clock_t::time_point _tp = __clock_t::now() ;
-
-
-        int_t _max_textures = 3 ;
-        int_t _used_texture = 0 ;
-
-
     public:
 
         test_app( void_t ) 
@@ -639,7 +631,6 @@ namespace this_file
 
             ImGui::Begin( "Test Control" ) ;
 
-            if( ImGui::SliderInt( "Use Texture", &_used_texture, 0, _max_textures ) ){} 
 
             ImGui::End() ;
             return natus::application::result::ok ;
