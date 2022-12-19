@@ -44,18 +44,11 @@ namespace this_file
         natus::graphics::render_object_res_t _ro_sec ;
 
         natus::graphics::geometry_object_res_t _go ;
+        natus::graphics::geometry_object_res_t _go_pts ;
 
         natus::graphics::variable_set_res_t _vs0 ;
 
         struct vertex { natus::math::vec4f_t pos ; natus::math::vec4f_t color ; } ;
-        
-        typedef std::chrono::high_resolution_clock __clock_t ;
-        __clock_t::time_point _tp = __clock_t::now() ;
-
-
-        int_t _max_textures = 3 ;
-        int_t _used_texture = 0 ;
-
 
     public:
 
@@ -185,6 +178,34 @@ namespace this_file
                 _go = std::move( geo ) ;
             }
 
+            // geometry configuration
+            {
+                auto vb = natus::graphics::vertex_buffer_t()
+                    .add_layout_element( natus::graphics::vertex_attribute::position, natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 )
+                    .add_layout_element( natus::graphics::vertex_attribute::color0, natus::graphics::type::tfloat, natus::graphics::type_struct::vec4 )
+                    .resize( 4 ).update<vertex>( [=] ( vertex* array, size_t const ne )
+                {
+                    array[ 0 ].pos = natus::math::vec4f_t( -0.5f, -0.5f, 0.0f, 1.0f ) ;
+                    array[ 1 ].pos = natus::math::vec4f_t( -0.5f, +0.5f, 0.0f, 1.0f ) ;
+                    array[ 2 ].pos = natus::math::vec4f_t( +0.5f, +0.5f, 0.0f, 1.0f ) ;
+                    array[ 3 ].pos = natus::math::vec4f_t( +0.5f, -0.5f, 0.0f, 1.0f ) ;
+
+                    array[ 0 ].color = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
+                    array[ 1 ].color = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
+                    array[ 2 ].color = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
+                    array[ 3 ].color = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
+                } );
+
+                natus::graphics::geometry_object_res_t geo = natus::graphics::geometry_object_t( "points",
+                    natus::graphics::primitive_type::points, std::move( vb ) ) ;
+
+                _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
+                {
+                    a.configure( geo ) ;
+                } ) ;
+                _go = std::move( geo ) ;
+            }
+
             // stream out object configuration
             {
                 auto vb = natus::graphics::vertex_buffer_t()
@@ -197,91 +218,96 @@ namespace this_file
                 _ae.graphics().for_each( [&]( natus::graphics::async_view_t a ) { a.configure( _soo ) ; } ) ;
             }
 
+            // shader configuration
             {
                 natus::ntd::string_t const nsl_shader = R"(
                     config render_original
                     {
                         vertex_shader
                         {
-                            mat4_t proj : projection ;
-                            mat4_t view : view ;
-                            mat4_t world : world ;
-                            
                             in vec4_t pos : position ;
-                            in vec4_t col : color ;
+                            in vec4_t color : color ;
 
                             out vec4_t pos : position ;
+                            out vec4_t color : color ;
+
+                            uint_t vid : vertex_id ;
+
+                            mat4_t u_proj : projection ;
+                            mat4_t u_view : view ;
+                            mat4_t u_world : world ;
+
+                            // will contain the transform feedback data
+                            data_buffer_t u_data ;
 
                             void main()
                             {
-                                out.pos = proj * view * world * in.pos ;
+                                int_t idx = vid / 4 ;
+                                vec4_t pos = fetch_data( u_data, (idx << 1) + 0 ) ; 
+                                vec4_t col = fetch_data( u_data, (idx << 1) + 1 ) ;
+
+                                pos = vec4_t( (pos + in.pos).xyz, 1.0 ) ;
+                                out.color = ( vid < 2) ? in.color : col ;
+                                out.pos = u_proj * u_view * u_world * pos ;
                             }
                         }
 
                         pixel_shader
                         {
-                            vec4_t color ;
-
-                            out vec4_t color : color0 ;
+                            in vec4_t color : color ;
+                            out vec4_t color : color ;
 
                             void main()
                             {
-                                out.color = color ;
+                                out.color = in.color ;
                             }
                         }
                     }
                 )" ;
 
                 _ae.process_shader( nsl_shader ) ;
-
-                // check this
-                /*
-                    .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
-                    .add_vertex_input_binding( natus::graphics::vertex_attribute::color0, "in_color" )
-                    .add_input_binding( natus::graphics::binding_point::world_matrix, "u_world" )
-                    .add_input_binding( natus::graphics::binding_point::view_matrix, "u_view" )
-                    .add_input_binding( natus::graphics::binding_point::projection_matrix, "u_proj" ) ;
-                */
             }
 
+            // shader configuration for stream out
             {
                 natus::ntd::string_t const nsl_shader = R"(
                     config stream_out
                     {
+                        streamout
+                        {
+                            mode : interleaved ;
+                        }
+
+                        render_states
+                        {
+                            blend_mode : ...
+                        }
+
+
                         vertex_shader
                         {
-                            mat4_t proj : projection ;
-                            mat4_t view : view ;
-                            mat4_t world : world ;
-                            
                             in vec4_t pos : position ;
-                            in vec4_t col : color ;
+                            in vec4_t color : color ;
 
                             out vec4_t pos : position ;
-                            out vec4_t col : color ;
+                            out vec4_t color : color ;
 
                             float_t u_ani ;
 
                             void main()
                             {
                                 float_t t = u_ani * 3.14526 * 2.0 ;
-                                out.pos = in.pos + vec4_t( 0.02 *cos(t), 0.02 *sin(t), 0.0, 0.0 ) ;
-                                out.col = vec4_t( 1.0, 1.0, 0.0, 1.0 ) ;
+                                out.pos = in.pos + vec4_t( 0.02 * cos(t), 0.02 * sin(t), 0.0, 0.0 ) ;
+                                out.color = vec4_t( 1.0, 1.0, 0.0, 1.0 ) ;
                             }
                         }
                     }
                 )" ;
 
-                _ae.process_shader( nsl_shader ) ;
-
-                // check this
-                /*
-                    .add_vertex_input_binding( natus::graphics::vertex_attribute::position, "in_pos" )
-                    .add_vertex_input_binding( natus::graphics::vertex_attribute::color0, "in_color" )
-                    .add_vertex_output_binding( natus::graphics::vertex_attribute::position, "out_pos" )
-                    .add_vertex_output_binding( natus::graphics::vertex_attribute::color0, "out_col" )
-                    .set_streamout_mode( natus::graphics::streamout_mode::interleaved ) ;
-                */
+                // needs to handle 
+                // - output binding
+                // - feedback mode
+                //_ae.process_shader( nsl_shader ) ;
             }
 
             // the original geometry render object
@@ -289,7 +315,7 @@ namespace this_file
                 natus::graphics::render_object_t rc = natus::graphics::render_object_t( "quad" ) ;
 
                 {
-                    rc.link_geometry( "quad", "compute" ) ;
+                    rc.link_geometry( "quad" ) ;
                     rc.link_shader( "render_original" ) ;
                 }
 
@@ -297,7 +323,11 @@ namespace this_file
                 {
                     natus::graphics::variable_set_res_t vars = natus::graphics::variable_set_t() ;
                     
-                    {}
+                    // associate variable with streamout object
+                    {
+                        auto* var = vars->array_variable_streamout( "u_data" ) ;
+                        var->set( "compute" ) ;
+                    }
                     _vs0 = vars ;
                     rc.add_variable_set( std::move( vars ) ) ;
                 }
@@ -310,7 +340,7 @@ namespace this_file
                 natus::graphics::render_object_t rc = natus::graphics::render_object_t( "stream_out" ) ;
 
                 {
-                    rc.link_geometry( "quad", "compute" ) ;
+                    rc.link_geometry( "points", "compute" ) ;
                     rc.link_shader( "stream_out" ) ;
                 }
 
@@ -403,7 +433,7 @@ namespace this_file
 
             _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
             {
-                #if 1
+                #if 0
                 // render original from geometry
                 {
                     natus::graphics::backend_t::render_detail_t detail ;
@@ -411,13 +441,14 @@ namespace this_file
                     a.render( _ro, detail ) ;
                 }
                 #endif
+                #if 1
                 // render streamed out
                 {
                     natus::graphics::backend_t::render_detail_t detail ;
-                    detail.feed_from_streamout = true ;
+                    detail.feed_from_streamout = false ;
                     a.render( _ro, detail ) ;
                 }
-                
+                #endif
             } ) ;
 
             _ae.on_graphics_end( 10 ) ;
@@ -433,8 +464,7 @@ namespace this_file
 
             ImGui::Begin( "Test Control" ) ;
 
-            if( ImGui::SliderInt( "Use Texture", &_used_texture, 0, _max_textures ) ){} 
-
+            
             ImGui::End() ;
             return natus::application::result::ok ;
         }
