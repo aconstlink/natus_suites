@@ -282,8 +282,7 @@ namespace this_file
                         {
                             blend_mode : ...
                         }
-
-
+                        
                         vertex_shader
                         {
                             in vec4_t pos : position ;
@@ -301,13 +300,15 @@ namespace this_file
                                 out.color = vec4_t( 1.0, 1.0, 0.0, 1.0 ) ;
                             }
                         }
+
+                        // automatically enable streamout when no pixel shader is present.
                     }
                 )" ;
 
                 // needs to handle 
                 // - output binding
                 // - feedback mode
-                //_ae.process_shader( nsl_shader ) ;
+                _ae.process_shader( nsl_shader ) ;
             }
 
             // the original geometry render object
