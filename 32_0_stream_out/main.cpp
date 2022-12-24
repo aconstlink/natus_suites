@@ -15,6 +15,8 @@
 #include <random>
 #include <thread>
 
+// this test streams out geometry and binds it back as a vertex buffer for 
+// streamout again.
 namespace this_file
 {
     using namespace natus::core::types ;

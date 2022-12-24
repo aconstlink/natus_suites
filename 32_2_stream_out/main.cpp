@@ -273,16 +273,6 @@ namespace this_file
                 natus::ntd::string_t const nsl_shader = R"(
                     config stream_out
                     {
-                        streamout
-                        {
-                            mode : interleaved ;
-                        }
-
-                        render_states
-                        {
-                            blend_mode : ...
-                        }
-                        
                         vertex_shader
                         {
                             in vec4_t pos : position ;

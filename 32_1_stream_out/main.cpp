@@ -15,6 +15,7 @@
 #include <random>
 #include <thread>
 
+// this test bind the streamout data as a buffer in the shader for vertex pulling.
 namespace this_file
 {
     using namespace natus::core::types ;
