@@ -174,33 +174,66 @@ namespace this_file
                     natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
 
                         set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 140
+                            #version 400 core
                             in vec4 in_pos ;
                             in vec4 in_color ;
-                            out vec4 var_color ;
 
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
                             
+                            out VS_GS_VERTEX
+                            {
+                                vec4 color ;
+                            } vout ;
+
                             void main()
                             {
-                                var_color = in_color ;
+                                vout.color = in_color ;
                                 gl_Position = u_proj * u_view * u_world * in_pos ;
 
                             } )" ) ).
 
+                        set_geometry_shader( natus::graphics::shader_t( R"(
+                            #version 400 core
+                            
+                            layout( triangles ) in ;
+                            layout( triangle_strip, max_vertices = 3 ) out ;
+
+                            in VS_GS_VERTEX
+                            {
+                                vec4 color ;
+                            } vin[] ;
+
+                            out GS_FS_VERTEX
+                            {
+                                vec4 color ;
+                            } vout ;
+
+                            void main()
+                            {
+                                for( int i=0; i<gl_in.length(); ++i )
+                                {
+                                    vout.color = vin[i].color ;
+                                    gl_Position = gl_in[i].gl_Position ;
+                                    EmitVertex() ;
+                                }
+                                EndPrimitive() ;
+                            } )" )).
+
                         set_pixel_shader( natus::graphics::shader_t( R"(
-                            #version 140
-                            #extension GL_ARB_separate_shader_objects : enable
-                            #extension GL_ARB_explicit_attrib_location : enable
+                            #version 400 core
     
-                            in vec4 var_color ;
+                            in GS_FS_VERTEX
+                            {
+                                vec4 color ;
+                            } fsin ;
+
                             layout( location = 0 ) out vec4 out_color ;
 
                             void main()
                             {
-                                out_color = var_color ;
+                                out_color = fsin.color ;
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::shader_api_type::glsl_1_4, std::move( ss ) ) ;
@@ -262,15 +295,15 @@ namespace this_file
                                 float4 in_color : COLOR ;
                             } ;
 
-                            struct VS_OUTPUT
+                            struct VSGS_DATA
                             {
                                 float4 pos : SV_POSITION ;
                                 float4 col : COLOR ;
                             };
 
-                            VS_OUTPUT VS( VS_INPUT input )
+                            VSGS_DATA VS( VS_INPUT input )
                             {
-                                VS_OUTPUT output = (VS_OUTPUT)0 ;
+                                VSGS_DATA output = (VSGS_DATA)0 ;
 
                                 output.pos = mul( input.in_pos, u_world ) ;
                                 output.pos = mul( output.pos, u_view ) ;
@@ -278,19 +311,49 @@ namespace this_file
                                 output.col = input.in_color ;
                                 return output;
                             } )" ) ).
+                        
+                        set_geometry_shader( natus::graphics::shader_t( R"(
+                            
+                            cbuffer ConstantBuffer : register( b0 ) 
+                            {}
+
+                            struct VSGS_DATA
+                            {
+                                float4 pos : SV_POSITION ;
+                                float4 col : COLOR ;
+                            };
+                            
+                            struct GSPS_DATA
+                            {
+                                float4 pos : SV_POSITION;
+                                float4 col : COLOR ;
+                            } ;
+
+                            [maxvertexcount(3)]
+                            void GS( triangle VSGS_DATA input[3], inout TriangleStream<GSPS_DATA> tri_stream ) 
+                            {
+                                GSPS_DATA output ;
+                                for( int i=0; i<3; ++i )
+                                {
+                                    output.pos = input[i].pos ;
+                                    output.col = input[i].col ;
+                                    tri_stream.Append( output ) ;    
+                                }
+                                tri_stream.RestartStrip() ;
+                            } )" ) ) .
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
                             
                             cbuffer ConstantBuffer : register( b0 ) 
                             {}
 
-                            struct VS_OUTPUT
+                            struct GSPS_DATA
                             {
                                 float4 pos : SV_POSITION;
                                 float4 col : COLOR ;
                             } ;
 
-                            float4 PS( VS_OUTPUT input ) : SV_Target0
+                            float4 PS( GSPS_DATA input ) : SV_Target0
                             {
                                 return input.col ;
                             } )" ) ) ;
