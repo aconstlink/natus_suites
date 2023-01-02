@@ -57,6 +57,7 @@ set( subdirs
     "32_0_stream_out"
     "32_1_stream_out"
     "32_2_stream_out"
+    "32_3_stream_out"
 
     "33_0_geometry_shader"
 
