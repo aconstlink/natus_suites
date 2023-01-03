@@ -52,7 +52,7 @@ namespace this_file
         struct sim_vertex { natus::math::vec4f_t pos ; natus::math::vec4f_t vel ; natus::math::vec4f_t accel; natus::math::vec4f_t force ;} ;
 
         natus::math::vec4f_t _particle_bounds = natus::math::vec4f_t( -1000.0f, -1000.0f, 1000.0f, 1000.0f ) ;
-        size_t _num_particles = 10000 ;
+        size_t _num_particles = 1000 ;
 
     public:
 
@@ -203,7 +203,8 @@ namespace this_file
                 {
                     for( size_t i=0; i<_num_particles; ++i )
                     {
-                        array[ i ].pos = natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f )  + natus::math::vec4f_t( _particle_bounds.x()*2.0f, 0.0f, 0.0f, 0.0f ) ;
+                        float_t const mass = float_t((i + 1)%10)/10.0f ;
+                        array[ i ].pos = natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, mass )  + natus::math::vec4f_t( _particle_bounds.x()*2.0f, 0.0f, 0.0f, 0.0f ) ;
                         array[ i ].vel = natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f ) ;
                         array[ i ].accel = natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f ) ;
                         array[ i ].force = natus::math::vec4f_t( 0.0f, -9.81f, 0.0f, 1.0f ) ;
@@ -259,7 +260,7 @@ namespace this_file
                             {
                                 int_t idx = vid / 4 ;
                                 vec4_t pos = fetch_data( u_data, (idx << 2) + 0 ) ; 
-                                vec4_t col = fetch_data( u_data, (idx << 2) + 1 ) ;
+                                //vec4_t vel = fetch_data( u_data, (idx << 2) + 1 ) ;
 
                                 pos = vec4_t( (pos).xyz, 1.0 ) ;
                                 out.color = in.color ;
@@ -308,17 +309,19 @@ namespace this_file
                             void main()
                             {
                                 float_t dt = u_dt ;
-                                vec3_t acl = in.force.xyz  ;
+                                float_t mass = in.pos.w ;
+                                vec3_t acl = in.force.xyz / mass ;
                                 vec3_t vel = acl * dt + in.vel.xyz ;
                                 vec3_t pos = vel * dt + in.pos.xyz ;
 
                                 if( any( less_than( pos, as_vec3( u_bounds.x ) ) ) || 
                                     any( greater_than( pos, as_vec3( u_bounds.z ) ) ) )
                                 {
-                                    pos = vec3_t( float_t(vid)-100.0, 200.0, 0.0 ) ;
+                                    pos = vec3_t( float_t(vid%30)*20-300.0, 200.0, 0.0 ) ;
+                                    pos.y += float_t( (vid / 30) * 15 ) ;
+
                                     vel = as_vec3( 0.0 ) ;
                                     acl = as_vec3( 0.0 ) ;
-                                    //pos = vec3_t(0.0,0.0,0.0);
                                 }
                                 
                                 out.pos = vec4_t( pos, in.pos.w ) ;
@@ -328,7 +331,9 @@ namespace this_file
                             }
                         }
 
-                        // automatically enable streamout when no pixel shader is present.
+                        // 1. automatically enable streamout when no pixel shader is present.
+                        // 2. the layout elements of the vertex buffer bound to the streamout object used 
+                        //      MUST MATCH the number of output variables of this shader.
                     }
                 )" ;
 
