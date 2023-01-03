@@ -107,6 +107,9 @@ This test performs a feedback loop using point primitives and binds the streamed
 ## 32_2_stream_out
 Performs the same test as the previous test but uses nsl shaders. 
 
+## 32_3_stream_out
+Placeholder
+
 ## 33_0_geometry_shader
 Tests a simple pass through geometry shader using native shaders.
 
