@@ -203,7 +203,7 @@ namespace this_file
                 {
                     for( size_t i=0; i<_num_particles; ++i )
                     {
-                        float_t const mass = float_t((i + 1)%10)/10.0f ;
+                        float_t const mass = float_t((i%10)+1)/10.0f ;
                         array[ i ].pos = natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, mass )  + natus::math::vec4f_t( _particle_bounds.x()*2.0f, 0.0f, 0.0f, 0.0f ) ;
                         array[ i ].vel = natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f ) ;
                         array[ i ].accel = natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f ) ;
@@ -291,15 +291,10 @@ namespace this_file
                     {
                         vertex_shader
                         {
-                            in vec4_t pos : position ;
-                            in vec4_t vel : color0 ;
-                            in vec4_t accel : color1 ;
-                            in vec4_t force : color2 ;
-
-                            out vec4_t pos : position ;
-                            out vec4_t vel : color0 ;
-                            out vec4_t accel : color1 ;
-                            out vec4_t force : color2 ;
+                            inout vec4_t pos : position ;
+                            inout vec4_t vel : color0 ;
+                            inout vec4_t accel : color1 ;
+                            inout vec4_t force : color2 ;
                             
                             uint_t vid : vertex_id ;
 
