@@ -108,7 +108,9 @@ This test performs a feedback loop using point primitives and binds the streamed
 Performs the same test as the previous test but uses nsl shaders. 
 
 ## 32_3_stream_out
-Placeholder
+Performs a streamout into a buffer object and feeds the data back to the particles vertex shader which performs a force integration in order to move the partilces. The only force applied is g(-9.81). The test uses nsl.
+
+![Streamout Feedback Particles]( images/streamout_feedback_particles.jpg )
 
 ## 33_0_geometry_shader
 Tests a simple pass through geometry shader using native shaders.
