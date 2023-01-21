@@ -189,8 +189,9 @@ namespace this_file
 
                             void main()
                             {
+                                
+                                (gl_Position) = u_proj * u_view * u_world * in_pos ;
                                 vout.color = in_color ;
-                                gl_Position = u_proj * u_view * u_world * in_pos ;
 
                             } )" ) ).
 

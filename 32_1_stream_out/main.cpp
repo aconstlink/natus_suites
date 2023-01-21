@@ -319,24 +319,23 @@ namespace this_file
 
                             struct VS_INPUT
                             {
-                                uint in_id: SV_VertexID ;
                                 float4 in_pos : POSITION ; 
-                                float4 in_color : COLOR ;
+                                float4 in_color : COLOR0 ;
                             } ;
 
                             struct VS_OUTPUT
                             {
                                 float4 pos : SV_POSITION ;
-                                float4 col : COLOR ;
+                                float4 col : COLOR0 ;
                             };
 
                             Buffer< float4 > u_data ;
 
-                            VS_OUTPUT VS( VS_INPUT input )
+                            VS_OUTPUT VS( VS_INPUT input, uint in_id: SV_VertexID )
                             {
                                 VS_OUTPUT output = (VS_OUTPUT)0 ;
                                 
-                                int idx = input.in_id / 4 ;
+                                int idx = in_id / 4 ;
                                 float4 pos = u_data.Load( (idx * 2) + 0 ) ;
                                 float4 col = u_data.Load( (idx * 2) + 1 ) ;
         
@@ -344,7 +343,7 @@ namespace this_file
                                 output.pos = mul( pos, u_world ) ;
                                 output.pos = mul( output.pos, u_view ) ;
                                 output.pos = mul( output.pos, u_proj ) ;
-                                output.col = (input.in_id < 2) ? input.in_color : col ;
+                                output.col = (in_id < 2) ? input.in_color : col ;
                                 return output;
                             } )" ) ).
 
@@ -356,7 +355,7 @@ namespace this_file
                             struct VS_OUTPUT
                             {
                                 float4 pos : SV_POSITION;
-                                float4 col : COLOR ;
+                                float4 col : COLOR0 ;
                             } ;
 
                             float4 PS( VS_OUTPUT input ) : SV_Target0

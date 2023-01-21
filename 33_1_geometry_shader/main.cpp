@@ -190,7 +190,7 @@ namespace this_file
                         geometry_shader
                         {
                             in triangles ;
-                            out triangles[3] ;
+                            out triangles[ max_verts = 3 ] ;
 
                             in vec4_t pos : position ;
                             in vec4_t color : color ;

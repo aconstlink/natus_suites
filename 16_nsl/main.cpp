@@ -497,6 +497,23 @@ void_t test_6( natus::io::database_res_t db )
     }
 }
 
+void_t test_7( void_t )
+{
+    {
+        natus::ntd::string_t s = "in ." ;
+        std::regex input( "in *\\." ) ;
+        s = std::regex_replace( s, input, "input." ) ; 
+        int pb = 0 ;
+    }
+
+    {
+        natus::ntd::string_t s = "in[0]." ;
+        std::regex input( "in *(\\[ *[0-9]*[a-z]* *\\])? *\\." ) ;
+        s = std::regex_replace( s, input, "input$1." ) ; 
+        int pb = 0 ;
+    }
+    int pb = 0 ;
+}
 int main( int argc, char ** argv )
 {
     natus::io::database_res_t db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
@@ -509,7 +526,8 @@ int main( int argc, char ** argv )
 
     //test_4( db ) ;
     //test_5( db ) ;
-    test_6( db ) ;
+    //test_6( db ) ;
+    test_7() ;
 
     return 0 ;
 }
