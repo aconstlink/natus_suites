@@ -140,16 +140,16 @@ namespace proto
                 }
 
                 {
-                    size_t i = 0 ;
-                    for( size_t y = 0 ; y < _tile_dims.y(); ++y )
+                    uint_t i = 0 ;
+                    for( uint_t y = 0 ; y < _tile_dims.y(); ++y )
                     {
-                        for( size_t x = 0 ; x < _tile_dims.x(); ++x )
+                        for( uint_t x = 0 ; x < _tile_dims.x(); ++x )
                         {
-                            natus::math::vec2ui_t const p0 ( (x+0) * region_w, (y+0) * region_h ) ;
-                            natus::math::vec2ui_t const p1 ( (x+1) * region_w, (y+1) * region_h ) ;
+                            natus::math::vec2ui_t const p0 ( (x+0) * uint_t(region_w), (y+0) * uint_t(region_h) ) ;
+                            natus::math::vec2ui_t const p1 ( (x+1) * uint_t(region_w), (y+1) * uint_t(region_h) ) ;
 
                             // where to write into the framebuffer texture
-                            natus::math::vec4ui_t const viewport( p0.x(), p0.y(), region_w, region_h ) ;
+                            natus::math::vec4ui_t const viewport( p0.x(), p0.y(), uint_t(region_w), uint_t(region_h) ) ;
                             // where to read from the framebuffer texture
                             natus::math::vec4f_t const tex_coords( 
                                 float_t( p0.x() )/float_t(w), float_t(p0.y())/float_t(h),

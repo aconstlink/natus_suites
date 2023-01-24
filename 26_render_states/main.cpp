@@ -31,7 +31,7 @@ namespace this_file
         app::window_async_t _wid_async ;
         app::window_async_t _wid_async2 ;
         
-        natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
+        natus::graphics::image_object_res_t _imgconfig ;
 
         natus::graphics::state_object_res_t _root_render_states ;
         natus::ntd::vector< natus::graphics::render_object_res_t > _render_objects ;
@@ -564,6 +564,6 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

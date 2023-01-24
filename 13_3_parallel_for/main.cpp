@@ -32,8 +32,11 @@ int main( int argc, char ** argv )
         else counts.emplace_back( count_t( id, 1 ) ) ;
     } ;
 
+    natus::log::global_t::status( "About to start concurrency. Check you CPU usage! Should be at 100% !!!") ;
+
     // single parallel_for
     {
+        natus::log::global_t::status( "Entering parallel_for ") ;
         size_t const n = 10000000000 ;
         natus::concurrent::semaphore_t loop_counter ;
 
@@ -50,10 +53,13 @@ int main( int argc, char ** argv )
         } ) ;
 
         natus_assert( loop_counter.value() == n) ;
+        natus::log::global_t::status( "Leaving parallel_for") ;
     }
 
     // nested parallel_for
     {
+        natus::log::global_t::status( "Entering nested parallel_for") ;
+
         size_t const n1 = 137103 ;
         size_t const n2 = 100000 ;
 
@@ -82,7 +88,11 @@ int main( int argc, char ** argv )
         } ) ;
 
         natus_assert( loop_counter.value() == n1*n2) ;
+
+        natus::log::global_t::status( "Leaving nested parallel_for") ;
     }
     
+    natus::log::global_t::status( "Good Bye") ;
+
     return 0 ;
 }

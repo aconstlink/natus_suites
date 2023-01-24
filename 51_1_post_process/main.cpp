@@ -91,6 +91,7 @@ namespace this_file
             _fb[0] = std::move( rhv._fb[0] ) ;
             _fb[1] = std::move( rhv._fb[1] ) ;
             _rc_map = std::move( rhv._rc_map ) ;
+            _rc_post = std::move( rhv._rc_post ) ;
         }
 
         virtual ~test_app( void_t ) noexcept 
@@ -811,6 +812,8 @@ namespace this_file
                 }
                 ImGui::End() ;
             }
+
+            return natus::application::result::ok ;
         }
 
         virtual natus::application::result on_shutdown( void_t ) noexcept 
@@ -824,6 +827,6 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

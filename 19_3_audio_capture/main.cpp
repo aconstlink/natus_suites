@@ -80,6 +80,8 @@ namespace this_file
 
             _frequencies0 = std::move( rhv._frequencies0 ) ;
             _freq_bands = std::move( rhv._freq_bands ) ;
+
+            _capture = std::move( rhv._capture ) ;
         }
         virtual ~test_app( void_t )
         {
@@ -258,10 +260,6 @@ namespace this_file
 
 int main( int argc, char** argv )
 {
-    natus::application::global_t::create_application(
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
-
-    natus::memory::global_t::dump_to_std() ;
-
-    return 0 ;
+    return natus::application::global_t::create_and_exec_application(
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

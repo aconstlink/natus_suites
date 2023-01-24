@@ -48,7 +48,9 @@ namespace this_file
             _wid_async = this_t::create_window( "A Render Window", wi/*, {natus::graphics::backend_type::gl4}*/ ) ;
             _db = natus::io::database_t( natus::io::path_t( DATAPATH ), "./working", "data" ) ;
         }
+
         test_app( this_cref_t ) = delete ;
+
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
             _wid_async = std::move( rhv._wid_async ) ;
@@ -56,9 +58,11 @@ namespace this_file
             _gconfig = std::move( rhv._gconfig ) ;
             _rc = std::move( rhv._rc) ;
             _db = std::move( rhv._db ) ;
+            _imgconfig = std::move( rhv._imgconfig ) ;
+            _render_states = std::move( rhv._render_states ) ;
         }
-        virtual ~test_app( void_t ) 
-        {}
+
+        virtual ~test_app( void_t ) {}
 
     private:
 
@@ -303,7 +307,6 @@ namespace this_file
             {
                 natus::graphics::backend_t::render_detail_t detail ;
                 detail.start = 0 ;
-                detail.render_states = _render_states ;
                 _wid_async.async().render( _rc, detail ) ;
             }
             return natus::application::result::ok ; 
@@ -317,6 +320,6 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

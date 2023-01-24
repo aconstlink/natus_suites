@@ -268,7 +268,7 @@ namespace this_file
                     auto const of = float_t(i) * 2.0 - 1.0 ;
                     natus::math::m3d::trafof_t t ;
                     t.scale_fl( 100.0f ) ;
-                    t.translate_fl( natus::math::vec3f_t( 100.0f * (float_t(i) * 2.0 - 1.0), 0.0f, 0.0f ) ) ;
+                    t.translate_fl( natus::math::vec3f_t( 100.0f * (float_t(i) * 2.0f - 1.0f), 0.0f, 0.0f ) ) ;
 
                     auto * var = vs->data_variable<natus::math::mat4f_t>("u_world") ;
                     var->set( t.get_transformation() ) ;
@@ -326,8 +326,8 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }
 
 

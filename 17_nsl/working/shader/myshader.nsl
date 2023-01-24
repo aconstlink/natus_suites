@@ -37,15 +37,16 @@ config myconfig
 
     pixel_shader
     {
-        tex2d some_texture ;
+        tex2d_t some_texture ;
 
         in vec2_t tex0 : texcoord ;
         out  vec4_t color : color ;
 
         void main()
         {
-            out.color = vec4_t(1) ;
-            out.color = vec4_t(12) ;
+            out.color = as_vec4(1) ;
+            out.color = vec4_t(12) ; // not possible at the moment
+
             out.color = texture( some_texture, in.tex0 ) ;
         }
     }

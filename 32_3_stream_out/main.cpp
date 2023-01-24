@@ -27,7 +27,7 @@ namespace this_file
 
         natus::application::util::app_essentials_t _ae ;
         
-        natus::graphics::array_object_res_t _gpu_data = natus::graphics::array_object_t() ;
+        natus::graphics::array_object_res_t _gpu_data ;
 
         natus::graphics::state_object_res_t _root_render_states ;
 
@@ -167,10 +167,10 @@ namespace this_file
                     set_layout_element( natus::graphics::type::tuint ).resize( 6 * _num_particles ).
                     update<uint_t>( [&] ( uint_t* array, size_t const ne )
                 {
-                    for( size_t i=0; i< _num_particles; ++i )
+                    for( uint_t i=0; i< uint_t(_num_particles); ++i )
                     {
-                        size_t const vidx = i * 4 ;
-                        size_t const idx = i * 6 ;
+                        uint_t const vidx = i * 4 ;
+                        uint_t const idx = i * 6 ;
 
                         array[ idx + 0 ] = vidx + 0 ;
                         array[ idx + 1 ] = vidx + 1 ;
@@ -505,8 +505,8 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }
 
 

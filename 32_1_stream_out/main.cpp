@@ -28,7 +28,7 @@ namespace this_file
 
         natus::application::util::app_essentials_t _ae ;
         
-        natus::graphics::array_object_res_t _gpu_data = natus::graphics::array_object_t() ;
+        natus::graphics::array_object_res_t _gpu_data ;
 
         natus::graphics::state_object_res_t _root_render_states ;
 
@@ -644,8 +644,8 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }
 
 

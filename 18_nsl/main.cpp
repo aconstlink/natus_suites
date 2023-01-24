@@ -77,6 +77,7 @@ namespace this_file
             _rc = std::move( rhv._rc) ;
             _db = std::move( rhv._db ) ;
             _ndb = std::move( rhv._ndb ) ;
+            _imgconfig = std::move( rhv._imgconfig ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -277,6 +278,6 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

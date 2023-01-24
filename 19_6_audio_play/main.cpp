@@ -77,6 +77,7 @@ namespace this_file
             _audio = std::move( rhv._audio ) ;
             _play = std::move( rhv._play ) ;
             _db = std::move( rhv._db ) ;
+            _play_res = std::move( rhv._play_res ) ;
         }
 
         virtual ~test_app( void_t )
@@ -212,10 +213,6 @@ namespace this_file
 
 int main( int argc, char** argv )
 {
-    natus::application::global_t::create_application(
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
-
-    //natus::memory::global_t::dump_to_std() ;
-
-    return 0 ;
+    return natus::application::global_t::create_and_exec_application(
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

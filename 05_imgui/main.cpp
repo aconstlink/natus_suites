@@ -30,7 +30,7 @@ namespace this_file
         float_t _demo_width = 10.0f ;
         float_t _demo_height = 10.0f ;
 
-        natus::graphics::image_object_res_t _checkerboard = natus::graphics::image_object_t() ;
+        natus::graphics::image_object_res_t _checkerboard ;
 
         natus::device::three_device_res_t _dev_mouse ;
         natus::device::ascii_device_res_t _dev_ascii ;
@@ -194,6 +194,6 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

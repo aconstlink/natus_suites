@@ -121,6 +121,7 @@ namespace this_file
         virtual natus::application::result on_tool( natus::application::app::tool_data_ref_t td ) noexcept
         {
             if( !_ae.on_tool( td ) ) return natus::application::result::ok ;
+            return natus::application::result::ok ;
         }
 
         virtual natus::application::result on_shutdown( void_t ) noexcept 
@@ -134,6 +135,6 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

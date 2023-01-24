@@ -118,7 +118,7 @@ Tests a simple pass through geometry shader using native shaders.
 ![Geometry Shader]( images/geometry_shader_1.jpg )
 
 ## 33_1_geometry_shader
-nsl geometry shader test placeholder
+Performs the same test as the one before but uses nsl.
 
 ## 34_0_reconfig
 Tests and shows how to reconfigure rendering objects. In the engine every used rendering objects needs to be configured before it can be used. But it is also possible to re-configure the rendering object so data can change during runtime! This test allows to reconfigure the used image, geometry and shader. This allows to break point and step through this mechanism. The test uses nsl loaded from a file.

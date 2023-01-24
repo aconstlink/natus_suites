@@ -51,6 +51,8 @@ int main( int argc, char ** argv )
     }
 
     natus::concurrent::loose_thread_scheduler lts ;
+    lts.init() ;
+
     lts.schedule( t0 ) ;
 
     while( run_loop )
@@ -59,6 +61,7 @@ int main( int argc, char ** argv )
         std::this_thread::sleep_for( std::chrono::milliseconds(100) ) ;
     }
 
-    
+    lts.deinit() ;
+
     return 0 ;
 }

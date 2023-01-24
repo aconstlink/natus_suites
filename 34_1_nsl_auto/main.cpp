@@ -40,7 +40,7 @@ namespace this_file
     private:
         
         natus::graphics::state_object_res_t _fb_render_states ;
-        natus::graphics::image_object_res_t _imgconfig = natus::graphics::image_object_t() ;
+        natus::graphics::image_object_res_t _imgconfig ;
         
         natus::ntd::vector< natus::graphics::render_object_res_t > _render_objects ;
         natus::ntd::vector< natus::graphics::geometry_object_res_t > _geometries ;
@@ -858,6 +858,6 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

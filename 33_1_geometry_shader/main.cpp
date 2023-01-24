@@ -192,11 +192,8 @@ namespace this_file
                             in triangles ;
                             out triangles[ max_verts = 3 ] ;
 
-                            in vec4_t pos : position ;
-                            in vec4_t color : color ;
-
-                            out vec4_t pos : position ;
-                            out vec4_t color : color ;
+                            inout vec4_t pos : position ;
+                            inout vec4_t color : color ;
 
                             void main()
                             {
@@ -212,8 +209,7 @@ namespace this_file
 
                         pixel_shader
                         {
-                            in vec4_t color : color ;
-                            out vec4_t color : color ;
+                            inout vec4_t color : color ;
 
                             void main()
                             {
@@ -321,8 +317,8 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }
 
 

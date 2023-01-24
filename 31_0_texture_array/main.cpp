@@ -77,6 +77,7 @@ namespace this_file
         test_app( this_rref_t rhv ) : app( ::std::move( rhv ) ) 
         {
             _ae = std::move( rhv._ae ) ;
+            _gpu_data = std::move( rhv._gpu_data ) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -514,8 +515,8 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }
 
 

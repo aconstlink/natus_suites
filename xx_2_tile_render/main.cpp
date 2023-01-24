@@ -598,9 +598,9 @@ namespace this_file
                     auto const cdims = _grid.get_dims().get_pixels_per_cell() ;
 
                     natus::math::vec2f_t p0 = start ;
-                    natus::math::vec2f_t p1 = start + natus::math::vec2f_t(0.0f,cdims.y()) ;
+                    natus::math::vec2f_t p1 = start + natus::math::vec2f_t(0.0f, float_t( cdims.y() ) ) ;
                     natus::math::vec2f_t p2 = start + cdims ;
-                    natus::math::vec2f_t p3 = start + natus::math::vec2f_t(cdims.x(),0.0f) ;
+                    natus::math::vec2f_t p3 = start + natus::math::vec2f_t( float_t( cdims.x() ),0.0f) ;
 
                     _pr->draw_rect( 0, p0, p1,p2,p3,
                         natus::math::vec4f_t( 0.0f, 0.0f, 0.0f, 1.0f ),
@@ -714,7 +714,7 @@ namespace this_file
 
             {
                 float_t data[2] = {_camera_0.get_position().x(), _camera_0.get_position().y() } ;
-                ImGui::SliderFloat2( "Cam Pos", data, -1000.0f, 1000.0f, "%f", 1.0f ) ;
+                ImGui::SliderFloat2( "Cam Pos", data, -1000.0f, 1000.0f, "%f" ) ;
                 _camera_0.translate_to( natus::math::vec3f_t( data[0], data[1], _camera_0.get_position().z() ) ) ;
                 
             }
@@ -737,6 +737,6 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

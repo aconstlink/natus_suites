@@ -55,6 +55,8 @@ namespace this_file
             _camera_1 = std::move( rhv._camera_1 ) ;
             _gconfig = std::move( rhv._gconfig ) ;
             _rc = std::move( rhv._rc) ;
+            _render_states = std::move( rhv._render_states ) ;
+            _imgconfig = std::move( rhv._imgconfig ) ;
         }
         virtual ~test_app( void_t ) noexcept
         {}
@@ -457,7 +459,6 @@ namespace this_file
                 detail.start = 0 ;
                 //detail.num_elems = 3 ;
                 detail.varset = 2 ;
-                detail.render_states = _render_states ;
                 _wid_async.async().render( _rc, detail ) ;
             }
 
@@ -477,7 +478,6 @@ namespace this_file
                 detail.start = 0 ;
                 //detail.num_elems = 3 ;
                 detail.varset = 0 ;
-                detail.render_states = rs ;
                 _wid_async.async().render( _rc, detail ) ;
             }
 
@@ -506,13 +506,16 @@ namespace this_file
             return natus::application::result::ok ;
         }
 
-        virtual natus::application::result on_shutdown( void_t ) noexcept { return natus::application::result::ok ; }
+        virtual natus::application::result on_shutdown( void_t ) noexcept 
+        {
+            return natus::application::result::ok ; 
+        }
     };
     natus_res_typedef( test_app ) ;
 }
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

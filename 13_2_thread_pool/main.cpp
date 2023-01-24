@@ -75,7 +75,7 @@ int main( int argc, char ** argv )
         natus::ntd::vector< natus::concurrent::task_res_t > tasks( n ) ;
         for( size_t i=0; i<n; ++i )
         {
-            tasks[i] = natus::concurrent::make_task( task_funk ) ;
+            tasks[i] = natus::concurrent::global_t::make_task( task_funk ) ;
         }
 
         for( size_t i=0; i<n; ++i )
@@ -98,13 +98,13 @@ int main( int argc, char ** argv )
 
         natus::concurrent::sync_object_res_t so =  natus::concurrent::sync_object_t() ;
 
-        natus::concurrent::task_res_t root = natus::concurrent::make_task( [&]( natus::concurrent::task_res_t this_task )
+        natus::concurrent::task_res_t root = natus::concurrent::global_t::make_task( [&]( natus::concurrent::task_res_t this_task )
         {
             inc_thread_counter() ;
 
             for( size_t i=0; i<num_in_betweens; ++i ) 
             {
-                this_task->in_between( natus::concurrent::make_task( [&]( natus::concurrent::task_res_t )
+                this_task->in_between( natus::concurrent::global_t::make_task( [&]( natus::concurrent::task_res_t )
                 {
                     // make it busy
                     for( size_t i=0; i<1000000; ++i ) 
@@ -115,7 +115,7 @@ int main( int argc, char ** argv )
             }
         });
 
-        natus::concurrent::task_res_t merge = natus::concurrent::make_task( [=]( natus::concurrent::task_res_t )
+        natus::concurrent::task_res_t merge = natus::concurrent::global_t::make_task( [=]( natus::concurrent::task_res_t )
         {
             so->set_and_signal() ;
         } );
@@ -142,7 +142,7 @@ int main( int argc, char ** argv )
         size_t const num_splits = std::thread::hardware_concurrency() ;
         natus::log::global_t::status("[SECTION 4] : there should be " + std::to_string(num_splits*num_splits) + " tasks" ) ;
 
-        natus::concurrent::task_res_t root = natus::concurrent::make_task( [&]( natus::concurrent::task_res_t this_task )
+        natus::concurrent::task_res_t root = natus::concurrent::global_t::make_task( [&]( natus::concurrent::task_res_t this_task )
         {
             inc_thread_counter() ;
             
@@ -153,7 +153,7 @@ int main( int argc, char ** argv )
             // outer for: create num_splits tasks that will yield
             for( size_t i=0; i<num_splits; ++i ) 
             {
-                tp.schedule( natus::concurrent::make_task( [&]( natus::concurrent::task_res_t )
+                tp.schedule( natus::concurrent::global_t::make_task( [&]( natus::concurrent::task_res_t )
                 {
                     inc_thread_counter() ;
 
@@ -162,7 +162,7 @@ int main( int argc, char ** argv )
                     // inner for
                     for( size_t i=0; i<num_splits; ++i ) 
                     {
-                        tp.schedule( natus::concurrent::make_task( [&]( natus::concurrent::task_res_t )
+                        tp.schedule( natus::concurrent::global_t::make_task( [&]( natus::concurrent::task_res_t )
                         {
                             inc_thread_counter() ;
 

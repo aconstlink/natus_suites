@@ -82,6 +82,8 @@ namespace this_file
             wind = std::move( rhv.wind ) ;
             g = std::move( rhv.g ) ;
             current_emitter = std::move( rhv.current_emitter ) ;
+            friction = std::move( rhv.friction ) ;
+            viscosity = std::move( rhv.viscosity ) ;
         }
 
         this_ref_t operator = ( this_rref_t rhv ) noexcept 
@@ -92,6 +94,8 @@ namespace this_file
             wind = std::move( rhv.wind ) ;
             g = std::move( rhv.g ) ;
             current_emitter = std::move( rhv.current_emitter ) ;
+            friction = std::move( rhv.friction ) ;
+            viscosity = std::move( rhv.viscosity ) ;
             return *this ;
         }
 
@@ -470,6 +474,6 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }

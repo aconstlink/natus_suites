@@ -84,6 +84,8 @@ namespace this_file
             _geometries = std::move( rhv._geometries ) ;
             _render_objects = std::move( rhv._render_objects ) ;
             _fb = std::move( rhv._fb ) ;
+            _imgconfig = std::move( rhv._imgconfig) ;
+            _gpu_data = std::move( rhv._gpu_data) ;
         }
         virtual ~test_app( void_t ) 
         {}
@@ -801,8 +803,8 @@ namespace this_file
 
 int main( int argc, char ** argv )
 {
-    return natus::application::global_t::create_application( 
-        this_file::test_app_res_t( this_file::test_app_t() ) )->exec() ;
+    return natus::application::global_t::create_and_exec_application( 
+        this_file::test_app_res_t( this_file::test_app_t() ) ) ;
 }
 
 
