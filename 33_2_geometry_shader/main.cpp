@@ -187,34 +187,34 @@ namespace this_file
                                 for( int i=0; i<in.length(); i++ )
                                 {
                                     {
-                                        out.pos = vec4_t( in[i].pos.xy + vec2_t( -10.5, -10.5 ), 0.0, in[i].pos.w ) ;
+                                        out.pos = vec4_t( in[i].pos.xy + vec2_t( -50.5, -50.5 ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -10.5, 10.5 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -50.5, 50.5 ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( +10.5, +10.5 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( +50.5, +50.5 ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     end_primitive() ;
 
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -10.5, -10.5 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -50.5, -50.5 ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( 10.5, 10.5 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( 50.5, 50.5 ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( 10.5, -10.5 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( 50.5, -50.5 ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
