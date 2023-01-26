@@ -37,11 +37,11 @@ Tests the engines thread pool class using tasks and sync objects. This app also 
 Tests and shows how to use a ```parallel_for``` for computation intensive tasks on the CPU.
 ## 13_4_loose_scheduler
 In contrast to the thread pool scheduler which distributes tasks across the threads in the pool which are limited, the loose scheduler immediately performs the tasks. This is useful if tasks need to wait for a uncertain amount of time which would block a thread pool thread.
-## 14_import
-## 15_import
-## 16_nsl
-## 17_nsl
-## 18_nsl
+## 14_0_import
+## 14_1_import
+## 16_0_nsl
+## 16_1_nsl
+## 16_2_nsl
 ## 19_0_audio_oal_capture
 ## 19_0_audio_wasapi_capture
 ## 19_0_audio_wasapi_capture_2
@@ -119,6 +119,9 @@ Tests a simple pass through geometry shader using native shaders.
 
 ## 33_1_geometry_shader
 Performs the same test as the one before but uses nsl.
+
+## 33_2_geometry_shader
+Placeholder. Using nsl for more and variable geometry output.
 
 ## 34_0_reconfig
 Tests and shows how to reconfigure rendering objects. In the engine every used rendering objects needs to be configured before it can be used. But it is also possible to re-configure the rendering object so data can change during runtime! This test allows to reconfigure the used image, geometry and shader. This allows to break point and step through this mechanism. The test uses nsl loaded from a file.

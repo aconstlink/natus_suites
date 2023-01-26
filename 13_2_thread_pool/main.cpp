@@ -1,6 +1,7 @@
 
 #include "main.h"
 
+#include <natus/concurrent/global.h>
 #include <natus/concurrent/semaphore.hpp>
 #include <natus/concurrent/thread_pool.hpp>
 #include <natus/log/global.h>
