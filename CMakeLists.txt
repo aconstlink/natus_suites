@@ -62,6 +62,7 @@ set( subdirs
     "33_0_geometry_shader"
     "33_1_geometry_shader"
     "33_2_geometry_shader"
+    "33_3_geometry_shader"
 
     "34_0_reconfig"
     "34_1_nsl_auto"
