@@ -125,7 +125,8 @@ Generating quads in the geometry shader form points.
 ![Geometry Shader]( images/geometry_shader_2.jpg )
 
 ## 33_3_geometry_shader
-Placeholder. Variable Output.
+This test performs a first filter streamout shader which uses a geometry shader for limiting the number of points streamed out to the buffer. In a second stage, another shader renders the streamout number of points using the captured streamout primitive count in the backend. The second shader does an additional geometry shader stage where the points are transformed to quads.
+![Geometry Shader]( images/geometry_shader_3.jpg )
 
 ## 34_0_reconfig
 Tests and shows how to reconfigure rendering objects. In the engine every used rendering objects needs to be configured before it can be used. But it is also possible to re-configure the rendering object so data can change during runtime! This test allows to reconfigure the used image, geometry and shader. This allows to break point and step through this mechanism. The test uses nsl loaded from a file.

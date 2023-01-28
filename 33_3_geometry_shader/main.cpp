@@ -292,7 +292,7 @@ namespace this_file
                         geometry_shader
                         {
                             in points ;
-                            out points[ max_verts = 1 ] ;
+                            out triangles[ max_verts = 6 ] ;
 
                             inout vec4_t pos : position ;
                             inout vec4_t color : color ;
@@ -301,11 +301,40 @@ namespace this_file
                             {
                                 for( int i=0; i<in.length(); i++ )
                                 {
-                                    out.pos = in[i].pos ;
-                                    out.color = in[i].color ;
-                                    emit_vertex() ;
+                                    {
+                                        out.pos = vec4_t( in[i].pos.xy + vec2_t( -2.0, -2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.color = in[i].color ;
+                                        emit_vertex() ;
+                                    }
+                                    {
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -2.0, 2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.color = in[i].color ;
+                                        emit_vertex() ;
+                                    }
+                                    {
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( +2.0, +2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.color = in[i].color ;
+                                        emit_vertex() ;
+                                    }
+                                    end_primitive() ;
+
+                                    {
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -2.0, -2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.color = in[i].color ;
+                                        emit_vertex() ;
+                                    }
+                                    {
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( 2.0, 2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.color = in[i].color ;
+                                        emit_vertex() ;
+                                    }
+                                    {
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( 2.0, -2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.color = in[i].color ;
+                                        emit_vertex() ;
+                                    }
+                                    end_primitive() ;
                                 }
-                                end_primitive() ;
                             }
                         }
 
