@@ -224,10 +224,6 @@ namespace this_file
 
                                     // filter out all vertice above the plane
                                     if( dot( plane, out.pos.xyz ) < 0.0 ) { emit_vertex() ; end_primitive() ; }
-
-                                    
-
-                                    
                                 }
                                 //end_primitive() ;
                             }
@@ -398,6 +394,18 @@ namespace this_file
             } ) ;
 
             _ae.on_graphics_begin( rd ) ;
+
+            // draw the cutting plane
+            {
+                auto dir2 = dir.xy().normalized().ortho() ;
+                natus::math::mat2f_t basis ;
+                basis.set_column( 0, dir ) ;
+                basis.set_column( 1, dir2 ) ;
+
+                natus::math::vec2f_t p0 = basis * natus::math::vec2f_t(0.0f, -250.0f ) ;
+                natus::math::vec2f_t p1 = basis * natus::math::vec2f_t(0.0f, +250.0f ) ;
+                _ae.get_prim_render()->draw_line( 0, p0, p1, natus::math::vec4f_t( 0.0f, 1.0f, 0.0f, 1.0f ) ) ;
+            }
 
             _ro->for_each( [&] ( size_t const i, natus::graphics::variable_set_res_t const& vs )
             {
