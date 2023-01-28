@@ -154,7 +154,7 @@ namespace this_file
                             natus::math::vec2f_t const p = start + natus::math::vec2f_t( sx, sy ) * natus::math::vec2f_t( float_t(xi), float_t(yi) ) ;
 
                             array[ idx ].pos = natus::math::vec4f_t( p, 0.0f, 1.0f ) ;
-                            array[ idx ].color = natus::math::vec4f_t( 1.0f, 0.0f, 0.0f, 1.0f ) ;
+                            array[ idx ].color = natus::math::vec4f_t( 1.0f, 1.0f, 1.0f, 1.0f ) ;
                         }
                     }
                     
@@ -214,15 +214,22 @@ namespace this_file
 
                             void main()
                             {
-                                if( pid % 4 == 0 ) { end_primitive() ; return ; }
-
                                 for( int i=0; i<in.length(); i++ )
                                 {
                                     out.pos = in[i].pos ;
                                     out.color = in[i].color ;
-                                    if( dot( plane, out.pos.xyz ) < 0.0 ) { emit_vertex() ; }
+                                    
+                                    // recolor every 2nd vertex
+                                    if( pid % 2 == 0 ) { out.color = vec4_t( 0.0, 1.0, 1.0, 1.0 ) ; }
+
+                                    // filter out all vertice above the plane
+                                    if( dot( plane, out.pos.xyz ) < 0.0 ) { emit_vertex() ; end_primitive() ; }
+
+                                    
+
+                                    
                                 }
-                                end_primitive() ;
+                                //end_primitive() ;
                             }
                         }
                     }
