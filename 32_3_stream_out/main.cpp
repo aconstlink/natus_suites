@@ -305,7 +305,7 @@ namespace this_file
                             {
                                 float_t dt = u_dt ;
                                 float_t mass = in.pos.w ;
-                                vec3_t acl = in.force.xyz / mass ;
+                                vec3_t acl = in.force.xyz / mass + in.accel.xyz ;
                                 vec3_t vel = acl * dt + in.vel.xyz ;
                                 vec3_t pos = vel * dt + in.pos.xyz ;
 
@@ -321,7 +321,7 @@ namespace this_file
                                 
                                 out.pos = vec4_t( pos, in.pos.w ) ;
                                 out.vel = vec4_t( vel, 0.0 ) ;
-                                out.accel = vec4_t( acl, 0.0 ) ;
+                                out.accel = as_vec4(0.0) ; //vec4_t( acl, 0.0 ) ;
                                 out.force = in.force ;
                             }
                         }

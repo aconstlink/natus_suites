@@ -38,6 +38,8 @@ namespace this_file
         natus::graphics::geometry_object_res_t _go_points ;
 
         natus::graphics::variable_set_res_t _vs0 ;
+        natus::graphics::variable_set_res_t _vs_filter ;
+        natus::math::vec3f_t dir = natus::math::vec3f_t( -1.0f, 0.0f, 0.0f ) ;
 
         struct vertex { natus::math::vec4f_t pos ; natus::math::vec4f_t color ; } ;
         
@@ -197,6 +199,32 @@ namespace this_file
                                 out.color = in.color ; 
                             }
                         }
+
+                        geometry_shader
+                        {
+                            in points ;
+                            out points[ max_verts = 1 ] ;
+
+                            inout vec4_t pos : position ;
+                            inout vec4_t color : color ;
+
+                            uint_t pid : primitive_id ;
+
+                            vec3_t plane ;
+
+                            void main()
+                            {
+                                if( pid % 4 == 0 ) { end_primitive() ; return ; }
+
+                                for( int i=0; i<in.length(); i++ )
+                                {
+                                    out.pos = in[i].pos ;
+                                    out.color = in[i].color ;
+                                    if( dot( plane, out.pos.xyz ) < 0.0 ) { emit_vertex() ; }
+                                }
+                                end_primitive() ;
+                            }
+                        }
                     }
                 )" ;
                 _ae.process_shader( nsl_shader ) ;
@@ -217,6 +245,7 @@ namespace this_file
                     
                     {}
                     
+                    _vs_filter = vars ;
                     rc.add_variable_set( std::move( vars ) ) ;
                 }
 
@@ -298,7 +327,7 @@ namespace this_file
                 natus::graphics::render_object_t rc = natus::graphics::render_object_t( "render stuff" ) ;
 
                 {
-                    rc.link_geometry( "points" ) ;
+                    rc.link_geometry( "points", "filtered_points" ) ;
                     rc.link_shader( "render_original" ) ;
                 }
 
@@ -355,7 +384,7 @@ namespace this_file
                 a.use( _soo ) ;
                 {
                     natus::graphics::backend_t::render_detail_t detail ;
-                    detail.feed_from_streamout = true ;
+                    detail.feed_from_streamout = false ;
                     a.render( _ro_filter, detail ) ;
                 }
                 a.unuse( natus::graphics::backend::unuse_type::streamout ) ;
@@ -379,12 +408,17 @@ namespace this_file
                     auto * var = _vs0->data_variable<natus::math::mat4f_t>("u_world") ;
                     var->set( m ) ;
                 }
+                {
+                    auto * var = _vs_filter->data_variable<natus::math::vec3f_t>("plane") ;
+                    var->set( dir ) ;
+                }
             } ) ;
 
             _ae.graphics().for_each( [&]( natus::graphics::async_view_t a )
             {
                 natus::graphics::backend_t::render_detail_t detail ;
                     detail.feed_from_streamout = false ;
+                    detail.use_streamout_count = true ;
                     a.render( _ro, detail ) ;
             } ) ;
 
@@ -401,7 +435,18 @@ namespace this_file
 
             ImGui::Begin( "Test Control" ) ;
 
+            {
+                natus::math::vec2f_t d = dir.xy() ;
+                if( natus::tool::custom_imgui_widgets::direction( "dir", d ) )
+                {
+                    dir = natus::math::vec3f_t( d, 0.0f ) ;
+                }
+            }
+
             ImGui::End() ;
+
+
+
             return natus::application::result::ok ;
         }
 

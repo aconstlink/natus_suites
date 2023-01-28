@@ -40,7 +40,7 @@ config myshaders.just_render
         void main()
         {
             out.color0 = texture( tex, in.tx ) ' color  ;
-            //out.color0 = vec4_t( in.tx, 0.0, 1.0 ) ;
+            out.color0 = vec4_t( in.tx, 0.0, 1.0 ) ;
             out.color0 = out.color0 + 0.3  * pulse( 0.4, 0.6, in.tx.x )  ;
             //out.color0 = vec4_t(1.0, 1.0, 1.0, 1.0) ;
             out.color1 = vec4_t( in.nrm, 1.0 ) ;
