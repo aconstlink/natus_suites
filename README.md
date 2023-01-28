@@ -122,10 +122,14 @@ Performs the same test as the one before but uses nsl.
 
 ## 33_2_geometry_shader
 Generating quads in the geometry shader form points.
+
 ![Geometry Shader]( images/geometry_shader_2.jpg )
 
 ## 33_3_geometry_shader
 This test performs a first filter streamout shader which uses a geometry shader for limiting the number of points streamed out to the buffer. In a second stage, another shader renders the streamout number of points using the captured streamout primitive count in the backend. The second shader does an additional geometry shader stage where the points are transformed to quads.
+
+The know in the UI can be used to change the line via user input.
+
 ![Geometry Shader]( images/geometry_shader_3.jpg )
 
 ## 34_0_reconfig
