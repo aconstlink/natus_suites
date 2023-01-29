@@ -222,10 +222,24 @@ namespace this_file
                                     // recolor every 2nd vertex
                                     if( pid % 2 == 0 ) { out.color = vec4_t( 0.0, 1.0, 1.0, 1.0 ) ; }
 
+                                    float_t pdp = dot( plane, out.pos.xyz ) ;
+
                                     // filter out all vertice above the plane
-                                    if( dot( plane, out.pos.xyz ) < 0.0 ) { emit_vertex() ; end_primitive() ; }
+                                    if( pdp < 0.0 ) 
+                                    { 
+                                        out.pos.w = 2.0 ;
+                                        emit_vertex() ; 
+                                    }
+
+                                    // change vertices on the line
+                                    if( pdp > -1.0 && pdp < 1.0 ) 
+                                    { 
+                                        out.pos.w = 4.0 ;
+                                        out.color = vec4_t( 0.0, 0.0, 1.0, 1.0 ) ;
+                                        emit_vertex() ; 
+                                    }
                                 }
-                                //end_primitive() ;
+                                end_primitive() ;
                             }
                         }
                     }
@@ -277,11 +291,15 @@ namespace this_file
                             
                             data_buffer_t u_filtered ;
 
+                            out float_t scale ;
+
                             void main()
                             {
                                 int_t idx = vid ;
                                 vec4_t pos = fetch_data( u_filtered, (idx << 1) + 0 ) ; 
                                 vec4_t color = fetch_data( u_filtered, (idx << 1) + 1 ) ;
+
+                                out.scale = pos.w ;
 
                                 out.pos = vec4_t( pos.xyz, 1.0 ) ;
                                 out.pos = u_proj * u_view * u_world * out.pos ;
@@ -297,39 +315,41 @@ namespace this_file
                             inout vec4_t pos : position ;
                             inout vec4_t color : color ;
 
+                            in float_t scale ;
+
                             void main()
                             {
                                 for( int i=0; i<in.length(); i++ )
                                 {
                                     {
-                                        out.pos = vec4_t( in[i].pos.xy + vec2_t( -2.0, -2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.pos = vec4_t( in[i].pos.xy + vec2_t( -in[i].scale, -in[i].scale ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -2.0, 2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -in[i].scale, in[i].scale ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( +2.0, +2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( +in[i].scale, +in[i].scale ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     end_primitive() ;
 
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -2.0, -2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( -in[i].scale, -in[i].scale ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( 2.0, 2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( in[i].scale, in[i].scale ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
                                     {
-                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( 2.0, -2.0 ), 0.0, in[i].pos.w ) ;
+                                        out.pos =  vec4_t( in[i].pos.xy + vec2_t( in[i].scale, -in[i].scale ), 0.0, in[i].pos.w ) ;
                                         out.color = in[i].color ;
                                         emit_vertex() ;
                                     }
