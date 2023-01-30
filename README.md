@@ -1,5 +1,8 @@
 # natus_tests
 
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/n0fw0qb50vetvtc1/branch/master?svg=true)](https://ci.appveyor.com/project/aconstlink/natus-tests/branch/master)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Adding manual tests here. Those can be seen as examples though.
 
 A real sample repo will be created later on.
