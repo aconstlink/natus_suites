@@ -181,7 +181,7 @@ namespace this_file
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
-                            
+
                             out VS_GS_VERTEX
                             {
                                 vec4 color ;
@@ -189,7 +189,6 @@ namespace this_file
 
                             void main()
                             {
-                                
                                 (gl_Position) = u_proj * u_view * u_world * in_pos ;
                                 vout.color = in_color ;
 
@@ -197,7 +196,7 @@ namespace this_file
 
                         set_geometry_shader( natus::graphics::shader_t( R"(
                             #version 400 core
-                            
+
                             layout( triangles ) in ;
                             layout( triangle_strip, max_vertices = 3 ) out ;
 
@@ -245,34 +244,70 @@ namespace this_file
                     natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
 
                         set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
+                            #version 320 es
                             in vec4 in_pos ;
                             in vec4 in_color ;
-                            out vec4 var_color ;
 
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
-                            
+
+                            out VS_GS_VERTEX
+                            {
+                                vec4 color ;
+                            } vout ;
+
                             void main()
                             {
-                                var_color = in_color ;
-                                gl_Position = u_proj * u_view * u_world * vec4( in_pos, 1.0 ) ;
+                                (gl_Position) = u_proj * u_view * u_world * in_pos ;
+                                vout.color = in_color ;
 
                             } )" ) ).
 
+                        set_geometry_shader( natus::graphics::shader_t( R"(
+                            #version 320 es
+
+                            layout( triangles ) in ;
+                            layout( triangle_strip, max_vertices = 3 ) out ;
+
+                            in VS_GS_VERTEX
+                            {
+                                vec4 color ;
+                            } vin[] ;
+
+                            out GS_FS_VERTEX
+                            {
+                                vec4 color ;
+                            } vout ;
+
+                            void main()
+                            {
+                                for( int i=0; i<gl_in.length(); ++i )
+                                {
+                                    vout.color = vin[i].color ;
+                                    gl_Position = gl_in[i].gl_Position ;
+                                    EmitVertex() ;
+                                }
+                                EndPrimitive() ;
+                            } )" )).
+
                         set_pixel_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
+                            #version 320 es
+
                             precision mediump int ;
                             precision mediump float ;
                             precision mediump sampler2DArray ;
 
-                            in vec4 var_color ;
-                            out vec4 out_color ;
+                            in GS_FS_VERTEX
+                            {
+                                vec4 color ;
+                            } fsin ;
+
+                            layout( location = 0 ) out vec4 out_color ;
 
                             void main()
                             {
-                                out_color = var_color ;
+                                out_color = fsin.color ;
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::shader_api_type::glsles_3_0, std::move( ss ) ) ;
