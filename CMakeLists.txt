@@ -17,6 +17,8 @@ natus_emacs_default_directory( "${CMAKE_CURRENT_LIST_DIR}/natus" )
 
 add_subdirectory( "suite_test" )
 add_subdirectory( "suite_proto" )
+add_subdirectory( "suite_math" )
+add_subdirectory( "suite_graphics" )
 
 natus_vs_gen_bat_for_dlls()
 

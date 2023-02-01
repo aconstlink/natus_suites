@@ -1,8 +1,5 @@
 # The Prototyping Suite
 
-## xx_1_tile_render
-## xx_2_tile_render
-Rendering each world tile into a framebuffer. This project revealed the shortcoming that the primitive renderers can not split rendering across framebuffers. 
 
 ## 41_0_particle_system
 First implmentation of an particle system. See next test for more detail. 
@@ -34,6 +31,8 @@ Does the same as the previous test but draws cells according to some implicit fu
 Tests and shows how to pick objects in 3d space using natus. The mouse was hovered over the red circle in the window but the mouse cursor was not captured, instread the black arrow marks the hovered circle.
 
 ![Picking]( images/picking.jpg )
+
+
 
 ## xx_tool_player_timeline
 Tests, prototypes and shows how to use the timeline UI widget along with the player widget. Those UI elements could be used for any sort of animation timing.

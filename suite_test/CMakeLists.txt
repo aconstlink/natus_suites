@@ -69,12 +69,9 @@ set( subdirs
     "47_0_keyframe"
     "47_1_keyframe"
     "48_pinhole_camera"
-    "49_picking_2d"
+    
     "50_simple_essentials"
-    "51_0_post_process"
-    "51_1_post_process"
-    "51_2_post_process"
-    "51_3_post_process_fxaa"
+    
     "52_time_measure"
     )
 
