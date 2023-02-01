@@ -272,7 +272,9 @@ namespace this_file
                     natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
 
                         set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
+                            #version 320 es
+                            precision mediump samplerBuffer ;
+
                             in vec4 in_pos ;
                             in vec4 in_color ;
                             out vec4 var_color ;
@@ -280,22 +282,29 @@ namespace this_file
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
-                            
+
+                            uniform samplerBuffer u_data ;
+
                             void main()
                             {
-                                var_color = in_color ;
-                                gl_Position = u_proj * u_view * u_world * vec4( in_pos, 1.0 ) ;
+                                int idx = gl_VertexID / 4 ;
+                                vec4 pos = texelFetch( u_data, (idx *2) + 0 ) ;
+                                vec4 col = texelFetch( u_data, (idx *2) + 1 ) ;
+
+                                pos = vec4( (pos + in_pos).xyz, 1.0 ) ;
+                                var_color = ( gl_VertexID < 2) ? in_color : col ;
+                                gl_Position = u_proj * u_view * u_world * pos ;
 
                             } )" ) ).
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
+                            #version 320 es
                             precision mediump int ;
                             precision mediump float ;
                             precision mediump sampler2DArray ;
 
                             in vec4 var_color ;
-                            out vec4 out_color ;
+                            layout( location = 0 ) out vec4 out_color ;
 
                             void main()
                             {
@@ -411,18 +420,34 @@ namespace this_file
                     natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
 
                         set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
+                            #version 320 es
                             precision mediump int ;
                             in vec4 in_pos ;
                             in vec4 in_color ;
                             out vec4 out_pos ;
                             out vec4 out_col ;
 
-                            uniform float u_ani ;  
+                            uniform float u_ani ;
                             void main()
                             {
-                                out_pos = in_pos ;
+                                float t = u_ani * 3.14526 * 2.0 ;
+                                out_pos = in_pos + vec4( 0.02 *cos(t), 0.02 *sin(t), 0.0, 0.0 ) ;
                                 out_col = vec4( 1.0, 1.0, 0.0, 1.0 ) ;
+                            } )" ) ).
+
+                        set_pixel_shader( natus::graphics::shader_t( R"(
+                            #version 320 es
+                            precision mediump int ;
+                            precision mediump float ;
+                            precision mediump sampler2DArray ;
+
+                            in vec4 out_pos ;
+                            in vec4 out_col ;
+                            layout( location = 0 ) out vec4 out_color2 ;
+
+                            void main()
+                            {
+                                out_color2 = out_col ;
                             } )" ) ) ;
 
                     sc.insert( natus::graphics::shader_api_type::glsles_3_0, std::move( ss ) ) ;

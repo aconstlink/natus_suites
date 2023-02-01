@@ -353,7 +353,9 @@ namespace this_file
                     natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
 
                         set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
+                            #version 320 es
+                            precision mediump samplerBuffer ;
+
                             in vec3 in_pos ;
                             in vec3 in_nrm ;
                             in vec2 in_tx ;
@@ -363,26 +365,24 @@ namespace this_file
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
-                            uniform sampler2D u_data ;
+                            uniform samplerBuffer u_data ;
 
                             void main()
                             {
                                 int idx = gl_VertexID / 24 ;
-                                ivec2 wh = textureSize( u_data, 0 ) ;
-                                vec4 pos_scl = texelFetch( u_data, 
-                                     ivec2( ((idx*2) % wh.x), ((idx*2) / wh.x) ), 0 ) ;
-                                var_col = texelFetch( u_data, 
-                                     ivec2( (((idx*2)+1) % wh.x), (((idx*2)+1) / wh.x) ), 0 ) ;
-                                var_tx0 = in_tx ;
+                                vec4 pos_scl = texelFetch( u_data, (idx *2) + 0 ) ;
+                                vec4 col = texelFetch( u_data, (idx *2) + 1 ) ;
+                                var_col = col ;
                                 vec4 pos = vec4(in_pos * vec3( pos_scl.w ),1.0 )  ;
-                                pos = u_world * pos ;
-                                pos += vec4(pos_scl.xyz*vec3(pos_scl.w*2.0f),0.0) ;
+                                pos = u_world * pos + vec4(pos_scl.xyz*vec3(pos_scl.w*2.0),0.0) ;
                                 gl_Position = u_proj * u_view * pos ;
+
+                                var_tx0 = in_tx ;
                                 var_nrm = normalize( u_world * vec4( in_nrm, 0.0 ) ).xyz ;
                             } )" ) ).
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
+                            #version 320 es
                             precision mediump float ;
                             in vec2 var_tx0 ;
                             in vec3 var_nrm ;
@@ -392,9 +392,9 @@ namespace this_file
                             layout(location = 2 ) out vec4 out_color2 ;
                             uniform sampler2D u_tex ;
                             uniform vec4 u_color ;
-                        
+
                             void main()
-                            {    
+                            {
                                 out_color0 = u_color * texture( u_tex, var_tx0 ) * var_col ;
                                 out_color1 = vec4( var_nrm, 1.0 ) ;
                                 out_color2 = vec4( 

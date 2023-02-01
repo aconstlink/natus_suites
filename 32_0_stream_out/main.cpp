@@ -209,7 +209,7 @@ namespace this_file
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
-                            
+
                             void main()
                             {
                                 var_color = in_color ;
@@ -221,7 +221,7 @@ namespace this_file
                             #version 140
                             #extension GL_ARB_separate_shader_objects : enable
                             #extension GL_ARB_explicit_attrib_location : enable
-    
+
                             in vec4 var_color ;
                             layout( location = 0 ) out vec4 out_color ;
 
@@ -238,7 +238,7 @@ namespace this_file
                     natus::graphics::shader_set_t ss = natus::graphics::shader_set_t().
 
                         set_vertex_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
+                            #version 320 es
                             in vec4 in_pos ;
                             in vec4 in_color ;
                             out vec4 var_color ;
@@ -246,16 +246,16 @@ namespace this_file
                             uniform mat4 u_proj ;
                             uniform mat4 u_view ;
                             uniform mat4 u_world ;
-                            
+
                             void main()
                             {
                                 var_color = in_color ;
-                                gl_Position = u_proj * u_view * u_world * vec4( in_pos, 1.0 ) ;
+                                gl_Position = u_proj * u_view * u_world * vec4( in_pos  ) ;
 
                             } )" ) ).
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
-                            #version 300 es
+                            #version 320 es
                             precision mediump int ;
                             precision mediump float ;
                             precision mediump sampler2DArray ;
@@ -307,7 +307,7 @@ namespace this_file
                             } )" ) ).
 
                         set_pixel_shader( natus::graphics::shader_t( R"(
-                            
+
                             cbuffer ConstantBuffer : register( b0 ) 
                             {}
 
@@ -340,7 +340,7 @@ namespace this_file
                     a.configure( sc ) ;
                 } ) ;
             }
-            
+
             // shader configuration
             {
                 natus::graphics::shader_object_t sc( "stream_out" ) ;
@@ -356,7 +356,7 @@ namespace this_file
                             out vec4 out_pos ;
                             out vec4 out_col ;
 
-                            uniform float u_ani ;                            
+                            uniform float u_ani ;
                             void main()
                             {
                                 float t = u_ani * 3.14526 * 2.0 ;
@@ -382,7 +382,8 @@ namespace this_file
                             uniform float u_ani ;  
                             void main()
                             {
-                                out_pos = in_pos ;
+                                float t = u_ani * 3.14526 * 2.0 ;
+                                out_pos = in_pos + vec4( 0.02 *cos(t), 0.02 *sin(t), 0.0, 0.0 ) ;
                                 out_col = vec4( 1.0, 1.0, 0.0, 1.0 ) ;
                             } )" ) ) ;
 
