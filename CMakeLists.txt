@@ -19,6 +19,7 @@ add_subdirectory( "suite_test" )
 add_subdirectory( "suite_proto" )
 add_subdirectory( "suite_math" )
 add_subdirectory( "suite_graphics" )
+add_subdirectory( "suite_physics" )
 
 natus_vs_gen_bat_for_dlls()
 

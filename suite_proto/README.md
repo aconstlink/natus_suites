@@ -29,7 +29,6 @@ Does the same as the previous test but draws cells according to some implicit fu
 
 ![World Grid Rendering]( images/world2.jpg )
 
-
 ## 49_picking_2d
 Tests and shows how to pick objects in 3d space using natus. The mouse was hovered over the red circle in the window but the mouse cursor was not captured, instread the black arrow marks the hovered circle.
 
