@@ -61,11 +61,7 @@ set( subdirs
     "38_1_sprite_sheet"
     "38_2_sprite_sheet"
     "38_3_sprite_sheet"
-    "41_0_particle_system"
-    "41_1_particle_system"
-    "43_inv_space_2d"
-    "44_0_world_2d"
-    "44_1_world_2d"
+    
     "45_0_line_3d"
     "46_0_spline"
     "46_1_spline"

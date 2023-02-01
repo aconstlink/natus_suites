@@ -8,6 +8,11 @@ set( subdirs
     "xx_tool_player_timeline"
     "xx_some_math_tests"
     "xx_insertion_sort"
+    "41_0_particle_system"
+    "41_1_particle_system"
+    "43_inv_space_2d"
+    "44_0_world_2d"
+    "44_1_world_2d"
     )
 
 foreach( _subdir ${subdirs} )
