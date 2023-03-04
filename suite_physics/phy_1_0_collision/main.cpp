@@ -31,7 +31,7 @@ namespace this_file
     {
         // orientation
         
-        float_t _mass = 1.0f ;
+        float_t _mass = 10.0f ;
         natus::math::vec2f_t _pos ;
         natus::math::vec2f_t _vel ;
         natus::math::vec2f_t _force ;
@@ -50,9 +50,12 @@ namespace this_file
 
         void_t reset_force( void_t ) noexcept { _force = natus::math::vec2f_t() ; }
 
-        void_t integrate( float_t const dt, float_t const ppm ) noexcept
+        float_t get_mass( void_t ) const noexcept { return _mass ; }
+        void_t set_mass( float_t const m ) noexcept { _mass = m ; }
+
+        void_t integrate( float_t const dt ) noexcept
         {
-            auto const a = (_force * ppm) / _mass ;
+            auto const a = (_force ) / _mass ;
             _vel = _vel + a * dt ;
             _pos = _pos + _vel * dt ;
         }
@@ -86,6 +89,7 @@ namespace this_file
         natus::math::vec2f_t _position ;
         natus::math::vec2f_t _direction = natus::math::vec2f_t(-100.0f, 0.0f ) ;
         float_t _mag = 10.0f ;
+        float_t _mass = 10.0f ;
 
     public:
 
@@ -110,6 +114,9 @@ namespace this_file
         }
 
     public:
+
+        float_t get_mass( void_t ) const noexcept { return _mass ; }
+        void_t set_mass( float_t const m ) noexcept { _mass = m ;}
 
         void_t set_direction( natus::math::vec2f_cref_t dir ) noexcept
         {
@@ -313,8 +320,9 @@ namespace this_file
                 {
                     // shoot object
                     this_file::object_t obj ;
-                    obj.get_physic().set_force( _obj_cannon.gen_force() ) ;
-                    obj.get_physic().set_position( _obj_cannon.get_position() ) ;
+                    obj.get_physic().set_force( _obj_cannon.gen_force() * _obj_cannon.get_mass() ) ;
+                    obj.get_physic().set_position( _obj_cannon.get_position() / _ppm ) ;
+                    obj.get_physic().set_mass( _obj_cannon.get_mass() ) ;
                     _objects.emplace_back( obj ) ;
 
                     _obj_cannon.set_magnitude( 10.0f ) ;
@@ -337,7 +345,7 @@ namespace this_file
                 for( auto & o : _objects )
                 {
                     auto & phy = o.get_physic() ;
-                    phy.add_force( natus::math::vec2f_t( 0.0f, -9.81f ) ) ;
+                    phy.add_force( natus::math::vec2f_t( 0.0f, -9.81f * phy.get_mass() ) ) ;
                 }
             }
 
@@ -352,7 +360,7 @@ namespace this_file
                 for( auto & o : _objects )
                 {
                     auto & phy = o.get_physic() ;
-                    phy.integrate( dt, _ppm ) ;
+                    phy.integrate( dt ) ;
                 }
             }
 
@@ -404,7 +412,7 @@ namespace this_file
                 {
                     auto const p0 = _obj_cannon.get_position() ;
                     auto const p1 = p0 + _obj_cannon.gen_force() * 0.1f;
-                    pr->draw_circle( 10, 10, p0, 10.0f, natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
+                    pr->draw_circle( 10, 10, p0, _obj_cannon.get_mass(), natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
                     pr->draw_line( 10, p0, p1, natus::math::vec4f_t(1.0f, 0.0f, 0.0, 1.0f) ) ;
                 }
 
@@ -419,8 +427,8 @@ namespace this_file
             {
                 for( auto & o : _objects )
                 {
-                    auto const p0 = o.get_physic().get_position() ;
-                    pr->draw_circle( 11, 10, p0, 10.0f, natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
+                    auto const p0 = o.get_physic().get_position() * _ppm ;
+                    pr->draw_circle( 11, 10, p0, o.get_physic().get_mass(), natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
                 }
             }
 
@@ -433,7 +441,12 @@ namespace this_file
         {
             if( !_ae.on_tool( td ) ) return natus::application::result::ok ;
 
-            ImGui::Begin( "Control Particle System" ) ;
+            ImGui::Begin( "Control" ) ;
+            {
+                float_t m = _obj_cannon.get_mass() ;
+                ImGui::SliderFloat( "Mass", &m, 1.0f, 100.0f ) ;
+                _obj_cannon.set_mass( m ) ;
+            }
             ImGui::End() ;
 
             return natus::application::result::ok ;
