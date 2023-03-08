@@ -33,8 +33,14 @@ namespace this_file
         
         float_t _mass = 10.0f ;
         natus::math::vec2f_t _pos ;
-        natus::math::vec2f_t _vel ;
-        natus::math::vec2f_t _force ;
+        natus::math::vec2f_t _vel ; // linear velocity
+        natus::math::vec2f_t _force ; // linear force
+
+
+        float_t _inertia = 0.0f ; // angular mass
+        float_t _tau = 0.0f ; // angular force
+        float_t _omega = 0.0f ; // angular velocity
+        float_t _alpha = 0.0f ; // angular displacement
 
     public:
 
@@ -48,16 +54,64 @@ namespace this_file
         natus::math::vec2f_cref_t get_position( void_t ) const noexcept{ return _pos ; }
         void_t set_position( natus::math::vec2f_cref_t v ) noexcept{ _pos = v ; }
 
-        void_t reset_force( void_t ) noexcept { _force = natus::math::vec2f_t() ; }
+        void_t reset_force( void_t ) noexcept { 
+            _force = natus::math::vec2f_t() ;
+            _inertia = 0.0f ;
+            _tau = 0.0f ;
+        }
 
         float_t get_mass( void_t ) const noexcept { return _mass ; }
         void_t set_mass( float_t const m ) noexcept { _mass = m ; }
 
+        void_t set_angular_velocity( natus::math::vec2f_cref_t v, natus::math::vec2f_cref_t prel ) noexcept        
+        {
+            float_t const d2 = prel.length2() ;
+            float_t const omega = prel.cross_as_scalar( v ) ;
+            _omega = omega ;
+        }
+
+        natus::math::vec2f_t get_angular( void_t ) const noexcept
+        {
+            return natus::math::vec2f_t( _omega, _alpha ) ;
+        }
+
+        // apply force at point relative (prel) to cur position.
+        void_t apply_angular_force_at( natus::math::vec2f_cref_t f, natus::math::vec2f_cref_t prel ) noexcept
+        {
+            float_t const d2 = prel.length2() ;
+            float_t const I = std::max( d2 * _mass, 0.01f ) ;
+            float_t const tau = prel.cross_as_scalar( f ) ;
+            
+            _inertia += I ;
+            _tau += tau ;
+        }
+
+        // generate a velocity vector
+        natus::math::vec2f_t angular_velocity( natus::math::vec2f_cref_t n ) const noexcept
+        {
+            return n.ortho() * natus::math::vec2f_t( _omega ) ;
+        }
+
+        float_t compute_inertia( float_t const distance ) const noexcept
+        {
+            return distance * distance * _mass ;
+        }
+
         void_t integrate( float_t const dt ) noexcept
         {
-            auto const a = (_force ) / _mass ;
-            _vel = _vel + a * dt ;
-            _pos = _pos + _vel * dt ;
+            // linear moment
+            {
+                auto const a = _force / _mass ;
+                _vel = _vel + a * dt ;
+                _pos = _pos + _vel * dt ;
+            }
+
+            // angular moment
+            {
+                float_t const a = std::abs( _inertia ) > 0.0001f ? _tau / _inertia : 0.0f ;
+                _omega = a * dt + _omega ;
+                _alpha = _omega * dt + _alpha ;
+            }
         }
     };
     natus_typedef( physic_property ) ;
@@ -69,10 +123,13 @@ namespace this_file
     natus_typedef( shape_property ) ;
 
     //****************************************************************************************
-    class object
+    class physics_object
     {
         physic_property_t _phy_prop ;
-        shape_property_t _shp_prop ;
+        
+        // levels of shape
+        // coars to fine
+        shape_property_ptr_t _shp_props[4] ; 
 
     public:
 
@@ -80,7 +137,7 @@ namespace this_file
         physic_property_ref_t get_physic( void_t ) noexcept { return _phy_prop ; }
 
     };
-    natus_typedef( object ) ;
+    natus_typedef( physics_object ) ;
 
     //****************************************************************************************
     // shoots objects
@@ -133,9 +190,9 @@ namespace this_file
 
     public:
 
-        this_file::object_t gen_object( void_t ) const noexcept
+        this_file::physics_object_t gen_object( void_t ) const noexcept
         {
-            auto const o = this_file::object_t() ;
+            auto const o = this_file::physics_object_t() ;
 
             return o ;
         }
@@ -161,6 +218,94 @@ namespace this_file
     natus_typedef( ground_object ) ;
 
     //****************************************************************************************
+    class physics_system
+    {
+        natus_this_typedefs( physics_system ) ;
+
+    public:
+
+        struct normal
+        {/*
+            normal( void_t ) noexcept {}
+            normal( normal const & n ) noexcept : pos( n.pos ), nrm(n.nrm ){}
+            ~normal( void_t ) noexcept {}
+            */
+            natus::math::vec2f_t pos ;
+            natus::math::vec2f_t nrm ;
+        };
+
+        struct contact_point 
+        {
+            // requires objects
+            float_t time = -1.0f ;
+            natus::math::vec2f_t p ;
+            natus::math::vec2f_t p2 ;
+        } ;
+
+    public:
+
+        natus_typedefs( natus::ntd::vector< normal >, normals ) ;
+        natus_typedefs( natus::ntd::vector< contact_point >, contacts ) ;
+
+    private:
+        
+        normals_t _normals ;
+        contacts_t _contacts ;
+
+
+    public:
+
+        void_t add_normal( natus::math::vec2f_cref_t p, natus::math::vec2f_cref_t n ) noexcept
+        {
+            
+            _normals.emplace_back( normal( { p, n } ) ) ;
+        }
+
+        normals_cref_t normals( void_t ) const noexcept
+        {
+            return _normals ;
+        }
+
+        contacts_cref_t contacts( void_t ) const noexcept
+        {
+            return _contacts ;
+        }
+
+        void_t add_contact_point( float_t const secs, natus::math::vec2f_cref_t p, natus::math::vec2f_cref_t p2 ) noexcept
+        {
+            this_t::contact_point cp ;
+            cp.p = p ;
+            cp.p2 = p2 ;
+            cp.time = secs ;
+            
+            _contacts.emplace_back( cp ) ;
+        }
+
+        void_t clear_normals( void_t ) noexcept { _normals.clear() ; }
+
+        void_t update( float_t const dt ) noexcept
+        {
+            size_t n = _contacts.size() ;
+            for( size_t i=0; i<n; ++i )
+            {
+                _contacts[i].time -= dt ;
+
+                if( _contacts[i].time > 0.0f ) continue ;
+                
+                _contacts[i].p = _contacts[n-1].p ;
+                _contacts[i].p2 = _contacts[n-1].p2 ;
+                _contacts[i].time = _contacts[n-1].time ;
+
+                --n ;
+                --i ;
+            }
+
+            _contacts.resize( n ) ;
+        }
+    };
+    natus_typedef( physics_system ) ;
+
+    //****************************************************************************************
     //
     //
     class test_app : public natus::application::app
@@ -175,11 +320,13 @@ namespace this_file
 
         object_cannon_t _obj_cannon ;
         natus::ntd::vector< ground_object_t > _ground ;
-        natus::ntd::vector< object_t > _objects ;
+        natus::ntd::vector< physics_object_t > _objects ;
         natus::collide::n2d::aabbf_t _bound ;
         
         // pixel per meter
         float_t _ppm = 50.0f ;
+
+        physics_system_t _phy_sys ;
 
     public:
 
@@ -234,6 +381,7 @@ namespace this_file
 
             // init ground obstacles
             {
+                #if 1
                 {
                     this_file::ground_object_t go ;
                     auto const b = this_file::ground_object_t::box_t( natus::math::vec2f_t(-400.0f, -500.0f), natus::math::vec2f_t(500.0f, -300.0f) );
@@ -252,13 +400,13 @@ namespace this_file
                     go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(-120.0f, -120.0f), natus::math::vec2f_t( -90.0f, -90.0f) ) ) ;
                     _ground.emplace_back( go ) ;
                 }
-
+                #endif
                 {
                     this_file::ground_object_t go ;
                     go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(-400.0f, 200.0f), natus::math::vec2f_t( -50.0f, 230.0f) ) ) ;
                     _ground.emplace_back( go ) ;
                 }
-
+                #if 1
                 {
                     this_file::ground_object_t go ;
                     go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(100.0f, -400.0f), natus::math::vec2f_t( 250.0f, -100.0f) ) ) ;
@@ -276,6 +424,7 @@ namespace this_file
                     go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(0.0f, -300.0f), natus::math::vec2f_t( 50.0f, -200.0f) ) ) ;
                     _ground.emplace_back( go ) ;
                 }
+                #endif
             }
 
             {
@@ -319,7 +468,7 @@ namespace this_file
                     natus::device::components::key_state::released )
                 {
                     // shoot object
-                    this_file::object_t obj ;
+                    this_file::physics_object_t obj ;
                     obj.get_physic().set_force( _obj_cannon.gen_force() * _obj_cannon.get_mass() ) ;
                     obj.get_physic().set_position( _obj_cannon.get_position() / _ppm ) ;
                     obj.get_physic().set_mass( _obj_cannon.get_mass() ) ;
@@ -339,6 +488,9 @@ namespace this_file
 
         virtual natus::application::result on_physics( natus::application::app_t::physics_data_in_t ud ) noexcept
         {
+            _phy_sys.update( ud.sec_dt ) ;
+            _phy_sys.clear_normals() ;
+
             // apply base force
             // e.g. gravity, wind, air friction
             {
@@ -349,9 +501,102 @@ namespace this_file
                 }
             }
 
+            // collision detect
+            {
+                for( auto & b : _ground )
+                {
+                    for( auto & o : _objects )
+                    {
+                        auto & phy = o.get_physic() ;
+                        auto const p = phy.get_position() * _ppm ;
+
+                        auto const n = b.get_box().calculate_normal_for( p ) ;
+                        _phy_sys.add_normal( b.get_box().get_center(), n.xy() ) ;
+                    }
+                }
+            }
+
             // apply collision force
             // e.g friction, drag, impluse, rotation
             {
+                for( auto & b : _ground )
+                {
+                    for( auto & o : _objects )
+                    {
+                        auto & phy = o.get_physic() ;
+                        auto p = phy.get_position() * _ppm ;
+
+                        float_t const radius = phy.get_mass() ;
+                        natus::collide::n2d::circle<float_t> c( p, radius ) ;
+                        natus::collide::n2d::aabb<float_t> a( b.get_box() ) ;
+
+                        auto const res = natus::collide::n2d::hit_test_box_circle( a, c ) ;
+                        if( res == natus::collide::hit_test_type::intersect || 
+                            res == natus::collide::hit_test_type::inside )
+                        {
+                            auto const n = b.get_box().calculate_normal_for( p ) ;
+                            auto const d = n.dot( natus::math::vec3f_t(p-b.get_box().get_center(), 1.0f) ) ;
+
+                            auto const old_pos = phy.get_position() ;
+                            auto const old_vel = phy.get_velocity() ;
+
+                            auto new_pos = old_pos ;
+                            auto new_vel = old_vel ;
+
+                            // repair collision
+                            {
+                                auto const pen_depth = std::abs(d - radius);
+                                auto const repair = (pen_depth / _ppm) * (n * 1.2f);
+
+                                new_pos = old_pos + repair ;
+                                new_vel = natus::math::vec2fe_t::reflect( n, old_vel ) ;
+                            }
+
+                            auto const n_vel_paral = n.xy().dot( new_vel ) * n.xy() ;
+                            auto const n_vel_ortho = new_vel - n.xy().dot( new_vel ) * n.xy() ;
+
+                            // all contact forces
+                            natus::math::vec2f_t forces ;
+
+
+                            // linear friction
+                            {
+                                forces += -0.4f * ((new_vel) * phy.get_mass()  / ud.sec_dt) ;
+                            }
+
+                            natus::math::vec2f_t cp ;
+
+                            // determin contact point
+                            {
+                                auto const pen_depth = d ;
+                                auto const repair = (pen_depth / _ppm) * (n * 1.0f);
+                                cp = phy.get_position() - repair ;
+                            }
+
+                            // angular friction
+                            {
+                                auto const v = phy.angular_velocity( n ) * 0.8f  ;
+                                auto const force = -v * phy.get_mass() / ud.sec_dt ;
+                                //forces += force ;
+                            }
+                            
+
+                            // apply forces 
+                            {
+                                auto const rel = cp - phy.get_position() ;
+                                phy.apply_angular_force_at( forces, rel ) ;
+                                phy.add_force( forces ) ;
+                            }
+
+                            if( phy.get_velocity().length() > 1.0f )
+                                _phy_sys.add_contact_point(0.5f, cp, cp + phy.angular_velocity( n ) );
+
+                            phy.set_position( new_pos ) ;
+                            phy.set_velocity( new_vel ) ;
+                            phy.set_angular_velocity( new_vel, cp - phy.get_position() ) ;
+                        }
+                    }
+                }
             }
 
             // integrate
@@ -370,7 +615,7 @@ namespace this_file
                 {
                     auto & o = _objects[i] ;
 
-                    if( !_bound.is_inside( o.get_physic().get_position() )  )
+                    if( !_bound.is_inside( o.get_physic().get_position() * _ppm )  )
                     {
                         _objects[i] = _objects[_objects.size()-1] ;
                         _objects.resize( _objects.size()-1) ;
@@ -390,6 +635,7 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        //***************************************************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rd ) noexcept 
         {
             _ae.on_graphics_begin( rd ) ;
@@ -427,9 +673,74 @@ namespace this_file
             {
                 for( auto & o : _objects )
                 {
-                    auto const p0 = o.get_physic().get_position() * _ppm ;
-                    pr->draw_circle( 11, 10, p0, o.get_physic().get_mass(), natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
+                    auto const & pp = o.get_physic() ;
+
+                    // draw shape
+                    {
+                        auto const p0 = pp.get_position() * _ppm ;
+                        pr->draw_circle( 11, 10, p0, o.get_physic().get_mass(), natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
+                    }
+
+                    // draw properties : Linear Velocity
+                    {
+                        auto const p0 = pp.get_position() * _ppm ;
+                        auto const p1 = p0 + pp.get_velocity() * 2.0f ;
+                        pr->draw_line( 12, p0, p1, natus::math::vec4f_t(0.0f, 1.0f, 0.0, 1.0f) ) ;
+                    }
+
+                    // draw properties : angular Velocity
+                    {
+                        auto const rot = natus::math::mat2f_t::rotation( pp.get_angular().y() ) ;
+                        auto const r = rot * natus::math::vec2f_t(0.0f, 15.0f ) ;
+
+                        auto const p0 = pp.get_position() * _ppm ;
+                        auto const p1 = p0 + r ;
+
+                        pr->draw_line( 12, p0, p1, natus::math::vec4f_t(1.0f, 0.0f, 0.0, 1.0f) ) ;
+
+                    }
                 }
+            }
+
+            // draw some physics
+            {
+
+                for( auto const & cp : _phy_sys.contacts() )
+                {
+                    // draw shape
+                    {
+                        auto const p0 = cp.p * _ppm ;
+                        pr->draw_circle( 11, 10, p0, 2.0f, natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
+                    }
+                    {
+                        auto const p0 = cp.p * _ppm ;
+                        auto const p1 = p0 + (cp.p2 - cp.p) ;
+
+                        pr->draw_line( 12, p0, p1, natus::math::vec4f_t(0.0f, 1.0f, 0.0, 1.0f) ) ;
+                    }
+                }
+
+                
+
+                for( auto const & n : _phy_sys.normals() )
+                {
+                    {
+                        auto const p0 = n.pos ;
+                        auto const p1 = p0 + n.nrm * 10.0f ;
+                        pr->draw_line( 11, p0, p1, natus::math::vec4f_t(0.0f, 1.0f, 0.0, 1.0f) ) ;
+                    }
+                }
+                #if 0
+                for( auto const & g : _ground )
+                {
+                    for( auto & o : _objects )
+                    {
+                        auto const p0 = g.get_box().get_center() ;
+                        auto const p1 = o.get_physic().get_position() * _ppm ;
+                        pr->draw_line( 11, p0, p1, natus::math::vec4f_t(0.0f, 1.0f, 0.0, 1.0f) ) ;
+                    }
+                }
+                #endif
             }
 
             _ae.on_graphics_end( 100 ) ;
