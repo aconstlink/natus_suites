@@ -29,8 +29,6 @@ namespace this_file
     //****************************************************************************************
     class physic_property
     {
-        // orientation
-        
         float_t _mass = 10.0f ;
         natus::math::vec2f_t _pos ;
         natus::math::vec2f_t _vel ; // linear velocity
@@ -119,6 +117,14 @@ namespace this_file
     //****************************************************************************************
     class shape_property
     {
+
+        // unit: meters
+        float_t _radius = .1f ;
+
+    public:
+
+        float_t get_radius( void_t ) const noexcept { return _radius ; }
+        void_t set_radius( float_t const r ) noexcept { _radius = r ; }
     };
     natus_typedef( shape_property ) ;
 
@@ -129,13 +135,15 @@ namespace this_file
         
         // levels of shape
         // coars to fine
-        shape_property_ptr_t _shp_props[4] ; 
+        shape_property_t _shp_props[4] ; 
 
     public:
 
         physic_property_cref_t get_physic( void_t ) const noexcept { return _phy_prop ; }
         physic_property_ref_t get_physic( void_t ) noexcept { return _phy_prop ; }
 
+        shape_property_cref_t get_shape( size_t const i = 0 ) const noexcept { return _shp_props[i] ; }
+        shape_property_ref_t get_shape( size_t const i = 0 ) noexcept { return _shp_props[i] ; }
     };
     natus_typedef( physics_object ) ;
 
@@ -208,11 +216,15 @@ namespace this_file
     private:
 
         box_t _bound ;
+        float_t _material_coeff = 0.8f ;
 
     public:
 
         box_t get_box( void_t ) const noexcept { return _bound ; }
         void_t set_box( box_cref_t b ) noexcept { _bound = b ; }
+
+        void_t set_friction_coeff( float_t const f ) noexcept { _material_coeff = f ; }
+        float_t get_friction_coeff( void_t ) const noexcept { return _material_coeff ; }
 
     };
     natus_typedef( ground_object ) ;
@@ -381,54 +393,59 @@ namespace this_file
 
             // init ground obstacles
             {
+                float_t const ms = 1.5f ;
                 #if 1
                 {
                     this_file::ground_object_t go ;
-                    auto const b = this_file::ground_object_t::box_t( natus::math::vec2f_t(-400.0f, -500.0f), natus::math::vec2f_t(500.0f, -300.0f) );
+                    auto const b = this_file::ground_object_t::box_t( natus::math::vec2f_t(-4.0f, -5.0f) * ms, natus::math::vec2f_t(5.0f, -3.0f) * ms )  ;
                     go.set_box( b ) ;
+                    go.set_friction_coeff( 0.2f ) ;
                     _ground.emplace_back( go ) ;
                 }
 
                 {
                     this_file::ground_object_t go ;
-                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(-400.0f, -400.0f), natus::math::vec2f_t(-350.0f, 400.0f) ) ) ;
+                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(-4.0f, -4.0f)* ms, natus::math::vec2f_t(-3.5f, 4.0f)* ms ) ) ;
+                    go.set_friction_coeff( 0.4f ) ;
                     _ground.emplace_back( go ) ;
                 }
 
                 {
                     this_file::ground_object_t go ;
-                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(-120.0f, -120.0f), natus::math::vec2f_t( -90.0f, -90.0f) ) ) ;
+                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(-1.2f, -1.2f)* ms, natus::math::vec2f_t( -.9f, -.9f)* ms ) ) ;
+                    go.set_friction_coeff( 0.4f ) ;
                     _ground.emplace_back( go ) ;
                 }
                 #endif
                 {
                     this_file::ground_object_t go ;
-                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(-400.0f, 200.0f), natus::math::vec2f_t( -50.0f, 230.0f) ) ) ;
+                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(-4.0f, 2.0f)* ms, natus::math::vec2f_t( -.5f, 2.3f)* ms ) ) ;
+                    go.set_friction_coeff( 0.6f ) ;
                     _ground.emplace_back( go ) ;
                 }
                 #if 1
                 {
                     this_file::ground_object_t go ;
-                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(100.0f, -400.0f), natus::math::vec2f_t( 250.0f, -100.0f) ) ) ;
+                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(1.0f, -4.0f)* ms, natus::math::vec2f_t( 2.5f, -1.0f)* ms ) ) ;
                     _ground.emplace_back( go ) ;
                 }
 
                 {
                     this_file::ground_object_t go ;
-                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(400.0f, -400.0f), natus::math::vec2f_t( 450.0f, 400.0f) ) ) ;
+                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(4.0f, -4.0f)* ms, natus::math::vec2f_t( 4.5f, 4.0f)* ms ) ) ;
                     _ground.emplace_back( go ) ;
                 }
 
                 {
                     this_file::ground_object_t go ;
-                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(0.0f, -300.0f), natus::math::vec2f_t( 50.0f, -200.0f) ) ) ;
+                    go.set_box( this_file::ground_object_t::box_t( natus::math::vec2f_t(0.0f, -3.0f)* ms, natus::math::vec2f_t( .50f, -2.0f)* ms ) ) ;
                     _ground.emplace_back( go ) ;
                 }
                 #endif
             }
 
             {
-                _bound = natus::collide::n2d::aabbf_t( natus::math::vec2f_t(-1000.0f), natus::math::vec2f_t(1000.0f) ) ;
+                _bound = natus::collide::n2d::aabbf_t( natus::math::vec2f_t(-100.0f), natus::math::vec2f_t(100.0f) ) ;
             }
 
             return natus::application::result::ok ; 
@@ -508,7 +525,7 @@ namespace this_file
                     for( auto & o : _objects )
                     {
                         auto & phy = o.get_physic() ;
-                        auto const p = phy.get_position() * _ppm ;
+                        auto const p = phy.get_position() ;
 
                         auto const n = b.get_box().calculate_normal_for( p ) ;
                         _phy_sys.add_normal( b.get_box().get_center(), n.xy() ) ;
@@ -523,30 +540,41 @@ namespace this_file
                 {
                     for( auto & o : _objects )
                     {
+                        auto & shp = o.get_shape() ;
                         auto & phy = o.get_physic() ;
-                        auto p = phy.get_position() * _ppm ;
 
-                        float_t const radius = phy.get_mass() ;
+                        auto p = phy.get_position() ;
+
+                        float_t const radius = shp.get_radius() ;
                         natus::collide::n2d::circle<float_t> c( p, radius ) ;
                         natus::collide::n2d::aabb<float_t> a( b.get_box() ) ;
 
-                        auto const res = natus::collide::n2d::hit_test_box_circle( a, c ) ;
+                        auto const res = natus::collide::n2d::hit_test_aabb_circle<float_t>::test_full( a, c ) ;
                         if( res == natus::collide::hit_test_type::intersect || 
                             res == natus::collide::hit_test_type::inside )
                         {
-                            auto const n = b.get_box().calculate_normal_for( p ) ;
-                            auto const d = n.dot( natus::math::vec3f_t(p-b.get_box().get_center(), 1.0f) ) ;
-
                             auto const old_pos = phy.get_position() ;
                             auto const old_vel = phy.get_velocity() ;
+
+                            auto const n = b.get_box().calculate_normal_for( old_pos ) ;
+                            auto const d = n.dot( natus::math::vec3f_t( old_pos - b.get_box().get_center(), 1.0f) ) ;
+
+                            auto const pen_depth = radius - d ;
+
+                            // should not happen
+                            if (pen_depth < 0.0f)
+                            {
+                                int pb = 0 ;
+                                continue ;
+                            }
+                            
 
                             auto new_pos = old_pos ;
                             auto new_vel = old_vel ;
 
                             // repair collision
                             {
-                                auto const pen_depth = std::abs(d - radius);
-                                auto const repair = (pen_depth / _ppm) * (n * 1.2f);
+                                auto const repair = pen_depth * (n.xy() * 1.2f);
 
                                 new_pos = old_pos + repair ;
                                 new_vel = natus::math::vec2fe_t::reflect( n, old_vel ) ;
@@ -561,7 +589,7 @@ namespace this_file
 
                             // linear friction
                             {
-                                forces += -0.4f * ((new_vel) * phy.get_mass()  / ud.sec_dt) ;
+                                forces += -(1.0f-b.get_friction_coeff()) * ((new_vel) * phy.get_mass()  / ud.sec_dt) ;
                             }
 
                             natus::math::vec2f_t cp ;
@@ -569,15 +597,14 @@ namespace this_file
                             // determin contact point
                             {
                                 auto const pen_depth = d ;
-                                auto const repair = (pen_depth / _ppm) * (n * 1.0f);
+                                auto const repair = pen_depth * (n * 1.0f);
                                 cp = phy.get_position() - repair ;
                             }
 
                             // angular friction
                             {
-                                auto const v = phy.angular_velocity( n ) * 0.8f  ;
-                                auto const force = -v * phy.get_mass() / ud.sec_dt ;
-                                //forces += force ;
+                                auto const v = -phy.angular_velocity( n ) * 0.2f  ;
+                                //new_vel += v ;
                             }
                             
 
@@ -589,9 +616,10 @@ namespace this_file
                             }
 
                             if( phy.get_velocity().length() > 1.0f )
-                                _phy_sys.add_contact_point(0.5f, cp, cp + phy.angular_velocity( n ) );
+                                _phy_sys.add_contact_point(0.5f, cp, cp + n * 10.5f );
 
                             phy.set_position( new_pos ) ;
+                            //phy.set_velocity( natus::math::vec2f_t() ) ;
                             phy.set_velocity( new_vel ) ;
                             phy.set_angular_velocity( new_vel, cp - phy.get_position() ) ;
                         }
@@ -615,7 +643,7 @@ namespace this_file
                 {
                     auto & o = _objects[i] ;
 
-                    if( !_bound.is_inside( o.get_physic().get_position() * _ppm )  )
+                    if( !_bound.is_inside( o.get_physic().get_position() )  )
                     {
                         _objects[i] = _objects[_objects.size()-1] ;
                         _objects.resize( _objects.size()-1) ;
@@ -646,10 +674,12 @@ namespace this_file
             {
                 for( auto const & g : _ground )
                 {
+                    float_t const c = g.get_friction_coeff() ;
+
                     natus::math::vec2f_t points[4] ;
                     g.get_box().get_points( points ) ;
-                    pr->draw_rect( 5, points[0], points[1], points[2], points[3], 
-                        natus::math::vec4f_t( .1f, .1f, .1f, 1.0f ), natus::math::vec4f_t(.1f, .1f, .1f, 1.0f) ) ;
+                    pr->draw_rect( 5, points[0]*_ppm, points[1]*_ppm, points[2]*_ppm, points[3]*_ppm, 
+                        natus::math::vec4f_t( c, c, c, 1.0f ), natus::math::vec4f_t(1.0f) ) ;
                 }
             }
 
@@ -658,7 +688,7 @@ namespace this_file
                 {
                     auto const p0 = _obj_cannon.get_position() ;
                     auto const p1 = p0 + _obj_cannon.gen_force() * 0.1f;
-                    pr->draw_circle( 10, 10, p0, _obj_cannon.get_mass(), natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
+                    pr->draw_circle( 10, 10, p0, 2.0f, natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
                     pr->draw_line( 10, p0, p1, natus::math::vec4f_t(1.0f, 0.0f, 0.0, 1.0f) ) ;
                 }
 
@@ -674,11 +704,12 @@ namespace this_file
                 for( auto & o : _objects )
                 {
                     auto const & pp = o.get_physic() ;
+                    auto const & sp = o.get_shape() ;
 
                     // draw shape
                     {
                         auto const p0 = pp.get_position() * _ppm ;
-                        pr->draw_circle( 11, 10, p0, o.get_physic().get_mass(), natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
+                        pr->draw_circle( 11, 10, p0, sp.get_radius()*_ppm, natus::math::vec4f_t(1.0f),natus::math::vec4f_t(1.0f) ) ;
                     }
 
                     // draw properties : Linear Velocity
@@ -725,7 +756,7 @@ namespace this_file
                 for( auto const & n : _phy_sys.normals() )
                 {
                     {
-                        auto const p0 = n.pos ;
+                        auto const p0 = n.pos * _ppm ;
                         auto const p1 = p0 + n.nrm * 10.0f ;
                         pr->draw_line( 11, p0, p1, natus::math::vec4f_t(0.0f, 1.0f, 0.0, 1.0f) ) ;
                     }
