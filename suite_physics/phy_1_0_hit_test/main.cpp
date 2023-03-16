@@ -16,7 +16,7 @@
 
 #include <natus/collide/2d/bounds/aabb.hpp>
 #include <natus/collide/2d/bounds/circle.hpp>
-#include <natus/collide/2d/hit_test/hit_test_aabb_circle.hpp>
+#include <natus/collide/2d/hit_tests.hpp>
 
 #include <random>
 #include <thread>
@@ -29,6 +29,7 @@ namespace this_file
     enum class shape_type
     {
         unknown,
+        ray,
         circle,
         aabb
         // obb
@@ -47,6 +48,7 @@ namespace this_file
 
         virtual shape_type get_type( void_t ) const noexcept = 0 ;
         virtual void_t translate_to( natus::math::vec2f_cref_t p ) noexcept = 0 ;
+        virtual natus::math::vec2f_t get_position( void_t ) const noexcept = 0 ;
     };
     natus_res_typedef( shape_property ) ;
 
@@ -70,6 +72,7 @@ namespace this_file
 
         virtual shape_type get_type( void_t ) const noexcept { return shape_type::circle ; }
         virtual void_t translate_to( natus::math::vec2f_cref_t p ) noexcept { _circle.set_center( p ) ; }
+        virtual natus::math::vec2f_t get_position( void_t ) const noexcept { return _circle.get_center() ; }
     };
     natus_res_typedef( circle_shape_property ) ;
 
@@ -99,8 +102,40 @@ namespace this_file
 
         virtual shape_type get_type( void_t ) const noexcept { return shape_type::aabb ; }
         virtual void_t translate_to( natus::math::vec2f_cref_t p ) noexcept { _box.translate_to_position( p ) ; }
+        virtual natus::math::vec2f_t get_position( void_t ) const noexcept { return _box.get_center() ; }
     };
     natus_res_typedef( aabb_shape_property ) ;
+
+
+    //****************************************************************************************
+    class ray_shape_property : public shape_property
+    {
+        natus_this_typedefs( ray_shape_property ) ;
+
+    public:
+
+        natus_typedefs( natus::math::ray2f_t, ray ) ;
+
+    private:
+
+        ray_t _ray ;
+
+    public:
+
+        ray_shape_property( void_t ) noexcept {}
+        ray_shape_property( ray_cref_t r ) noexcept : _ray( r ) {}
+        ray_shape_property( this_cref_t rhv ) noexcept : _ray( rhv._ray ) {}
+        virtual ~ray_shape_property( void_t ) noexcept {}
+
+        ray_cref_t get_ray( void_t ) const noexcept { return _ray ; }
+        ray_ref_t get_ray( void_t ) noexcept { return _ray ; }
+        void_t set_ray( ray_cref_t r ) noexcept { _ray = r ; }
+
+        virtual shape_type get_type( void_t ) const noexcept { return shape_type::ray ; }
+        virtual void_t translate_to( natus::math::vec2f_cref_t p ) noexcept { _ray.translate_to( p ) ; }
+        virtual natus::math::vec2f_t get_position( void_t ) const noexcept { return _ray.get_origin() ; }
+    };
+    natus_res_typedef( ray_shape_property ) ;
 
     //****************************************************************************************
     //
@@ -175,7 +210,7 @@ namespace this_file
             // mouse shape
             {
                 natus::math::vec2f_t const pos ;
-                float_t const r = 0.1f ;
+                float_t const r = 0.3f ;
                 _mouse_shape = this_file::circle_shape_property_res_t( 
                     this_file::circle_shape_property_t( natus::collide::n2d::circlef_t( pos, r ) ) ) ;
             }
@@ -213,7 +248,14 @@ namespace this_file
 
                 if( mouse.is_pressing( natus::device::layouts::three_mouse::button::right ) )
                 {
-                    
+                    auto const cur_mouse_pos = _ae.get_cur_mouse_pos() / _ppm ;
+
+                    if( _mouse_shape->get_type() == this_file::shape_type::ray )
+                    {
+                        this_file::ray_shape_property_res_t c = _mouse_shape ;
+                        auto const dir = ( cur_mouse_pos - _mouse_shape->get_position() ).normalize() ;
+                        c->get_ray().set_direction( dir ) ;
+                    }
                 }
 
                 if( mouse.is_pressing( natus::device::layouts::three_mouse::button::left ) )
@@ -261,9 +303,51 @@ namespace this_file
         {
             hit_test_funk_t unknown = [&]( this_file::shape_property_res_t, this_file::shape_property_res_t ){ return hit_test_result() ;} ;
 
-            hit_test_funk_t circle_circle = [&]( this_file::shape_property_res_t, this_file::shape_property_res_t )
+            hit_test_funk_t circle_ray = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
             { 
-                return hit_test_result() ;
+                this_file::circle_shape_property_res_t o0 = r0 ;
+                this_file::ray_shape_property_res_t o1 = r1 ;
+
+                natus::math::vec2f_t dist ;
+
+                hit_test_result ret ;
+                ret.valid = true ;
+                ret.st0 = s0 ;
+                ret.st1 = s1 ;
+                ret.htt = natus::collide::n2d::hit_tests<float_t>::ray_circle( o1->get_ray(), o0->get_circle(), dist ) ;
+
+                ret.num_contacts = 2 ;
+
+                ret.contact_points[0] = o1->get_ray().point_at( dist.x() ) ;
+                ret.contact_normals[0] = o0->get_circle().calculate_normal_distance_to_bound_for( ret.contact_points[0] ) ;
+
+                ret.contact_points[1] = o1->get_ray().point_at( dist.y() ) ;
+                ret.contact_normals[1] = o0->get_circle().calculate_normal_distance_to_bound_for( ret.contact_points[1] ) ;
+                
+                return ret ;
+            } ;
+            hit_test_funk_t ray_circle = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
+            {
+                return circle_ray( r1, r0 ) ;
+            } ;
+
+            hit_test_funk_t circle_circle = [&]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
+            { 
+                this_file::circle_shape_property_res_t o0 = r0 ;
+                this_file::circle_shape_property_res_t o1 = r1 ;
+
+                hit_test_result ret ;
+                ret.valid = true ;
+                ret.st0 = s0 ;
+                ret.st1 = s1 ;
+                ret.htt = natus::collide::n2d::hit_tests<float_t>::circle_circle_overlap( o1->get_circle(), o0->get_circle() ) ;
+                
+                auto const nrm = o1->get_circle().calculate_normal_distance_to_bound_for( o0->get_circle().get_center() ) ;
+                ret.num_contacts = 1 ;
+                ret.contact_normals[0] = nrm ;
+                ret.contact_points[0] = o1->get_circle().get_center() + nrm.xy() * nrm.z() ;
+
+                return ret ;
             } ;
             hit_test_funk_t aabb_aabb = [&]( this_file::shape_property_res_t, this_file::shape_property_res_t )
             { 
@@ -278,7 +362,7 @@ namespace this_file
                 ret.valid = true ;
                 ret.st0 = s0 ;
                 ret.st1 = s1 ;
-                ret.htt = natus::collide::n2d::hit_test_aabb_circle<float_t>::test_full( o1->get_box(), o0->get_circle() ) ;
+                ret.htt = natus::collide::n2d::hit_tests<float_t>::aabb_circle( o1->get_box(), o0->get_circle() ) ;
                 auto const nrm = o1->get_box().calculate_normal_for( o0->get_circle().get_center() ) ;
                 ret.num_contacts = 1 ;
                 ret.contact_normals[0] = nrm ;
@@ -291,6 +375,19 @@ namespace this_file
 
             switch( s0 )
             {
+            case this_file::shape_type::ray:
+            {
+                switch( s1 )
+                {
+                case this_file::shape_type::circle:
+                    return ray_circle ;
+                case this_file::shape_type::aabb:
+                    return unknown ;
+                case this_file::shape_type::ray:
+                    return unknown ;
+                }
+                break ;
+            }
             case this_file::shape_type::circle:
             {
                 switch( s1 )
@@ -299,6 +396,8 @@ namespace this_file
                     return circle_circle ;
                 case this_file::shape_type::aabb:
                     return circle_aabb ;
+                case this_file::shape_type::ray:
+                    return circle_ray ;
                 }
                 break ;
             }
@@ -310,6 +409,8 @@ namespace this_file
                     return aabb_circle ;
                 case this_file::shape_type::aabb:
                     return aabb_aabb ;
+                case this_file::shape_type::ray:
+                    return unknown ;
                 }
                 break ;
             }
@@ -319,11 +420,13 @@ namespace this_file
         }
 
         // this one is used for visual hit test notification
-        hit_test_result _htr ;
+        size_t _num_htr = 0 ;
+        hit_test_result _htr[10] ;
 
+        //***************************************************************************************************************
         virtual natus::application::result on_physics( natus::application::app_t::physics_data_in_t ud ) noexcept
         {
-            _htr = hit_test_result() ;
+            _num_htr = 0 ;
 
             auto const s0 = _mouse_shape->get_type() ;
 
@@ -332,9 +435,10 @@ namespace this_file
                 auto const s1 = s->get_type() ;
                 auto res = demux( s0, s1 )( _mouse_shape, s ) ;
                 if( res.htt == natus::collide::hit_test_type::intersect ||
+                    res.htt == natus::collide::hit_test_type::overlap ||
                     res.htt == natus::collide::hit_test_type::inside )
                 {
-                    _htr = res ;
+                    _htr[_num_htr++] = res ;
                 }
             }
             return natus::application::result::ok ; 
@@ -357,7 +461,7 @@ namespace this_file
                     this_file::circle_shape_property_res_t sr = s ;
 
                     auto const p0 = sr->get_circle().get_center() * _ppm ;
-                    pr->draw_circle( 10, 20, p0, sr->get_circle().get_radius()*_ppm, 
+                    pr->draw_circle( 5, 20, p0, sr->get_circle().get_radius()*_ppm, 
                         natus::math::vec4f_t(0.2f,0.2f,0.2f,1.0f),natus::math::vec4f_t(1.0f) ) ;
 
                     break ;
@@ -385,7 +489,7 @@ namespace this_file
                     this_file::circle_shape_property_res_t sr = _mouse_shape ;
 
                     auto const p0 = sr->get_circle().get_center() * _ppm ;
-                    pr->draw_circle( 10, 20, p0, sr->get_circle().get_radius()*_ppm, 
+                    pr->draw_circle( 7, 20, p0, sr->get_circle().get_radius()*_ppm, 
                         natus::math::vec4f_t(0.3f,0.3f,0.3f,1.0f),natus::math::vec4f_t(1.0f) ) ;
 
                     break ;
@@ -400,19 +504,44 @@ namespace this_file
                         natus::math::vec4f_t( 0.3f, 0.3f, 0.3f, 1.0f ), natus::math::vec4f_t(1.0f) ) ;
                     break ;
                 }
+                case this_file::shape_type::ray: 
+                {
+                    this_file::ray_shape_property_res_t sr = _mouse_shape ;
+
+                    // draw little circle around ray origin
+                    {
+                        auto const p0 = sr->get_ray().get_origin() * _ppm ;
+                        pr->draw_circle( 7, 20, p0, 10.0f, 
+                            natus::math::vec4f_t(0.3f,0.3f,0.3f,1.0f),natus::math::vec4f_t(1.0f) ) ;
+                    }
+
+                    // draw direction of ray
+                    {
+                        auto const p0 = sr->get_ray().get_origin() * _ppm ;
+                        auto const p1 = p0 + sr->get_ray().get_direction() * 80.0f ;
+                        pr->draw_line( 7, p0, p1, natus::math::vec4f_t(0.0f, 1.0f, 0.0, 1.0f) ) ;
+                    }
+                }
+
                 default: break ;
                 }
             }
 
             // draw contact points
             {
-                for( size_t i=0; i<_htr.num_contacts; ++i )
+                for( size_t h=0; h<_num_htr; ++h )
                 {
+                    for( size_t i=0; i<_htr[h].num_contacts; ++i )
                     {
-                        auto const p0 = _htr.contact_points[i] * _ppm ;
-                        auto const p1 = p0 + _htr.contact_normals[i].xy() * 1.0f * _ppm ;
-                        pr->draw_line( 12, p0, p1, natus::math::vec4f_t(0.0f, 1.0f, 0.0, 1.0f) ) ;
-                    }}
+                        // draw normal
+                        {
+                            auto const p0 = _htr[h].contact_points[i] * _ppm ;
+                            auto const p1 = p0 + _htr[h].contact_normals[i].xy() * 1.0f * _ppm ;
+                            pr->draw_line( 15, p0, p1, natus::math::vec4f_t(0.0f, 1.0f, 0.0, 1.0f) ) ;
+                        }
+                    }
+                }
+                
             }
 
             _ae.on_graphics_end( 100 ) ;
@@ -424,9 +553,47 @@ namespace this_file
         {
             if( !_ae.on_tool( td ) ) return natus::application::result::ok ;
 
-            ImGui::Begin( "Hit test result" ) ;
+            ImGui::Begin( "Control" ) ;
+            
             {
-                ImGui::Text( "Hit test type: %s", natus::collide::to_string( _htr.htt ).c_str() ) ;
+                const char* items[] = { "Circle", "Ray" };
+                static int item_current = 0;
+                if( ImGui::Combo( "Mouse Shape", &item_current, items, IM_ARRAYSIZE(items) ) )
+                {
+                    if( items[item_current] == "Circle" && _mouse_shape->get_type() != this_file::shape_type::circle )
+                    {
+                        natus::math::vec2f_t const pos = _mouse_shape->get_position() ;
+                        float_t const r = 0.3f ;
+                        _mouse_shape = this_file::circle_shape_property_res_t( 
+                            this_file::circle_shape_property_t( natus::collide::n2d::circlef_t( pos, r ) ) ) ;
+                    }
+                    else if( items[item_current] == "Ray" && _mouse_shape->get_type() != this_file::shape_type::ray)
+                    {
+                        natus::math::vec2f_t const pos = _mouse_shape->get_position() ;
+                        natus::math::vec2f_t const dir = natus::math::vec2f_t(1.0f, 0.0f ) ;
+
+                        _mouse_shape = this_file::ray_shape_property_res_t( 
+                            this_file::ray_shape_property_t( natus::math::ray2f_t( pos, dir ) ) ) ;
+                    }
+                }
+            }
+
+            if( _mouse_shape->get_type() == this_file::shape_type::circle )
+            {
+                ImGui::Text( "Mouse Shape is: %s", "Circle" ) ;
+
+                this_file::circle_shape_property_res_t c = _mouse_shape ;
+                float_t r = c->get_circle().get_radius() ;
+                ImGui::SliderFloat( "Radius", &r, 0.01f, 2.0f ) ;
+                c->get_circle().set_radius( r ) ;
+            }
+            else if( _mouse_shape->get_type() == this_file::shape_type::circle )
+            {
+                ImGui::Text( "Mouse Shape is: %s", "Ray" ) ;
+            }
+
+            {
+                //ImGui::Text( "Hit test type: %s", natus::collide::to_string( _htr.htt ).c_str() ) ;
             }
             ImGui::End() ;
 

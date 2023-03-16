@@ -16,7 +16,7 @@
 
 #include <natus/collide/2d/bounds/aabb.hpp>
 #include <natus/collide/2d/bounds/circle.hpp>
-#include <natus/collide/2d/hit_test/hit_test_aabb_circle.hpp>
+#include <natus/collide/2d/hit_tests.hpp>
 
 #include <random>
 #include <thread>
@@ -549,7 +549,7 @@ namespace this_file
                         natus::collide::n2d::circle<float_t> c( p, radius ) ;
                         natus::collide::n2d::aabb<float_t> a( b.get_box() ) ;
 
-                        auto const res = natus::collide::n2d::hit_test_aabb_circle<float_t>::test_full( a, c ) ;
+                        auto const res = natus::collide::n2d::hit_tests<float_t>::aabb_circle( a, c ) ;
                         if( res == natus::collide::hit_test_type::intersect || 
                             res == natus::collide::hit_test_type::inside )
                         {
