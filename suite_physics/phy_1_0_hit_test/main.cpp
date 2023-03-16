@@ -303,6 +303,33 @@ namespace this_file
         {
             hit_test_funk_t unknown = [&]( this_file::shape_property_res_t, this_file::shape_property_res_t ){ return hit_test_result() ;} ;
 
+            hit_test_funk_t aabb_ray = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
+            { 
+                this_file::aabb_shape_property_res_t o0 = r0 ;
+                this_file::ray_shape_property_res_t o1 = r1 ;
+
+                float_t dist ;
+                natus::math::vec3f_t nrm ;
+
+                hit_test_result ret ;
+                ret.valid = true ;
+                ret.st0 = s0 ;
+                ret.st1 = s1 ;
+                ret.htt = natus::collide::n2d::hit_tests<float_t>::ray_aabb( o1->get_ray(), o0->get_box(), dist, nrm ) ;
+
+                ret.num_contacts = 1 ;
+
+                ret.contact_points[0] = o1->get_ray().point_at( dist ) ;
+                ret.contact_normals[0] = nrm ;
+                
+                return ret ;
+            } ;
+
+            hit_test_funk_t ray_aabb = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
+            {
+                return aabb_ray( r1, r0 ) ;
+            } ;
+
             hit_test_funk_t circle_ray = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
             { 
                 this_file::circle_shape_property_res_t o0 = r0 ;
@@ -382,7 +409,7 @@ namespace this_file
                 case this_file::shape_type::circle:
                     return ray_circle ;
                 case this_file::shape_type::aabb:
-                    return unknown ;
+                    return ray_aabb ;
                 case this_file::shape_type::ray:
                     return unknown ;
                 }
@@ -410,7 +437,7 @@ namespace this_file
                 case this_file::shape_type::aabb:
                     return aabb_aabb ;
                 case this_file::shape_type::ray:
-                    return unknown ;
+                    return aabb_ray ;
                 }
                 break ;
             }
@@ -474,6 +501,21 @@ namespace this_file
                     sr->get_box().get_points( points ) ;
                     pr->draw_rect( 5, points[0]*_ppm, points[1]*_ppm, points[2]*_ppm, points[3]*_ppm, 
                         natus::math::vec4f_t( 0.2f, 0.2f, 0.2f, 1.0f ), natus::math::vec4f_t(1.0f) ) ;
+
+                    #if 0
+                    if( _mouse_shape->get_type() == this_file::shape_type::ray )
+                    {
+                        auto const d = this_file::ray_shape_property_res_t( _mouse_shape )->get_ray().get_direction() ;
+                        std::array< natus::math::vec3f_t, 2 > nrms = sr->get_box().calculate_normals_for_direction( d ) ;
+                        for( size_t i=0; i<2;++i)
+                        {
+                            auto const n = nrms[i] ;
+                            auto const p0 = sr->get_box().get_center() + n.xy() * n.z() ;
+                            auto const p1 = p0 + n.xy() * 10.0f ;
+                            pr->draw_line( 7, p0*_ppm, p1*_ppm, natus::math::vec4f_t(0.0f, 1.0f, 0.0, 1.0f) ) ;
+                        }
+                    }
+                    #endif
                     break ;
                 }
                 default: break ;
