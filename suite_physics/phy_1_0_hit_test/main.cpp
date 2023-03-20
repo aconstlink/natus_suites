@@ -16,7 +16,10 @@
 
 #include <natus/collide/2d/bounds/aabb.hpp>
 #include <natus/collide/2d/bounds/circle.hpp>
+#include <natus/collide/2d/bounds/obb.hpp>
 #include <natus/collide/2d/hit_tests.hpp>
+
+#include <natus/math/utility/angle.hpp>
 
 #include <random>
 #include <thread>
@@ -31,8 +34,8 @@ namespace this_file
         unknown,
         ray,
         circle,
-        aabb
-        // obb
+        aabb,
+        obb
         // circle_tree
         // aabb_tree
     };
@@ -106,6 +109,35 @@ namespace this_file
     };
     natus_res_typedef( aabb_shape_property ) ;
 
+    //****************************************************************************************
+    class obb_shape_property : public shape_property
+    {
+        natus_this_typedefs( obb_shape_property ) ;
+
+    public:
+
+        natus_typedefs( natus::collide::n2d::obbf_t, box ) ;
+
+    private:
+
+        box_t _box ;
+
+    public:
+
+        obb_shape_property( void_t ) noexcept {}
+        obb_shape_property( box_cref_t b ) noexcept : _box( b ) {}
+        obb_shape_property( this_cref_t rhv ) noexcept : _box( rhv._box ) {}
+        virtual ~obb_shape_property( void_t ) noexcept {}
+
+        box_cref_t get_box( void_t ) const noexcept { return _box ; }
+        box_ref_t get_box( void_t ) noexcept { return _box ; }
+        void_t set_box( box_cref_t b ) noexcept { _box = b ; }
+
+        virtual shape_type get_type( void_t ) const noexcept { return shape_type::obb ; }
+        virtual void_t translate_to( natus::math::vec2f_cref_t p ) noexcept { _box.translate_to( p ) ; }
+        virtual natus::math::vec2f_t get_position( void_t ) const noexcept { return _box.origin() ; }
+    };
+    natus_res_typedef( obb_shape_property ) ;
 
     //****************************************************************************************
     class ray_shape_property : public shape_property
@@ -229,6 +261,17 @@ namespace this_file
                     float_t const r = 1.0f ;
                     _shapes.emplace_back( this_file::circle_shape_property_res_t( 
                     this_file::circle_shape_property_t( natus::collide::n2d::circlef_t( pos, r ) ) ) ) ;
+                }
+
+                {
+                    natus::math::vec2f_t const pos( 1.0f, -2.0f ) ;
+                    float_t const r = 1.0f ;
+                    auto const aabb = this_file::aabb_shape_property_t::box_t( pos, r ) ;
+                    auto obb = this_file::obb_shape_property_t::box_t(aabb) ;
+                    obb = obb.transform_by( natus::math::trafo2df_t::rotation(
+                        natus::math::anglef_t::degree_to_radian(10.0f) )) ;
+
+                    _shapes.emplace_back( this_file::obb_shape_property_res_t( this_file::obb_shape_property_t( obb ) ) ) ;
                 }
             }
 
@@ -393,7 +436,7 @@ namespace this_file
                 auto const nrm = o1->get_box().calculate_normal_for( o0->get_circle().get_center() ) ;
                 ret.num_contacts = 1 ;
                 ret.contact_normals[0] = nrm ;
-                ret.contact_points[0] = o0->get_circle().get_center() + nrm.xy() * 
+                ret.contact_points[0] = o0->get_circle().get_center() - nrm.xy() * 
                     nrm.dot( natus::math::vec3f_t( o0->get_circle().get_center() - o1->get_box().get_center(), 1.0f ) ) ;
 
                 return ret ;
@@ -471,9 +514,14 @@ namespace this_file
             return natus::application::result::ok ; 
         }
 
+        float_t angle = 0.0f ;
+
         //***************************************************************************************************************
         virtual natus::application::result on_graphics( natus::application::app_t::render_data_in_t rd ) noexcept 
         {
+            angle = rd.sec_dt * natus::math::constants< float_t >::pix2() * 0.25f ;
+            angle = natus::math::fn<float_t>::mod( angle, natus::math::constants< float_t >::pix2() ) ;
+
             _ae.on_graphics_begin( rd ) ;
 
             auto pr = _ae.get_prim_render() ;
@@ -517,6 +565,14 @@ namespace this_file
                     }
                     #endif
                     break ;
+                }
+                case this_file::shape_type::obb: 
+                {
+                    this_file::obb_shape_property_res_t sr = s ;
+                    auto const pts = sr->get_box().get_points() ;
+                    sr->get_box().transform_by( natus::math::trafo2df_t::rotation( angle ) ) ;
+                    pr->draw_rect( 5, pts[0]*_ppm, pts[1]*_ppm, pts[2]*_ppm, pts[3]*_ppm, 
+                        natus::math::vec4f_t( 0.2f, 0.2f, 0.2f, 1.0f ), natus::math::vec4f_t(1.0f) ) ;
                 }
                 default: break ;
                 }
@@ -583,7 +639,6 @@ namespace this_file
                         }
                     }
                 }
-                
             }
 
             _ae.on_graphics_end( 100 ) ;
