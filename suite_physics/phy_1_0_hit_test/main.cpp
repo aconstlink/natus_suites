@@ -470,9 +470,23 @@ namespace this_file
 
                 return ret ;
             } ;
-            hit_test_funk_t aabb_aabb = [=]( this_file::shape_property_res_t, this_file::shape_property_res_t )
+            hit_test_funk_t aabb_aabb = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
             { 
-                return hit_test_result() ;
+                this_file::aabb_shape_property_res_t o0 = r0 ;
+                this_file::aabb_shape_property_res_t o1 = r1 ;
+
+                hit_test_result ret ;
+                ret.valid = true ;
+                ret.st0 = s0 ;
+                ret.st1 = s1 ;
+                ret.htt = natus::collide::n2d::hit_tests<float_t>::aabb_aabb_overlap( o0->get_box(), o1->get_box() ) ;
+                if( ret.htt != natus::collide::hit_test_type::overlap ) return hit_test_result() ;
+                
+                ret.num_contacts = 1 ;
+                ret.contact_normals[0] = natus::math::vec3f_t( 1.0f, 0.0f, 0.0f ) ;
+                ret.contact_points[0] = o1->get_box().get_center() ;
+
+                return ret ;
             } ;
             hit_test_funk_t circle_aabb = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
             { 
