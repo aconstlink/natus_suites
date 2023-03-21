@@ -452,7 +452,7 @@ namespace this_file
                 return circle_ray( r1, r0 ) ;
             } ;
 
-            hit_test_funk_t circle_circle = [&]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
+            hit_test_funk_t circle_circle = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
             { 
                 this_file::circle_shape_property_res_t o0 = r0 ;
                 this_file::circle_shape_property_res_t o1 = r1 ;
@@ -470,11 +470,11 @@ namespace this_file
 
                 return ret ;
             } ;
-            hit_test_funk_t aabb_aabb = [&]( this_file::shape_property_res_t, this_file::shape_property_res_t )
+            hit_test_funk_t aabb_aabb = [=]( this_file::shape_property_res_t, this_file::shape_property_res_t )
             { 
                 return hit_test_result() ;
             } ;
-            hit_test_funk_t circle_aabb = [&]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
+            hit_test_funk_t circle_aabb = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
             { 
                 this_file::circle_shape_property_res_t o0 = r0 ;
                 this_file::aabb_shape_property_res_t o1 = r1 ;
@@ -489,7 +489,11 @@ namespace this_file
 
                 return ret ;
             } ;
-            hit_test_funk_t aabb_circle = [&]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 ){ return circle_aabb(r0, r1) ;} ;
+
+            hit_test_funk_t aabb_circle = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
+            { 
+                return circle_aabb(r1, r0) ;
+            } ;
 
             hit_test_funk_t obb_circle = [=]( this_file::shape_property_res_t r0, this_file::shape_property_res_t r1 )
             {
@@ -511,7 +515,7 @@ namespace this_file
             {
                 return obb_circle( r1, r0 ) ;
             } ;
-
+            
             switch( s0 )
             {
             case this_file::shape_type::ray:
@@ -763,6 +767,14 @@ namespace this_file
                     }
                     break ;
                 }
+                case this_file::shape_type::obb: 
+                {
+                    this_file::obb_shape_property_res_t sr = _mouse_shape ;
+                    auto const pts = sr->get_box().get_points() ;
+                    pr->draw_rect( 5, pts[0]*_ppm, pts[1]*_ppm, pts[2]*_ppm, pts[3]*_ppm, 
+                        natus::math::vec4f_t( 0.2f, 0.2f, 0.2f, 1.0f ), natus::math::vec4f_t(1.0f) ) ;
+                    break ;
+                }
 
                 default: break ;
                 }
@@ -803,7 +815,7 @@ namespace this_file
             ImGui::Begin( "Control" ) ;
             
             {
-                const char* items[] = { "Circle", "Ray" };
+                const char* items[] = { "Circle", "Ray", "Aabb", "Obb" };
                 static int item_current = 0;
                 if( ImGui::Combo( "Mouse Shape", &item_current, items, IM_ARRAYSIZE(items) ) )
                 {
@@ -814,13 +826,27 @@ namespace this_file
                         _mouse_shape = this_file::circle_shape_property_res_t( 
                             this_file::circle_shape_property_t( natus::collide::n2d::circlef_t( pos, r ) ) ) ;
                     }
-                    else if( items[item_current] == "Ray" && _mouse_shape->get_type() != this_file::shape_type::ray)
+                    else if( items[item_current] == "Ray" && _mouse_shape->get_type() != this_file::shape_type::ray )
                     {
                         natus::math::vec2f_t const pos = _mouse_shape->get_position() ;
                         natus::math::vec2f_t const dir = natus::math::vec2f_t(1.0f, 0.0f ) ;
 
                         _mouse_shape = this_file::ray_shape_property_res_t( 
                             this_file::ray_shape_property_t( natus::math::ray2f_t( pos, dir ) ) ) ;
+                    }
+                    else if( items[item_current] == "Aabb" && _mouse_shape->get_type() != this_file::shape_type::aabb )
+                    {
+                        natus::math::vec2f_t const pos = _mouse_shape->get_position() ;
+
+                        _mouse_shape = this_file::aabb_shape_property_res_t( 
+                            this_file::aabb_shape_property_t( natus::collide::n2d::aabbf_t( pos, 1.0f ) ) ) ;
+                    }
+                    else if( items[item_current] == "Obb" && _mouse_shape->get_type() != this_file::shape_type::obb )
+                    {
+                        natus::math::vec2f_t const pos = _mouse_shape->get_position() ;
+
+                        _mouse_shape = this_file::obb_shape_property_res_t( 
+                            this_file::obb_shape_property_t( natus::collide::n2d::aabbf_t( pos, 1.0f ) ) ) ;
                     }
                 }
             }
@@ -837,6 +863,21 @@ namespace this_file
             else if( _mouse_shape->get_type() == this_file::shape_type::circle )
             {
                 ImGui::Text( "Mouse Shape is: %s", "Ray" ) ;
+            }
+            else if( _mouse_shape->get_type() == this_file::shape_type::aabb )
+            {
+            }
+            else if( _mouse_shape->get_type() == this_file::shape_type::obb )
+            {
+                static natus::math::vec2f_t dir(1.0f,0.0f) ;
+                if( natus::tool::custom_imgui_widgets::direction( "Obb orientation", dir ) )
+                {
+                    this_file::obb_shape_property_res_t c = _mouse_shape ;
+                    auto const old = c->get_box() ;
+                    c->set_box( natus::collide::n2d::obbf_t( old.origin(), dir.normalized(), 
+                        dir.ortho().normalized(), natus::math::vec2f_t( 1.0f ) ) ) ;
+                    
+                }
             }
 
             {
